@@ -3,7 +3,7 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 @Entity
 @Table(name = "profiles")
-public class Profiles {
+public class Profile {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -29,10 +29,10 @@ public class Profiles {
     @Column(nullable = false)
     private java.time.LocalDateTime updatedAt = java.time.LocalDateTime.now();
 
-    public Profiles() {}
+    public Profile() {}
 
-    public Profiles(User user, String firstName, String lastName, LocalDate birthDate,
-                    String phoneNumber, String profilePhoto) {
+    public Profile(User user, String firstName, String lastName, LocalDate birthDate,
+                   String phoneNumber, String profilePhoto) {
         this.user = user;
         this.firstName = firstName;
         this.lastName = lastName;

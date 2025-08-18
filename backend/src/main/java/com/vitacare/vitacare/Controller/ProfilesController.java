@@ -1,6 +1,6 @@
 package com.vitacare.vitacare.Controller;
 
-import com.vitacare.vitacare.Model.Profiles;
+import com.vitacare.vitacare.Model.Profile;
 import com.vitacare.vitacare.Repository.ProfilesRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -15,23 +15,23 @@ public class ProfilesController {
     private ProfilesRepository profilesRepository;
 
     @GetMapping
-    public List<Profiles> getAllProfiles() {
+    public List<Profile> getAllProfiles() {
         return profilesRepository.findAll();
     }
 
     @GetMapping("/{userId}")
-    public Profiles getProfileByUserId(@PathVariable Long userId) {
+    public Profile getProfileByUserId(@PathVariable Long userId) {
         return profilesRepository.findByUserId(userId);
     }
 
     @PostMapping
-    public Profiles createProfile(@RequestBody Profiles profile) {
+    public Profile createProfile(@RequestBody Profile profile) {
         return profilesRepository.save(profile);
     }
 
     @PutMapping("/{id}")
-    public Profiles updateProfile(@PathVariable Long id, @RequestBody Profiles profileDetails) {
-        Profiles profile = profilesRepository.findById(id).orElseThrow();
+    public Profile updateProfile(@PathVariable Long id, @RequestBody Profile profileDetails) {
+        Profile profile = profilesRepository.findById(id).orElseThrow();
         profile.setFirstName(profileDetails.getFirstName());
         profile.setLastName(profileDetails.getLastName());
         profile.setBirthDate(profileDetails.getBirthDate());
