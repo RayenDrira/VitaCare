@@ -1,0 +1,103 @@
+.documents-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.documents-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.document-item {
+  position: relative;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  overflow: hidden;
+  text-align: center;
+  background: #fff;
+  cursor: pointer;
+  height: 200px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.document-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+}
+
+.document-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.2s;
+}
+
+.document-item:hover .document-thumb {
+  transform: scale(1.05);
+}
+
+.button-group {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  display: none;
+  align-items: center;
+}
+
+.document-item:hover .button-group {
+  display: flex;
+}
+
+.action-button {
+  width: 70px;
+  height: 36px;
+  border-radius: 8px;
+  background-color: rgba(128, 128, 128, 0.35);
+  color: #000;
+  border: none;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.action-button:hover {
+  background-color: rgba(128, 128, 128, 0.6);
+  transform: scale(1.05);
+}
+
+/* Style drag & drop */
+.ant-upload.ant-upload-drag {
+  background: #fafafa;
+  border: 2px dashed #1890ff;
+  border-radius: 12px;
+  padding: 40px 20px;
+  text-align: center;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.ant-upload.ant-upload-drag:hover {
+  background: #e6f7ff;
+  border-color: #40a9ff;
+}
+
+.ant-upload-drag-icon {
+  font-size: 36px;
+  color: #1890ff;
+}
+
+.ant-upload-text {
+  font-size: 16px;
+  color: #555;
+  margin-top: 12px;
+}
+
+.ant-upload-drag-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
