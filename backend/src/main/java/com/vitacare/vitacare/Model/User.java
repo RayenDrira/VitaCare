@@ -1,42 +1,60 @@
 package com.vitacare.vitacare.Model;
 
 import jakarta.persistence.*;
+import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import jakarta.validation.constraints.*;
+
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "users")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "users", uniqueConstraints = @UniqueConstraint(columnNames = "email"))
+@EntityListeners(AuditingEntityListener.class)
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Email(message = "Email should be valid")
+    @NotBlank(message = "Email is required")
+    @Column(nullable = false, unique = true, length = 191)
     private String email;
 
-    @Column(nullable = false)
+    @Column(nullable = true) // OAuth users might not have password
     private String password;
 
-    // Constructeurs
-    public User() {}
+    @Column(name = "first_name")
+    private String firstName;
 
-    public User(String email, String password) {
-        this.email = email;
-        this.password = password;
+    @Column(name = "last_name")
+    private String lastName;
+
+    @Column(name = "profile_picture_url")
+    private String profilePictureUrl;
+
+    @Column(name = "provider")
+    @Enumerated(EnumType.STRING)
+    private AuthProvider provider = AuthProvider.LOCAL;
+
+    @Column(name = "provider_id")
+    private String providerId;
+
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+
+    public enum AuthProvider {
+        LOCAL, GOOGLE
     }
-
-    // Getters et Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
-
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
-
-
-    //Relationship one to one with profile table
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
-    private Profile profile;
-
 }

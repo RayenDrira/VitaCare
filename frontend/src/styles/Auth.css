@@ -1,0 +1,166 @@
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap");
+* {
+   font-family: Outfit;
+   margin: 0;
+   padding: 0;
+   box-sizing: border-box;
+   scroll-behavior: smooth;
+}
+html {
+   font-size: 16px;
+   height: 100vh;
+}
+body {
+   background: linear-gradient(157deg, #31c1e1 58.93%, #31e1cf 84.16%);
+}
+
+/* Links */
+.forgot-password {
+   text-align: right;
+}
+a,
+.flip-clicker {
+   position: relative;
+   color: #535353;
+   text-transform: capitalize;
+   text-decoration: none;
+   cursor: pointer;
+   text-align: right;
+   display: inline-block;
+}
+
+a::after,
+.flip-clicker::after {
+   content: "";
+   position: absolute;
+   width: 0%;
+   height: 1.5px;
+   left: 0;
+   bottom: -2px;
+   background-color: #535353;
+   transition: width 0.3s ease;
+}
+
+a:hover::after,
+.flip-clicker:hover::after {
+   width: 100%;
+}
+
+#new a {
+   position: relative;
+   color: #535353;
+   font-weight: 600;
+   text-transform: capitalize;
+   text-decoration: none;
+   cursor: pointer;
+}
+#new a::after {
+   content: "";
+   position: absolute;
+   width: 0%;
+   height: 1.5px;
+   left: 0;
+   bottom: -2px;
+   background-color: #535353;
+   transition: width 0.3s ease;
+}
+
+#new a:hover::after {
+   width: 100%;
+}
+
+/* top part */
+h1 {
+   font-size: 2.8em;
+   font-weight: 700;
+   text-align: center;
+   line-height: 60px;
+   letter-spacing: 2px;
+   background: linear-gradient(94deg, #31c1e1 1.39%, #31e1cf 99.3%);
+   background-clip: text;
+   -webkit-background-clip: text;
+   -webkit-text-fill-color: transparent;
+}
+.logo-container {
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   flex-direction: column;
+   padding: 1em 0;
+}
+.glassy-card .logo-img {
+   height: 90px;
+   width: 88px;
+   padding: 0;
+}
+
+/* Card */
+
+.container {
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   margin: 4em 6em;
+}
+.glassy-card {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   gap: 1em;
+   padding: 1.5em 1.875em;
+   width: 30em;
+   height: 38em;
+   border-radius: 20px;
+
+   /* soft aqua border */
+   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+   background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.82) 20%,
+      rgba(255, 255, 255, 0.41) 100%
+   );
+   backdrop-filter: blur(5px);
+}
+
+/* Form */
+.glassy-card form {
+   display: flex;
+   flex-direction: column;
+   gap: 1em;
+}
+.glassy-card input {
+   height: 3.6em;
+   background-color: transparent;
+   padding: 1em;
+   border: 1.6px solid #535353;
+   border-radius: 10px;
+}
+.glassy-card input:focus {
+   border-color: rgba(49, 193, 225, 0.8);
+   outline: none;
+   transition: all 0.25s ease;
+   box-shadow: 0 4px 12px rgba(49, 193, 225, 0.15);
+}
+
+#new {
+   display: flex;
+   justify-content: center;
+   padding-bottom: 1em;
+}
+
+.or {
+   display: flex;
+   align-items: center;
+   gap: 1em;
+}
+.or hr {
+   width: 11em;
+   border-color: #535353;
+   border-radius: 100px;
+}
+p {
+   font-size: 1em;
+   font-weight: 400;
+   color: #535353;
+}
+

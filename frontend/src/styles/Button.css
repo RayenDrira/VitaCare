@@ -1,0 +1,209 @@
+html {
+  font-size: 16px;
+}
+
+/*blue*/
+.btx-blue {
+  padding: 5px 41px;
+  font-weight: 400;
+  font-size: 1.1em;
+  text-transform: capitalize;
+  border-radius: 10px;
+  color: #535353;
+  background-color: #31c1e1;
+  border: 2px solid #31c1e1;
+  cursor: pointer;
+}
+.btx-blue:hover {
+  color: #535353;
+  border: 2px solid #535353;
+}
+.btx-blue::before {
+  width: 200%;
+  height: 180%;
+  background: #31c1e1;
+}
+.btx-blue:hover::before {
+  height: 0%;
+}
+/* blue-reverse */
+.btx-blue-reverse {
+  padding: 5px 41px;
+  font-weight: 400;
+  font-size: 1.1em;
+  text-transform: capitalize;
+  border-radius: 10px;
+  color: #31c1e1;
+  background-color: #ff233200;
+  border: 2px solid #31c1e1;
+  cursor: pointer;
+}
+
+.btx-blue-reverse:hover {
+  color: #fff;
+}
+.btx-blue-reverse::before {
+  height: 0%;
+  width: 100%;
+  background: #31c1e1;
+}
+.btx-blue-reverse:hover::before {
+  width: 100%;
+  height: 180%;
+}
+/* blue-blue */
+.btx-blue-blue {
+  padding: 5px 41px;
+  font-weight: 700;
+  font-size: 1.1em;
+  text-transform: capitalize;
+  border-radius: 20px;
+  color: #0f2438;
+  background-color: #31c1e1;
+  border: 2px solid #31c1e1;
+  cursor: pointer;
+}
+.btx-blue-blue:hover {
+  color: #31c1e1;
+}
+.btx-blue-blue::before {
+  width: 200%;
+  height: 180%;
+  background: #31c1e1;
+}
+.btx-blue-blue:hover::before {
+  height: 0%;
+}
+/*white*/
+.btx-white {
+  padding: 5px 41px;
+  font-weight: 400;
+  font-size: 1.1em;
+  text-transform: capitalize;
+  border-radius: 10px;
+  color: #535353;
+  background-color: white;
+  border: 2px solid #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+}
+.btx-white:hover {
+  color: #535353;
+  border: 2px solid #535353;
+}
+.btx-white::before {
+  width: 200%;
+  height: 180%;
+  background: white;
+}
+.btx-white:hover::before {
+  height: 0%;
+}
+/* white-reverse */
+.btx-white-reverse {
+  padding: 5px 41px;
+  font-weight: 400;
+  font-size: 1.1em;
+  text-transform: capitalize;
+  border-radius: 10px;
+  color: #0f2438;
+  background-color: #ff233200;
+  border: 2px solid #0f2438;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+}
+
+.btx-white-reverse:hover {
+  color: #0f2438;
+}
+.btx-white-reverse::before {
+  height: 0%;
+  width: 100%;
+  background: #ffffff;
+}
+.btx-white-reverse:hover::before {
+  width: 100%;
+  height: 180%;
+}
+/* animations */
+.btx-blue,
+.btx-blue-reverse,
+.btx-blue-blue,
+.btx-white,
+.btx-white-reverse {
+  transition: 0.9s;
+  position: relative;
+  overflow: hidden;
+  z-index: 100;
+  background: none;
+}
+
+.btx-blue::before,
+.btx-blue-reverse::before,
+.btx-blue-blue::before,
+.btx-white::before,
+.btx-white-reverse::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  z-index: -1;
+  top: 0;
+  border-radius: 0 0 50% 50%;
+  transition: 0.9s;
+}
+
+/* size */
+
+.hero .btx-blue,
+.hero .btx-blue-reverse {
+  font-size: 1.1em;
+  font-weight: 500;
+  text-transform: capitalize;
+  width: 210px;
+  height: 60px;
+  letter-spacing: 1px;
+}
+
+.create-card .btx-blue,
+.create-card .btx-blue-reverse,
+.revise .btx-blue {
+  font-size: 1.1em;
+  font-weight: 500;
+  text-transform: capitalize;
+  width: 200px;
+  height: 45px;
+  letter-spacing: 1px;
+}
+
+#create-2 .btx-blue,
+#create-2 .btx-blue-reverse {
+  cursor: default;
+  height: 2.7em;
+}
+.btx-blue-blue,
+#button-holder-finish .btx-blue-reverse {
+  width: 20em;
+  height: 3em;
+  letter-spacing: 1px;
+  font-weight: 650;
+}
+
+.revise .btx-blue {
+  height: 2.7em;
+}
+.revise .btx-blue-reverse {
+  width: 9em;
+  height: 2.7em;
+  font-size: 1.2em;
+  font-weight: 500;
+}
+
+.btx-white-reverse,.btx-white,.btx-blue{
+  height:40px;
+}
