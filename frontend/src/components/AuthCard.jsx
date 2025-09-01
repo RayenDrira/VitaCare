@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import LoginPage from "../components/Login"; // make sure the path is correct
-import SignupPage from "../components/Signup";
+import LoginPage from "./Login";
+import SignupPage from "./Signup";
 import "../styles/Auth.css";
 import "../styles/Flipper.css";
 
-export default function AuthCard() {
+export default function AuthCard({ onLogin }) {
    const [flipped, setFlipped] = useState(false);
 
    return (
@@ -12,10 +12,10 @@ export default function AuthCard() {
          <div className="card-container ">
             <div className={`card ${flipped ? "flipped" : ""}`}>
                <div className="card-side card-front">
-                  <LoginPage flip={() => setFlipped(true)} />
+                  <LoginPage flip={() => setFlipped(true)} onLogin={onLogin} />
                </div>
                <div className="card-side card-back">
-                  <SignupPage flip={() => setFlipped(false)} />
+                  <SignupPage flip={() => setFlipped(false)} onLogin={onLogin} />
                </div>
             </div>
          </div>

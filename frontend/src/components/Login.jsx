@@ -7,10 +7,25 @@ import "../styles/Button.css";
 import GoogleLogo from "../assets/google_logo.svg";
 import Logo from "../assets/VitaCare_logo.png";
 
-export default function LoginPage({ flip }) {
+export default function LoginPage({ flip, onLogin }) {
    const [email, setEmail] = useState("");
    const [password, setPassword] = useState("");
    const [error, setError] = useState("");
+
+   React.useEffect(() => {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get("token");
+      if (token) {
+         localStorage.setItem("jwt", token);
+         if (onLogin) onLogin();
+         // Optionally, remove token from URL
+         window.history.replaceState(
+            {},
+            document.title,
+            window.location.pathname
+         );
+      }
+   }, [onLogin]);
 
    const handleSubmit = async (e) => {
       e.preventDefault();
@@ -24,10 +39,9 @@ export default function LoginPage({ flip }) {
          if (!res.ok) throw new Error("Login failed");
 
          const data = await res.json();
-         console.log("JWT Response:", data);
-
-         // store JWT in localStorage (or cookie if you prefer)
          localStorage.setItem("jwt", data.token);
+
+         if (onLogin) onLogin(); // <-- Notify parent
       } catch (err) {
          setError("Invalid email or password");
       }

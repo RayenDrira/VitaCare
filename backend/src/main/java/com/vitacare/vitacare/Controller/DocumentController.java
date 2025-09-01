@@ -1,5 +1,8 @@
 package com.vitacare.vitacare.Controller;
 
+import com.vitacare.vitacare.Model.Document;
+import com.vitacare.vitacare.Repository.DocumentRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.ResponseEntity;
@@ -13,10 +16,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/documents")
-@CrossOrigin(origins = "http://localhost:3000") // <-- permet l'accès depuis ton frontend
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class DocumentController {
 
     private final Path uploadDir = Paths.get("uploads");
+
+    @Autowired
+    private DocumentRepository documentRepository;
 
     // Upload d'un fichier
     @PostMapping("/upload")
@@ -26,6 +32,15 @@ public class DocumentController {
         String filename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
         Path filePath = uploadDir.resolve(filename);
         file.transferTo(filePath);
+
+        // Save document info to DB
+        Document doc = new Document(
+            filename,
+            file.getContentType(),
+            file.getSize(),
+            filePath.toString()
+        );
+        documentRepository.save(doc);
 
         return ResponseEntity.ok(filename);
     }

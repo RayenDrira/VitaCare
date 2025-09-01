@@ -25,6 +25,13 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
 
+        // Skip JWT processing for OPTIONS requests
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            response.setStatus(HttpServletResponse.SC_OK);
+            chain.doFilter(request, response);
+            return;
+        }
+
         String header = request.getHeader("Authorization");
 
         if (header != null && header.startsWith("Bearer ")) {
@@ -44,8 +51,8 @@ public class JwtFilter extends OncePerRequestFilter {
                     if (jwtUtil.validateToken(token)) {
                         UsernamePasswordAuthenticationToken authToken =
                                 new UsernamePasswordAuthenticationToken(
-                                        userDetails.getUsername(), // Must NOT be null
-                                        "N/A", // dummy password for OAuth users
+                                        userDetails.getUsername(),
+                                        "N/A",
                                         userDetails.getAuthorities()
                                 );
                         authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

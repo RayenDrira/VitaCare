@@ -7,11 +7,25 @@ import "../styles/Button.css";
 import GoogleLogo from "../assets/google_logo.svg";
 import Logo from "../assets/VitaCare_logo.png";
 
-export default function SignupPage({ flip }) {
+export default function SignupPage({ flip, onLogin }) {
    const [email, setEmail] = useState("");
    const [password, setPassword] = useState("");
    const [confirmPassword, setConfirmPassword] = useState("");
    const [error, setError] = useState("");
+
+   React.useEffect(() => {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get("token");
+      if (token) {
+         localStorage.setItem("jwt", token);
+         if (onLogin) onLogin();
+         window.history.replaceState(
+            {},
+            document.title,
+            window.location.pathname
+         );
+      }
+   }, [onLogin]);
 
    const handleSubmit = async (e) => {
       e.preventDefault();
@@ -24,16 +38,15 @@ export default function SignupPage({ flip }) {
          const res = await fetch("http://localhost:8081/auth/signup", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password }),
+            body: JSON.stringify({ email, password })
          });
 
          if (!res.ok) throw new Error("Signup failed");
 
          const data = await res.json();
-         console.log("JWT Response:", data);
-
          localStorage.setItem("jwt", data.token);
-         window.location.href = "/dashboard";
+
+         if (onLogin) onLogin(); // <-- Notify parent
       } catch (err) {
          setError("Failed to create account");
       }
