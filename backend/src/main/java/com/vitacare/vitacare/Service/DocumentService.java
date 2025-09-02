@@ -7,31 +7,36 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.*;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 public class DocumentService {
 
     private final DocumentRepository documentRepository;
-    private final String uploadDir = "uploads/"; // dossier local pour stocker les fichiers
+    private final Path uploadDir = Paths.get("uploads");
 
-    public DocumentService(DocumentRepository documentRepository) {
+    public DocumentService(DocumentRepository documentRepository) throws IOException {
         this.documentRepository = documentRepository;
-        // créer le dossier si n'existe pas
-        new File(uploadDir).mkdirs();
+        if (!Files.exists(uploadDir)) {
+            Files.createDirectories(uploadDir);
+        }
     }
 
-    // Upload d'un fichier
+    // Upload d’un fichier
     public Document uploadFile(MultipartFile file) throws IOException {
-        String filePath = uploadDir + file.getOriginalFilename();
-        File dest = new File(filePath);
-        file.transferTo(dest);
+        String filename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+        Path filePath = uploadDir.resolve(filename);
+        file.transferTo(filePath);
 
         Document document = new Document(
-                file.getOriginalFilename(),
+                null,
+                filename,
                 file.getContentType(),
                 file.getSize(),
-                filePath
+                filePath.toString(),
+                LocalDateTime.now()
         );
         return documentRepository.save(document);
     }
@@ -42,15 +47,15 @@ public class DocumentService {
     }
 
     // Supprimer un fichier
-    public void deleteDocument(Long id) {
+    public void deleteDocument(Long id) throws IOException {
         Document doc = documentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Document non trouvé"));
 
-        // Supprimer le fichier physique
-        File file = new File(doc.getFilePath());
-        if(file.exists()) file.delete();
+        Path filePath = Paths.get(doc.getFilePath());
+        if (Files.exists(filePath)) {
+            Files.delete(filePath);
+        }
 
-        // Supprimer les métadonnées en DB
-        documentRepository.deleteById(id);
+        documentRepository.delete(doc);
     }
 }

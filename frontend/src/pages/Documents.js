@@ -55,14 +55,14 @@ const GestionDocuments = () => {
                const url = `${BACKEND_URL}/api/documents/uploads/${encodeURIComponent(
                   doc.filename
                )}`;
-               const thumbUrl = doc.contentType.startsWith("image/")
+               const thumbUrl = doc.fileType.startsWith("image/")
                   ? url
                   : await generatePdfThumbnail(url);
 
                return {
                   uid: doc.filename,
                   name: doc.filename,
-                  contentType: doc.contentType,
+                  contentType: doc.fileType,
                   url,
                   thumbUrl,
                };
@@ -106,7 +106,7 @@ const GestionDocuments = () => {
             method: "POST",
             body: formData,
             headers: {
-            Authorization: `Bearer ${token}`,
+               Authorization: `Bearer ${token}`,
             },
          });
 

@@ -13,6 +13,7 @@ import org.springframework.core.io.UrlResource;
 import java.nio.file.*;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/documents")
@@ -24,7 +25,7 @@ public class DocumentController {
     @Autowired
     private DocumentRepository documentRepository;
 
-    // Upload d'un fichier
+    // Upload a file and save info to DB
     @PostMapping("/upload")
     public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) throws IOException {
         if (!Files.exists(uploadDir)) Files.createDirectories(uploadDir);
@@ -33,73 +34,58 @@ public class DocumentController {
         Path filePath = uploadDir.resolve(filename);
         file.transferTo(filePath);
 
-        // Save document info to DB
         Document doc = new Document(
+            null,
             filename,
             file.getContentType(),
             file.getSize(),
-            filePath.toString()
+            filePath.toString(),
+            null // uploadedAt will be set automatically
         );
         documentRepository.save(doc);
 
         return ResponseEntity.ok(filename);
     }
 
-    // Télécharger un fichier spécifique
+    // Download a file using DB info
     @GetMapping("/uploads/{filename:.+}")
     public ResponseEntity<Resource> getFile(@PathVariable String filename) throws IOException {
-        Path filePath = uploadDir.resolve(filename).normalize();
+        Optional<Document> docOpt = documentRepository.findByFilename(filename);
+        if (docOpt.isEmpty()) throw new RuntimeException("File not found: " + filename);
+
+        Document doc = docOpt.get();
+        Path filePath = Paths.get(doc.getFilePath());
         Resource resource = new UrlResource(filePath.toUri());
         if (!resource.exists()) throw new RuntimeException("File not found: " + filename);
 
-        String contentType = Files.probeContentType(filePath);
+        String contentType = doc.getFileType();
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(contentType != null ? contentType : "application/octet-stream"))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
                 .body(resource);
     }
 
-    // Supprimer un fichier
+    // Delete a file and remove from DB
     @DeleteMapping("/{filename:.+}")
     public ResponseEntity<Void> deleteFile(@PathVariable String filename) throws IOException {
-        Path filePath = uploadDir.resolve(filename).normalize();
-        if (Files.exists(filePath)) {
-            Files.delete(filePath);
+        Optional<Document> docOpt = documentRepository.findByFilename(filename);
+        if (docOpt.isPresent()) {
+            Document doc = docOpt.get();
+            Path filePath = Paths.get(doc.getFilePath());
+            if (Files.exists(filePath)) {
+                Files.delete(filePath);
+            }
+            documentRepository.delete(doc);
             return ResponseEntity.ok().build();
         } else {
             return ResponseEntity.notFound().build();
         }
     }
 
-    // Récupérer la liste de tous les fichiers
+    // List all documents from DB
     @GetMapping
-    public ResponseEntity<List<DocumentInfo>> getAllDocuments() throws IOException {
-        if (!Files.exists(uploadDir)) Files.createDirectories(uploadDir);
-
-        List<DocumentInfo> docs = Files.list(uploadDir)
-                .map(path -> {
-                    DocumentInfo info = new DocumentInfo();
-                    info.setFilename(path.getFileName().toString());
-                    try {
-                        info.setContentType(Files.probeContentType(path));
-                    } catch (IOException e) {
-                        info.setContentType("application/octet-stream");
-                    }
-                    return info;
-                })
-                .toList();
-
+    public ResponseEntity<List<Document>> getAllDocuments() {
+        List<Document> docs = documentRepository.findAll();
         return ResponseEntity.ok(docs);
-    }
-
-    // Classe interne pour info document
-    public static class DocumentInfo {
-        private String filename;
-        private String contentType;
-
-        public String getFilename() { return filename; }
-        public void setFilename(String filename) { this.filename = filename; }
-        public String getContentType() { return contentType; }
-        public void setContentType(String contentType) { this.contentType = contentType; }
     }
 }
