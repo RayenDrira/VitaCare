@@ -38,9 +38,7 @@ const GestionDocuments = () => {
          const token = localStorage.getItem("jwt");
 
          const res = await fetch(`${BACKEND_URL}/api/documents`, {
-            headers: {
-               Authorization: `Bearer ${token}`,
-            },
+            headers: { Authorization: `Bearer ${token}` },
          });
          const data = await res.json();
 
@@ -55,16 +53,27 @@ const GestionDocuments = () => {
                const url = `${BACKEND_URL}/api/documents/uploads/${encodeURIComponent(
                   doc.filename
                )}`;
-               const thumbUrl = doc.fileType.startsWith("image/")
-                  ? url
-                  : await generatePdfThumbnail(url);
+
+               // fetch file as blob with token
+               const fileRes = await fetch(url, {
+                  headers: { Authorization: `Bearer ${token}` },
+               });
+               const blob = await fileRes.blob();
+               const objectUrl = URL.createObjectURL(blob);
+
+               let thumbUrl = objectUrl;
+
+               // if PDF → generate thumbnail from blob
+               if (doc.fileType.startsWith("application/pdf")) {
+                  thumbUrl = await generatePdfThumbnail(objectUrl);
+               }
 
                return {
                   uid: doc.filename,
                   name: doc.filename,
                   contentType: doc.fileType,
-                  url,
-                  thumbUrl,
+                  url: objectUrl, // <-- blob url
+                  thumbUrl, // <-- preview img or pdf thumbnail
                };
             })
          );
@@ -80,10 +89,31 @@ const GestionDocuments = () => {
       fetchDocuments();
    }, []);
 
-   const handlePreview = (file) => {
+   const handlePreview = async (file) => {
+      console.log("Previewing:", file);
       setIsPdf(file.contentType.startsWith("application/pdf"));
-      setPreviewContent(file.url);
-      setPreviewOpen(true);
+
+      try {
+         const token = localStorage.getItem("jwt");
+
+         // Fetch the file as blob (with token)
+         const res = await fetch(file.url, {
+            headers: {
+               Authorization: `Bearer ${token}`,
+            },
+         });
+
+         if (!res.ok) throw new Error("Failed to fetch file");
+
+         const blob = await res.blob();
+         const objectUrl = URL.createObjectURL(blob);
+
+         setPreviewContent(objectUrl);
+         setPreviewOpen(true);
+      } catch (err) {
+         console.error("Preview failed:", err);
+         message.error("Impossible de prévisualiser ce fichier.");
+      }
    };
 
    const handleCustomUpload = async ({

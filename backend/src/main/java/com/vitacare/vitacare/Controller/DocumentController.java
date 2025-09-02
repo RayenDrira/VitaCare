@@ -49,6 +49,7 @@ public class DocumentController {
 
     // Download a file using DB info
     @GetMapping("/uploads/{filename:.+}")
+    @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
     public ResponseEntity<Resource> getFile(@PathVariable String filename) throws IOException {
         Optional<Document> docOpt = documentRepository.findByFilename(filename);
         if (docOpt.isEmpty()) throw new RuntimeException("File not found: " + filename);
