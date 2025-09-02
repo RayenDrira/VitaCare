@@ -6,10 +6,10 @@ import {
    Navigate,
    useNavigate,
 } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 
-// Handler for Google OAuth redirect
 function OAuth2RedirectHandler({ setIsAuthenticated }) {
    const navigate = useNavigate();
 
@@ -24,17 +24,29 @@ function OAuth2RedirectHandler({ setIsAuthenticated }) {
       }
    }, [setIsAuthenticated, navigate]);
 
-   return null; // Optionally, show a loading spinner here
+   return null;
 }
 
 function App() {
    const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-   // Check for JWT token on app load
+   // Validate JWT on app load
    useEffect(() => {
       const token = localStorage.getItem("jwt");
       if (token) {
-         setIsAuthenticated(true);
+         try {
+            const decoded = jwtDecode(token);
+            const currentTime = Date.now() / 1000;
+            if (decoded.exp > currentTime) {
+               setIsAuthenticated(true);
+            } else {
+               localStorage.removeItem("jwt"); // expired
+               setIsAuthenticated(false);
+            }
+         } catch (e) {
+            console.error("Invalid token", e);
+            setIsAuthenticated(false);
+         }
       }
    }, []);
 
