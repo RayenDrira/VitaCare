@@ -1,3 +1,12 @@
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap");
+
+*{
+  font-family: Outfit;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+}
 .documents-container {
   padding: 20px;
   max-width: 1200px;
@@ -73,7 +82,7 @@
 /* Style drag & drop */
 .ant-upload.ant-upload-drag {
   background: #fafafa;
-  border: 2px dashed #1890ff;
+  border: 2px dashed #31c1e1;
   border-radius: 12px;
   padding: 40px 20px;
   text-align: center;
@@ -82,12 +91,12 @@
 
 .ant-upload.ant-upload-drag:hover {
   background: #e6f7ff;
-  border-color: #40a9ff;
+  border-color: #31c1e1;
 }
 
 .ant-upload-drag-icon {
   font-size: 36px;
-  color: #1890ff;
+  color: #31c1e1;
 }
 
 .ant-upload-text {

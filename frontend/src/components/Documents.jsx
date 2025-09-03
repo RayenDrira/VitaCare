@@ -2,28 +2,26 @@ import React, { useState, useEffect } from "react";
 import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import { Upload, Image, message, Button, Modal } from "antd";
 import { pdfjs } from "react-pdf";
-import "./Documents.css";
+import { apiFetch } from "../utils/api";
+import "../styles/Documents.css";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
-const BACKEND_URL = "http://localhost:8081";
 const ACCEPTED_TYPES = ["image/", "application/pdf"];
 
 const generatePdfThumbnail = async (url) => {
    try {
-      const loadingTask = pdfjs.getDocument(url);
-      const pdf = await loadingTask.promise;
+      const pdf = await pdfjs.getDocument(url).promise;
       const page = await pdf.getPage(1);
-      const viewport = page.getViewport({ scale: 1 }); // scale plus grand pour meilleure qualité
+      const viewport = page.getViewport({ scale: 1.5 });
       const canvas = document.createElement("canvas");
       canvas.width = viewport.width;
       canvas.height = viewport.height;
       await page.render({ canvasContext: canvas.getContext("2d"), viewport })
          .promise;
       return canvas.toDataURL();
-   } catch (err) {
-      console.error("Erreur miniature PDF :", err);
-      return "/pdf-fallback.png"; // fallback si erreur
+   } catch {
+      return "/pdf-fallback.png";
    }
 };
 
@@ -32,55 +30,39 @@ const GestionDocuments = () => {
    const [previewOpen, setPreviewOpen] = useState(false);
    const [previewContent, setPreviewContent] = useState("");
    const [isPdf, setIsPdf] = useState(false);
+   const { Dragger } = Upload;
 
    const fetchDocuments = async () => {
       try {
-         const token = localStorage.getItem("jwt");
-
-         const res = await fetch(`${BACKEND_URL}/api/documents`, {
-            headers: { Authorization: `Bearer ${token}` },
-         });
+         const res = await apiFetch("/api/documents");
+         if (!res) return; // already handled by apiFetch
          const data = await res.json();
-
-         if (!Array.isArray(data)) {
-            console.error("Erreur : data n'est pas un tableau", data);
-            setFileList([]);
-            return;
-         }
 
          const list = await Promise.all(
             data.map(async (doc) => {
-               const url = `${BACKEND_URL}/api/documents/uploads/${encodeURIComponent(
+               const url = `/api/documents/uploads/${encodeURIComponent(
                   doc.filename
                )}`;
-
-               // fetch file as blob with token
-               const fileRes = await fetch(url, {
-                  headers: { Authorization: `Bearer ${token}` },
-               });
+               const fileRes = await apiFetch(url);
                const blob = await fileRes.blob();
                const objectUrl = URL.createObjectURL(blob);
 
                let thumbUrl = objectUrl;
-
-               // if PDF → generate thumbnail from blob
-               if (doc.fileType.startsWith("application/pdf")) {
+               if (doc.fileType.startsWith("application/pdf"))
                   thumbUrl = await generatePdfThumbnail(objectUrl);
-               }
 
                return {
                   uid: doc.filename,
                   name: doc.filename,
                   contentType: doc.fileType,
-                  url: objectUrl, // <-- blob url
-                  thumbUrl, // <-- preview img or pdf thumbnail
+                  url: objectUrl,
+                  thumbUrl,
                };
             })
          );
 
          setFileList(list.reverse());
-      } catch (err) {
-         console.error(err);
+      } catch {
          message.error("Erreur lors de la récupération des documents");
       }
    };
@@ -90,30 +72,9 @@ const GestionDocuments = () => {
    }, []);
 
    const handlePreview = async (file) => {
-      console.log("Previewing:", file);
       setIsPdf(file.contentType.startsWith("application/pdf"));
-
-      try {
-         const token = localStorage.getItem("jwt");
-
-         // Fetch the file as blob (with token)
-         const res = await fetch(file.url, {
-            headers: {
-               Authorization: `Bearer ${token}`,
-            },
-         });
-
-         if (!res.ok) throw new Error("Failed to fetch file");
-
-         const blob = await res.blob();
-         const objectUrl = URL.createObjectURL(blob);
-
-         setPreviewContent(objectUrl);
-         setPreviewOpen(true);
-      } catch (err) {
-         console.error("Preview failed:", err);
-         message.error("Impossible de prévisualiser ce fichier.");
-      }
+      setPreviewContent(file.url);
+      setPreviewOpen(true);
    };
 
    const handleCustomUpload = async ({
@@ -131,29 +92,14 @@ const GestionDocuments = () => {
       formData.append("file", file);
 
       try {
-         const token = localStorage.getItem("jwt");
-         const res = await fetch(`${BACKEND_URL}/api/documents/upload`, {
+         const res = await apiFetch("/api/documents/upload", {
             method: "POST",
             body: formData,
-            headers: {
-               Authorization: `Bearer ${token}`,
-            },
          });
-
-         // Progress simulation
-         let loaded = 0;
-         const total = file.size;
-         const interval = setInterval(() => {
-            loaded += total * 0.1;
-            if (loaded > total) loaded = total;
-            onProgress({ percent: (loaded / total) * 100 });
-            if (loaded === total) clearInterval(interval);
-         }, 100);
-
-         const filename = await res.text();
+         if (!res) throw new Error("Upload failed");
          onSuccess(null);
          fetchDocuments();
-         message.success(`${filename} uploadé avec succès !`);
+         message.success(`${file.name} uploadé avec succès !`);
       } catch (err) {
          onError(err);
          message.error(`${file.name} upload échoué.`);
@@ -162,24 +108,15 @@ const GestionDocuments = () => {
 
    const handleDelete = async (filename) => {
       try {
-         await fetch(
-            `${BACKEND_URL}/api/documents/${encodeURIComponent(filename)}`,
-            {
-               method: "DELETE",
-               headers: {
-                  Authorization: `Bearer ${localStorage.getItem("jwt")}`,
-                  "Content-Type": "application/json",
-               },
-            }
-         );
+         await apiFetch(`/api/documents/${encodeURIComponent(filename)}`, {
+            method: "DELETE",
+         });
          message.success("Document supprimé !");
          fetchDocuments();
       } catch {
          message.error("Erreur lors de la suppression");
       }
    };
-
-   const { Dragger } = Upload;
 
    return (
       <div className="documents-container">

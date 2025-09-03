@@ -6,7 +6,7 @@ import {
    Navigate,
    useNavigate,
 } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
+import {jwtDecode} from "jwt-decode";
 import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 
@@ -30,8 +30,7 @@ function OAuth2RedirectHandler({ setIsAuthenticated }) {
 function App() {
    const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-   // Validate JWT on app load
-   useEffect(() => {
+   const validateToken = () => {
       const token = localStorage.getItem("jwt");
       if (token) {
          try {
@@ -39,15 +38,21 @@ function App() {
             const currentTime = Date.now() / 1000;
             if (decoded.exp > currentTime) {
                setIsAuthenticated(true);
+               return;
             } else {
                localStorage.removeItem("jwt"); // expired
-               setIsAuthenticated(false);
             }
-         } catch (e) {
-            console.error("Invalid token", e);
-            setIsAuthenticated(false);
+         } catch {
+            localStorage.removeItem("jwt"); // invalid
          }
       }
+      setIsAuthenticated(false);
+   };
+
+   useEffect(() => validateToken(), []);
+   useEffect(() => {
+      const interval = setInterval(validateToken, 60 * 1000);
+      return () => clearInterval(interval);
    }, []);
 
    return (
@@ -59,7 +64,7 @@ function App() {
                   isAuthenticated ? (
                      <Navigate to="/" />
                   ) : (
-                     <LoginPage onLogin={() => setIsAuthenticated(true)} />
+                     <LoginPage onLogin={validateToken} />
                   )
                }
             />

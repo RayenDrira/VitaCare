@@ -7,7 +7,7 @@ import {
    TeamOutlined,
    UserOutlined,
 } from "@ant-design/icons";
-import GestionDocuments from "./Documents";
+import GestionDocuments from "../components/Documents";
 
 const { Header, Content, Sider } = Layout;
 
