@@ -1,5 +1,9 @@
 import React, { useState } from "react";
-import { Layout, Menu, Breadcrumb, theme } from "antd";
+import GestionDocuments from "../components/Documents";
+import "../styles/Dashboard.css";
+
+
+import { Layout, Menu, Breadcrumb, theme, ConfigProvider } from "antd";
 import {
    DesktopOutlined,
    FileOutlined,
@@ -7,7 +11,7 @@ import {
    TeamOutlined,
    UserOutlined,
 } from "@ant-design/icons";
-import GestionDocuments from "../components/Documents";
+
 
 const { Header, Content, Sider } = Layout;
 
@@ -43,43 +47,55 @@ export default function Dashboard() {
    ];
 
    return (
-      <Layout style={{ minHeight: "100vh" }}>
-         <Sider collapsible collapsed={collapsed} onCollapse={setCollapsed}>
-            <div className="demo-logo-vertical" />
-            <Menu
-               theme="dark"
-               defaultSelectedKeys={["1"]}
-               mode="inline"
-               items={siderItems}
-            />
-         </Sider>
-
-         <Layout>
-            <Header style={{ background: colorBgContainer, padding: "0 16px" }}>
-               <Menu mode="horizontal" defaultSelectedKeys={["1"]}>
-                  <Menu.Item key="1">Accueil</Menu.Item>
-                  <Menu.Item key="2">Documents</Menu.Item>
-                  <Menu.Item key="3">Profil</Menu.Item>
-               </Menu>
-            </Header>
-
-            <Content style={{ margin: "0 16px" }}>
-               <Breadcrumb
-                  style={{ margin: "16px 0" }}
-                  items={[{ title: "Documents" }]}
+      <ConfigProvider
+         theme={{
+            token: {
+               colorPrimary: "#31c1e1",
+               borderRadius: 20,
+               colorBgElevated: "#0f2438",
+            },
+         }}
+      >
+         <Layout style={{ minHeight: "100vh" }}>
+            <Sider collapsible collapsed={collapsed} onCollapse={setCollapsed}>
+               <div className="demo-logo-vertical" />
+               <Menu
+                  theme="dark"
+                  defaultSelectedKeys={["1"]}
+                  mode="inline"
+                  items={siderItems}
                />
-               <div
-                  style={{
-                     padding: 24,
-                     minHeight: 360,
-                     background: colorBgContainer,
-                     borderRadius: borderRadiusLG,
-                  }}
+            </Sider>
+
+            <Layout>
+               <Header
+                  style={{ background: colorBgContainer, padding: "0 16px" }}
                >
-                  <GestionDocuments />
-               </div>
-            </Content>
+                  <Menu mode="horizontal" defaultSelectedKeys={["1"]}>
+                     <Menu.Item key="1">Accueil</Menu.Item>
+                     <Menu.Item key="2">Documents</Menu.Item>
+                     <Menu.Item key="3">Profil</Menu.Item>
+                  </Menu>
+               </Header>
+
+               <Content style={{ margin: "0 16px" }}>
+                  <Breadcrumb
+                     style={{ margin: "16px 0" }}
+                     items={[{ title: "Documents" }]}
+                  />
+                  <div
+                     style={{
+                        padding: 24,
+                        minHeight: 360,
+                        background: colorBgContainer,
+                        borderRadius: borderRadiusLG,
+                     }}
+                  >
+                     <GestionDocuments />
+                  </div>
+               </Content>
+            </Layout>
          </Layout>
-      </Layout>
+      </ConfigProvider>
    );
 }
