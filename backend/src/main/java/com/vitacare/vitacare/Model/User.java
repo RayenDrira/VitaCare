@@ -5,8 +5,8 @@ import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import jakarta.validation.constraints.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -22,12 +22,8 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Email(message = "Email should be valid")
-    @NotBlank(message = "Email is required")
-    @Column(nullable = false, unique = true, length = 191)
     private String email;
 
-    @Column(nullable = true) // OAuth users might not have password
     private String password;
 
     @Column(name = "first_name")
@@ -38,6 +34,16 @@ public class User {
 
     @Column(name = "profile_picture_url")
     private String profilePictureUrl;
+
+    @Column(name = "date_of_birth")
+    private LocalDate dateOfBirth; // Date de naissance
+
+    @Column(name = "gender")
+    @Enumerated(EnumType.STRING)
+    private Gender gender; // Sexe de l'utilisateur
+
+    @Column(name = "phone_number")
+    private String phoneNumber; // Numéro de téléphone
 
     @Column(name = "provider")
     @Enumerated(EnumType.STRING)
@@ -55,6 +61,13 @@ public class User {
     private LocalDateTime updatedAt;
 
     public enum AuthProvider {
-        LOCAL, GOOGLE
+        LOCAL,
+        GOOGLE
+    }
+
+    public enum Gender {
+        MALE,
+        FEMALE,
+        OTHER
     }
 }
