@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import GestionDocuments from "../components/Documents";
+import GestionProfile from "../components/GestionProfile";
 import "../styles/Dashboard.css";
-
 
 import { Layout, Menu, Breadcrumb, theme, ConfigProvider } from "antd";
 import {
@@ -12,11 +12,12 @@ import {
    UserOutlined,
 } from "@ant-design/icons";
 
-
 const { Header, Content, Sider } = Layout;
 
 export default function Dashboard() {
    const [collapsed, setCollapsed] = useState(false);
+   const [activeTopMenu, setActiveTopMenu] = useState("1"); // Track top menu selection
+
    const {
       token: { colorBgContainer, borderRadiusLG },
    } = theme.useToken();
@@ -52,7 +53,6 @@ export default function Dashboard() {
             token: {
                colorPrimary: "#31c1e1",
                borderRadius: 20,
-               colorBgElevated: "#0f2438",
             },
          }}
       >
@@ -71,7 +71,11 @@ export default function Dashboard() {
                <Header
                   style={{ background: colorBgContainer, padding: "0 16px" }}
                >
-                  <Menu mode="horizontal" defaultSelectedKeys={["1"]}>
+                  <Menu
+                     mode="horizontal"
+                     selectedKeys={[activeTopMenu]}
+                     onClick={(e) => setActiveTopMenu(e.key)}
+                  >
                      <Menu.Item key="1">Accueil</Menu.Item>
                      <Menu.Item key="2">Documents</Menu.Item>
                      <Menu.Item key="3">Profil</Menu.Item>
@@ -81,7 +85,12 @@ export default function Dashboard() {
                <Content style={{ margin: "0 16px" }}>
                   <Breadcrumb
                      style={{ margin: "16px 0" }}
-                     items={[{ title: "Documents" }]}
+                     items={[
+                        {
+                           title:
+                              activeTopMenu === "2" ? "Documents" : "Accueil",
+                        },
+                     ]}
                   />
                   <div
                      style={{
@@ -91,7 +100,11 @@ export default function Dashboard() {
                         borderRadius: borderRadiusLG,
                      }}
                   >
-                     <GestionDocuments />
+                     {activeTopMenu === "2" && <GestionDocuments />}
+                     {activeTopMenu === "1" && (
+                        <div>Welcome to the dashboard!</div>
+                     )}
+                     {activeTopMenu === "3" && <GestionProfile />}
                   </div>
                </Content>
             </Layout>
