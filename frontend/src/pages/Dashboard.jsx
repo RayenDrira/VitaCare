@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import GestionDocuments from "../components/Documents";
 import GestionProfile from "../components/GestionProfile";
 import "../styles/Dashboard.css";
+// Get userId from your auth context, JWT token, or props
+// Import the function to get userId
 
 import { Layout, Menu, Breadcrumb, theme, ConfigProvider } from "antd";
 import {
@@ -13,6 +15,7 @@ import {
 } from "@ant-design/icons";
 
 const { Header, Content, Sider } = Layout;
+
 
 export default function Dashboard() {
    const [collapsed, setCollapsed] = useState(false);
@@ -100,7 +103,7 @@ export default function Dashboard() {
                         borderRadius: borderRadiusLG,
                      }}
                   >
-                     {activeTopMenu === "2" && <GestionDocuments />}
+                     {activeTopMenu === "2" && <GestionDocuments  />}
                      {activeTopMenu === "1" && (
                         <div>Welcome to the dashboard!</div>
                      )}

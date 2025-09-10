@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
-import { Upload, Image, message, Button, Modal } from "antd";
+import {
+   PlusOutlined,
+   DeleteOutlined,
+   SearchOutlined,
+   GlobalOutlined,
+   MoreOutlined,
+} from "@ant-design/icons";
+import { Upload, Image, message, Button, Modal, Dropdown, Menu } from "antd";
 import { pdfjs } from "react-pdf";
 import { apiFetch } from "../utils/api";
 import "../styles/Documents.css";
@@ -25,6 +31,36 @@ const generatePdfThumbnail = async (url) => {
    }
 };
 
+const handleAnalyse = async (filename) => {
+   try {
+      const res = await apiFetch(
+         `/api/documents/analyse/${encodeURIComponent(filename)}`,
+         {
+            method: "POST",
+         }
+      );
+      if (!res) throw new Error("Analyse échouée");
+      message.success(`Analyse de ${filename} terminée !`);
+   } catch {
+      message.error("Erreur lors de l'analyse du document");
+   }
+};
+
+const handleTranslate = async (filename) => {
+   try {
+      const res = await apiFetch(
+         `/api/documents/traduire/${encodeURIComponent(filename)}`,
+         {
+            method: "POST",
+         }
+      );
+      if (!res) throw new Error("Traduction échouée");
+      message.success(`Traduction de ${filename} terminée !`);
+   } catch {
+      message.error("Erreur lors de la traduction du document");
+   }
+};
+
 const GestionDocuments = () => {
    const [fileList, setFileList] = useState([]);
    const [previewOpen, setPreviewOpen] = useState(false);
@@ -35,7 +71,7 @@ const GestionDocuments = () => {
    const fetchDocuments = async () => {
       try {
          const res = await apiFetch("/api/documents");
-         if (!res) return; // already handled by apiFetch
+         if (!res) return;
          const data = await res.json();
 
          const list = await Promise.all(
@@ -57,11 +93,17 @@ const GestionDocuments = () => {
                   contentType: doc.fileType,
                   url: objectUrl,
                   thumbUrl,
+                  uploadedAt: doc.uploadedAt
+                     ? new Date(doc.uploadedAt)
+                     : new Date(),
                };
             })
          );
 
-         setFileList(list.reverse());
+         // Tri par date du plus récent au plus ancien
+         list.sort((a, b) => b.uploadedAt - a.uploadedAt);
+
+         setFileList(list);
       } catch {
          message.error("Erreur lors de la récupération des documents");
       }
@@ -71,18 +113,13 @@ const GestionDocuments = () => {
       fetchDocuments();
    }, []);
 
-   const handlePreview = async (file) => {
+   const handlePreview = (file) => {
       setIsPdf(file.contentType.startsWith("application/pdf"));
       setPreviewContent(file.url);
       setPreviewOpen(true);
    };
 
-   const handleCustomUpload = async ({
-      file,
-      onSuccess,
-      onError,
-      onProgress,
-   }) => {
+   const handleCustomUpload = async ({ file, onSuccess, onError }) => {
       if (!ACCEPTED_TYPES.some((type) => file.type.startsWith(type))) {
          message.error("Type de fichier non autorisé !");
          return onError(new Error("Type non autorisé"));
@@ -120,6 +157,7 @@ const GestionDocuments = () => {
 
    return (
       <div className="documents-container">
+         {/* Upload drag & drop */}
          <Dragger
             customRequest={handleCustomUpload}
             multiple
@@ -135,18 +173,17 @@ const GestionDocuments = () => {
             </p>
          </Dragger>
 
+         {/* Liste des documents */}
          <div className="documents-grid">
             {fileList.map((file) => (
-               <div
-                  key={file.uid}
-                  className="document-item"
-                  onClick={() => handlePreview(file)}
-               >
+               <div key={file.uid} className="document-item">
                   <img
                      src={file.thumbUrl}
                      alt={file.name}
                      className="document-thumb"
+                     onClick={() => handlePreview(file)}
                   />
+
                   <div className="button-group">
                      <Button
                         className="action-button"
@@ -156,12 +193,49 @@ const GestionDocuments = () => {
                            handleDelete(file.uid);
                         }}
                      />
+                     <Button
+                        className="action-button"
+                        icon={<SearchOutlined />}
+                        onClick={(e) => {
+                           e.stopPropagation();
+                           handleAnalyse(file.uid);
+                        }}
+                     />
+                     <Button
+                        className="action-button"
+                        icon={<GlobalOutlined />}
+                        onClick={(e) => {
+                           e.stopPropagation();
+                           handleTranslate(file.uid);
+                        }}
+                     />
+                     {/* Bouton 3 points */}
+                     <Dropdown
+                        overlay={
+                           <Menu>
+                              <Menu.Item key="name">
+                                 Nom : {file.name}
+                              </Menu.Item>
+                              <Menu.Item key="date">
+                                 Date :{" "}
+                                 {file.uploadedAt.toLocaleString("fr-FR")}
+                              </Menu.Item>
+                           </Menu>
+                        }
+                        trigger={["click"]}
+                     >
+                        <Button
+                           className="action-button"
+                           icon={<MoreOutlined />}
+                           onClick={(e) => e.stopPropagation()}
+                        />
+                     </Dropdown>
                   </div>
-                  <div className="document-name">{file.name}</div>
                </div>
             ))}
          </div>
 
+         {/* Modal aperçu */}
          <Modal
             open={previewOpen}
             footer={null}

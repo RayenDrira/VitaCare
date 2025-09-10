@@ -1,12 +1,13 @@
 @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap");
 
-*{
+* {
   font-family: Outfit;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   scroll-behavior: smooth;
 }
+
 .documents-container {
   padding: 20px;
   max-width: 1200px;
@@ -50,9 +51,8 @@
 
 .button-group {
   position: absolute;
-  bottom: 8px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 8px; /* déplacer en haut */
+  right: 8px; /* aligné à droite */
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -64,13 +64,17 @@
   display: flex;
 }
 
+
 .action-button {
-  width: 70px;
+  width: 36px;
   height: 36px;
   border-radius: 8px;
   background-color: rgba(128, 128, 128, 0.35);
   color: #000;
   border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: background-color 0.2s, transform 0.2s;
 }
 

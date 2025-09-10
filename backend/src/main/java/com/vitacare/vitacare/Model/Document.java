@@ -9,6 +9,7 @@ import lombok.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+
 public class Document {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,5 +21,13 @@ public class Document {
     private String fileType;
     private Long fileSize;
     private String filePath;
-    private LocalDateTime uploadedAt = LocalDateTime.now();
+    private LocalDateTime uploadedAt;
+    public Document(String filename, String fileType, Long fileSize, String filePath) {
+        this.filename = filename;
+        this.fileType = fileType;
+        this.fileSize = fileSize;
+        this.filePath = filePath;
+        // uploadedAt = null → MySQL le remplira automatiquement
+    }
+
 }

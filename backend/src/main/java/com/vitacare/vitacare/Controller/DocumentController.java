@@ -35,14 +35,13 @@ public class DocumentController {
         file.transferTo(filePath);
 
         Document doc = new Document(
-            null,
-            filename,
-            file.getContentType(),
-            file.getSize(),
-            filePath.toString(),
-            null // uploadedAt will be set automatically
+                filename,
+                file.getContentType(),
+                file.getSize(),
+                filePath.toString()
         );
         documentRepository.save(doc);
+
 
         return ResponseEntity.ok(filename);
     }

@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
+import com.vitacare.vitacare.Repository.UserRepository;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,7 +19,8 @@ public class UserProfileController {
 
     @Autowired
     private UserProfileService userProfileService;
-
+    @Autowired
+    private UserRepository userRepository;
     // Récupérer le profil
     @GetMapping("/{id}")
     public ResponseEntity<?> getProfile(@PathVariable Long id) {
@@ -68,6 +69,16 @@ public class UserProfileController {
         }
     }
 
+    @GetMapping("/user/by-email/{email}")
+    public ResponseEntity<?> getUserByEmail(@PathVariable String email) {
+        try {
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec l'email : " + email));
+            return ResponseEntity.ok(user);
+        } catch (RuntimeException e) {
+            return errorResponse(e.getMessage(), HttpStatus.NOT_FOUND);
+        }
+    }
     // Méthode utilitaire pour les réponses d'erreur
     private ResponseEntity<Map<String, String>> errorResponse(String message, HttpStatus status) {
         Map<String, String> error = new HashMap<>();
