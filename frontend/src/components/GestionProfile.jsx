@@ -239,7 +239,7 @@ export default function GestionProfile() {
                      background:
                         "linear-gradient(135deg, #31c1e1 0%, #31e1cf 100%)",
                      color: "white",
-                     padding: "40px",
+                     padding: "0px",
                      width: isEditing ? "50%" : "100%", // expand if not editing
                      textAlign: "center",
                      display: "flex",
@@ -248,22 +248,6 @@ export default function GestionProfile() {
                      justifyContent: "center",
                   }}
                >
-                  {userData.provider === "GOOGLE" && (
-                     <span
-                        style={{
-                           fontSize: "12px",
-                           background: "rgba(255,255,255,0.2)",
-                           backdropFilter: "blur(10px)",
-                           padding: "6px 12px",
-                           borderRadius: "20px",
-                           border: "1px solid rgba(255,255,255,0.1)",
-                           marginBottom: "10px",
-                        }}
-                     >
-                        🔗 Compte Google
-                     </span>
-                  )}
-
                   {/* Show big full photo when not editing */}
                   {!isEditing ? (
                      <div
@@ -279,10 +263,10 @@ export default function GestionProfile() {
                            src={displayImage}
                            alt="profile"
                            style={{
-                              width: "100%",
-                              height: "100%",
+                              width: "auto",
+                              height: "60vh",
+
                               objectFit: "cover",
-                              filter: "brightness(0.85)",
                            }}
                         />
 
@@ -354,6 +338,7 @@ export default function GestionProfile() {
                      </div>
                   ) : (
                      /* Keep your old avatar + upload button for editing */
+
                      <div
                         style={{
                            position: "relative",
@@ -368,6 +353,7 @@ export default function GestionProfile() {
                            src={displayImage}
                            icon={<UserOutlined />}
                         />
+
                         <Upload
                            showUploadList={false}
                            customRequest={handleUpload}
@@ -390,10 +376,6 @@ export default function GestionProfile() {
                         </Upload>
                      </div>
                   )}
-
-              
-
-               
                </div>
 
                {/* Right Section - Form (only when editing) */}
@@ -435,7 +417,7 @@ export default function GestionProfile() {
                            name="email"
                         >
                            <Input
-                              disabled={!isEditing}
+                              disabled={true}
                               placeholder="votre@email.com"
                               style={{ borderRadius: "8px" }}
                               type="email"
