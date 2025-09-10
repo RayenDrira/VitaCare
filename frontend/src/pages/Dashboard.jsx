@@ -2,10 +2,16 @@ import React, { useState } from "react";
 import GestionDocuments from "../components/Documents";
 import GestionProfile from "../components/GestionProfile";
 import "../styles/Dashboard.css";
-// Get userId from your auth context, JWT token, or props
-// Import the function to get userId
+import Logo from "../assets/VitaCare_logo.png";
 
-import { Layout, Menu, Breadcrumb, theme, ConfigProvider } from "antd";
+import {
+   Layout,
+   Menu,
+   Breadcrumb,
+   ConfigProvider,
+   Card,
+   Typography,
+} from "antd";
 import {
    DesktopOutlined,
    FileOutlined,
@@ -15,23 +21,19 @@ import {
 } from "@ant-design/icons";
 
 const { Header, Content, Sider } = Layout;
-
+const { Title } = Typography;
 
 export default function Dashboard() {
    const [collapsed, setCollapsed] = useState(false);
-   const [activeTopMenu, setActiveTopMenu] = useState("1"); // Track top menu selection
-
-   const {
-      token: { colorBgContainer, borderRadiusLG },
-   } = theme.useToken();
+   const [activeTopMenu, setActiveTopMenu] = useState("1");
 
    const siderItems = [
-      { key: "1", icon: <PieChartOutlined />, label: "Option 1" },
-      { key: "2", icon: <DesktopOutlined />, label: "Option 2" },
+      { key: "1", icon: <PieChartOutlined />, label: "Dashboard" },
+      { key: "2", icon: <DesktopOutlined />, label: "Analytics" },
       {
          key: "sub1",
          icon: <UserOutlined />,
-         label: "User",
+         label: "Users",
          children: [
             { key: "3", label: "Tom" },
             { key: "4", label: "Bill" },
@@ -41,13 +43,13 @@ export default function Dashboard() {
       {
          key: "sub2",
          icon: <TeamOutlined />,
-         label: "Team",
+         label: "Teams",
          children: [
             { key: "6", label: "Team 1" },
             { key: "8", label: "Team 2" },
          ],
       },
-      { key: "9", icon: <FileOutlined />, label: "Files" },
+      { key: "9", icon: <FileOutlined />, label: "Documents" },
    ];
 
    return (
@@ -55,13 +57,38 @@ export default function Dashboard() {
          theme={{
             token: {
                colorPrimary: "#31c1e1",
-               borderRadius: 20,
+               borderRadius: 12,
             },
          }}
       >
-         <Layout style={{ minHeight: "100vh" }}>
-            <Sider collapsible collapsed={collapsed} onCollapse={setCollapsed}>
-               <div className="demo-logo-vertical" />
+         <Layout style={{ minHeight: "100vh", background: "#f0f2f5" }}>
+            <Sider
+               collapsible
+               collapsed={collapsed}
+               onCollapse={setCollapsed}
+               style={{ background: "#001529" }}
+            >
+               <div
+                  className="dashboard-logo"
+                  style={{
+                     height: 60,
+                     margin: 16,
+                     color: "#31c1e1",
+                     fontWeight: "bold",
+                     fontSize: 18,
+                     textAlign: "center",
+                     lineHeight: "60px",
+                     background: "rgba(255, 255, 255, 0.1)",
+                     borderRadius: 12,
+                     display: "flex",
+                     alignItems: "center",
+                     justifyContent: "center",
+                     gap: 8,
+                  }}
+               >
+                  <img src={Logo} style={{ width: 30, height: 30 }} alt="" />
+                  VitaCare
+               </div>
                <Menu
                   theme="dark"
                   defaultSelectedKeys={["1"]}
@@ -72,12 +99,17 @@ export default function Dashboard() {
 
             <Layout>
                <Header
-                  style={{ background: colorBgContainer, padding: "0 16px" }}
+                  style={{
+                     background: "#fff",
+                     padding: "0 24px",
+                     boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                  }}
                >
                   <Menu
                      mode="horizontal"
                      selectedKeys={[activeTopMenu]}
                      onClick={(e) => setActiveTopMenu(e.key)}
+                     style={{ borderBottom: "none", fontWeight: "500" }}
                   >
                      <Menu.Item key="1">Accueil</Menu.Item>
                      <Menu.Item key="2">Documents</Menu.Item>
@@ -85,30 +117,44 @@ export default function Dashboard() {
                   </Menu>
                </Header>
 
-               <Content style={{ margin: "0 16px" }}>
-                  <Breadcrumb
-                     style={{ margin: "16px 0" }}
-                     items={[
-                        {
-                           title:
-                              activeTopMenu === "2" ? "Documents" : "Accueil",
-                        },
-                     ]}
-                  />
-                  <div
-                     style={{
-                        padding: 24,
-                        minHeight: 360,
-                        background: colorBgContainer,
-                        borderRadius: borderRadiusLG,
-                     }}
-                  >
-                     {activeTopMenu === "2" && <GestionDocuments  />}
-                     {activeTopMenu === "1" && (
-                        <div>Welcome to the dashboard!</div>
-                     )}
-                     {activeTopMenu === "3" && <GestionProfile />}
-                  </div>
+               <Content style={{ margin: "16px", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center"  }}>
+                  {activeTopMenu === "1" && (
+                     <Card
+                        style={{
+                           padding: 24,
+                           minHeight: 400,
+                           background: "#fff",
+                           borderRadius: 12,
+                           boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
+                        }}
+                     >
+                        <div style={{ textAlign: "center", marginTop: 50 }}>
+                           <Title level={2}>
+                              Welcome to VitaCare Dashboard
+                           </Title>
+                           <p style={{ fontSize: 16, color: "#555" }}>
+                              Manage your profile, documents, and analytics
+                              easily.
+                           </p>
+                        </div>
+                     </Card>
+                  )}
+
+                  {activeTopMenu === "2" && (
+                     <Card
+                        style={{
+                           padding: 24,
+                           minHeight: 400,
+                           background: "#fff",
+                           borderRadius: 12,
+                           boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
+                        }}
+                     >
+                        <GestionDocuments />
+                     </Card>
+                  )}
+
+                  {activeTopMenu === "3" && <GestionProfile />}
                </Content>
             </Layout>
          </Layout>

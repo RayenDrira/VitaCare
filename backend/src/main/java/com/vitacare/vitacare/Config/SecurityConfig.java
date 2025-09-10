@@ -82,6 +82,7 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints
+                        .requestMatchers("/uploads/**").permitAll()  // <-- Add this line
                         .requestMatchers(HttpMethod.OPTIONS, "/api/**").permitAll() // <--- Add this line
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // autoriser préflight
                         .requestMatchers("/", "/error", "/favicon.ico").permitAll()

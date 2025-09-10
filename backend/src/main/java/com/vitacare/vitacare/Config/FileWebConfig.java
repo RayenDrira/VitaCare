@@ -18,15 +18,16 @@ public class FileWebConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         Path uploadPath = Paths.get(uploadDir).toAbsolutePath();
-        registry.addResourceHandler("/uploads/**")          // public URL
-                .addResourceLocations(uploadPath.toUri().toString()); // portable path
+
+        // Expose /uploads/** publicly
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations(uploadPath.toUri().toString());
     }
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        // Only enable CORS for file uploads, let SecurityConfig handle /api/**
         registry.addMapping("/uploads/**")
-                .allowedOriginPatterns("http://localhost:*") // flexible for dev ports
+                .allowedOriginPatterns("http://localhost:*") // allow React frontend
                 .allowedMethods("GET", "POST")
                 .allowedHeaders("*")
                 .allowCredentials(true);

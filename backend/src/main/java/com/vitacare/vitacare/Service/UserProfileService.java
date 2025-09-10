@@ -33,7 +33,6 @@ public class UserProfileService {
         if (updatedData.getPhoneNumber() != null) user.setPhoneNumber(updatedData.getPhoneNumber());
         if (updatedData.getDateOfBirth() != null) user.setDateOfBirth(updatedData.getDateOfBirth());
         if (updatedData.getGender() != null) user.setGender(updatedData.getGender());
-        if (updatedData.getProfilePictureUrl() != null) user.setProfilePictureUrl(updatedData.getProfilePictureUrl());
 
         return userRepository.save(user);
     }
@@ -43,18 +42,27 @@ public class UserProfileService {
         User user = getProfile(userId);
 
         if (file != null && !file.isEmpty()) {
-            // Générer un nom de fichier unique pour éviter les collisions
-            String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-            Path filePath = Paths.get("uploads/" + fileName);
-            Files.createDirectories(filePath.getParent());
-            Files.write(filePath, file.getBytes(), StandardOpenOption.CREATE);
-
-            // Supprimer l'ancienne photo si existante
-            if (user.getProfilePictureUrl() != null) {
-                Files.deleteIfExists(Paths.get(user.getProfilePictureUrl()));
+            // Assurez-vous que le dossier "uploads" existe
+            Path uploadDir = Paths.get("uploads");
+            if (!Files.exists(uploadDir)) {
+                Files.createDirectories(uploadDir);
             }
 
-            user.setProfilePictureUrl(filePath.toString());
+            // Générer un nom de fichier unique
+            String filename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+            Path filePath = uploadDir.resolve(filename);
+
+            // Sauvegarder le fichier
+            file.transferTo(filePath);
+
+            // Supprimer l'ancienne photo si elle existe
+            if (user.getProfilePictureUrl() != null) {
+                Path oldPhotoPath = uploadDir.resolve(Paths.get(user.getProfilePictureUrl()).getFileName());
+                Files.deleteIfExists(oldPhotoPath);
+            }
+
+            // Stocker seulement le nom relatif dans la base de données
+            user.setProfilePictureUrl(filename);
             userRepository.save(user);
         }
 
