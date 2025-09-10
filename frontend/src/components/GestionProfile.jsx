@@ -220,8 +220,7 @@ export default function GestionProfile() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            
-         }} 
+         }}
       >
          <Card
             style={{
@@ -265,19 +264,110 @@ export default function GestionProfile() {
                      </span>
                   )}
 
-                  <div
-                     style={{ position: "relative", display: "inline-block" }}
-                  >
-                     <Avatar
-                        size={250}
+                  {/* Show big full photo when not editing */}
+                  {!isEditing ? (
+                     <div
                         style={{
-                           borderRadius: "15%",
-                          
+                           position: "relative",
+                           width: "100%",
+                           height: "100%",
+                           borderRadius: "24px",
+                           overflow: "hidden",
                         }}
-                        src={displayImage}
-                        icon={<UserOutlined />}
-                     />
-                     {isEditing && (
+                     >
+                        <img
+                           src={displayImage}
+                           alt="profile"
+                           style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                              filter: "brightness(0.85)",
+                           }}
+                        />
+
+                        {/* Glass overlay with user info + button */}
+                        <div
+                           style={{
+                              position: "absolute",
+                              bottom: 0,
+                              left: 0,
+                              width: "100%",
+                              padding: "20px",
+                              background:
+                                 "linear-gradient(to top, rgba(0,0,0,0.6), rgba(0,0,0,0))",
+                              color: "white",
+                              textAlign: "center",
+                           }}
+                        >
+                           <h3 style={{ margin: 0 }}>
+                              {userData.firstName && userData.lastName
+                                 ? `${userData.firstName} ${userData.lastName}`
+                                 : userData.email}
+                           </h3>
+                           <Text style={{ color: "rgba(255,255,255,0.85)" }}>
+                              {userData.email}
+                           </Text>
+
+                           {/* Animated Modify button */}
+                           <div style={{ marginTop: "15px" }}>
+                              <Button
+                                 icon={<EditOutlined />}
+                                 onClick={handleEdit}
+                                 size="large"
+                                 style={{
+                                    borderRadius: "8px",
+                                    background: "rgba(255,255,255,0.2)",
+                                    border: "none",
+                                    color: "white",
+                                    backdropFilter: "blur(8px)",
+                                    padding: "0 32px",
+                                    opacity: 0.8,
+                                    transition: "all 0.3s ease",
+                                 }}
+                                 onMouseEnter={(e) => {
+                                    e.currentTarget.style.transform =
+                                       "scale(1.05)";
+                                    e.currentTarget.style.opacity = 1;
+                                    e.currentTarget.style.boxShadow =
+                                       "0 6px 20px rgba(255,255,255,0.3)";
+                                 }}
+                                 onMouseLeave={(e) => {
+                                    e.currentTarget.style.transform =
+                                       "scale(1)";
+                                    e.currentTarget.style.opacity = 0.8;
+                                    e.currentTarget.style.boxShadow = "none";
+                                 }}
+                                 onMouseDown={(e) =>
+                                    (e.currentTarget.style.transform =
+                                       "scale(0.95)")
+                                 }
+                                 onMouseUp={(e) =>
+                                    (e.currentTarget.style.transform =
+                                       "scale(1.05)")
+                                 }
+                              >
+                                 Modifier mon profil
+                              </Button>
+                           </div>
+                        </div>
+                     </div>
+                  ) : (
+                     /* Keep your old avatar + upload button for editing */
+                     <div
+                        style={{
+                           position: "relative",
+                           display: "inline-block",
+                        }}
+                     >
+                        <Avatar
+                           size={280}
+                           style={{
+                              borderRadius: "15%",
+                           }}
+                           src={displayImage}
+                           icon={<UserOutlined />}
+                        />
                         <Upload
                            showUploadList={false}
                            customRequest={handleUpload}
@@ -298,47 +388,12 @@ export default function GestionProfile() {
                               }}
                            />
                         </Upload>
-                     )}
-                  </div>
-
-                  <div style={{ marginTop: "15px" }}>
-                     <h3 style={{ color: "white", margin: 0 }}>
-                        {userData.firstName && userData.lastName
-                           ? `${userData.firstName} ${userData.lastName}`
-                           : userData.email}
-                     </h3>
-                     <Text style={{ color: "rgba(255,255,255,0.8)" }}>
-                        {userData.email}
-                     </Text>
-                  </div>
-
-                  {/* Transparent Modify Button */}
-                  {!isEditing && (
-                     <Button
-                        icon={<EditOutlined />}
-                        onClick={handleEdit}
-                        size="large"
-                        style={{
-                           marginTop: "20px",
-                           borderRadius: "8px",
-                           background: "rgba(255,255,255,0.2)",
-                           border: "none",
-                           color: "white",
-                           backdropFilter: "blur(6px)",
-                           padding: "0 32px",
-                           opacity: 0.6,
-                           transition: "opacity 0.3s ease",
-                        }}
-                        onMouseEnter={(e) =>
-                           (e.currentTarget.style.opacity = 1)
-                        }
-                        onMouseLeave={(e) =>
-                           (e.currentTarget.style.opacity = 0.6)
-                        }
-                     >
-                        Modifier mon profil
-                     </Button>
+                     </div>
                   )}
+
+              
+
+               
                </div>
 
                {/* Right Section - Form (only when editing) */}

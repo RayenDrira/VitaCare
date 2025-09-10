@@ -240,19 +240,38 @@ const GestionDocuments = () => {
             open={previewOpen}
             footer={null}
             onCancel={() => setPreviewOpen(false)}
-            width="80%"
-            style={{ top: 20 }}
+            centered
+            width={isPdf ? "80%" : "auto"}
+            bodyStyle={{
+               padding: 0,
+               display: "flex",
+               justifyContent: "center",
+            }}
+            
          >
             {isPdf ? (
                <iframe
                   src={previewContent}
                   title="PDF Preview"
-                  width="100%"
-                  height="600px"
-                  style={{ border: "none" }}
+                  style={{
+                     border: "none",
+                     width: "97%",
+                     minHeight: "600px", // you can keep a minHeight for readability
+                  }}
                />
             ) : (
-               <Image src={previewContent} alt="preview" preview={false} />
+               <img
+                  src={previewContent}
+                  alt="preview"
+                  style={{
+                     display: "block",
+                     maxWidth: "80vw", // max width relative to viewport
+                     maxHeight: "80vh", // max height relative to viewport
+                     width: "auto",
+                     height: "auto",
+                    
+                  }}
+               />
             )}
          </Modal>
       </div>

@@ -117,7 +117,7 @@ export default function Dashboard() {
                   </Menu>
                </Header>
 
-               <Content style={{ margin: "16px", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center"  }}>
+               <Content style={{ margin: "16px", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
                   {activeTopMenu === "1" && (
                      <Card
                         style={{
