@@ -5,14 +5,33 @@ import {
    SearchOutlined,
    GlobalOutlined,
    MoreOutlined,
+   FileTextOutlined,
+   FilePdfOutlined,
+   FileImageOutlined,
+   EyeOutlined,
+   CloudUploadOutlined,
 } from "@ant-design/icons";
-import { Upload, Image, message, Button, Modal, Dropdown, Menu } from "antd";
+import {
+   Upload,
+   Image,
+   message,
+   Button,
+   Modal,
+   Dropdown,
+   Menu,
+   Card,
+   Typography,
+   Space,
+   Tag,
+   Tooltip,
+} from "antd";
 import { pdfjs } from "react-pdf";
 import { apiFetch } from "../utils/api";
 import "../styles/Documents.css";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
+const { Title, Text } = Typography;
 const ACCEPTED_TYPES = ["image/", "application/pdf"];
 
 const generatePdfThumbnail = async (url) => {
@@ -61,11 +80,30 @@ const handleTranslate = async (filename) => {
    }
 };
 
+const getFileIcon = (contentType) => {
+   if (contentType.startsWith("application/pdf")) {
+      return <FilePdfOutlined style={{ fontSize: 24, color: "#f56565" }} />;
+   } else if (contentType.startsWith("image/")) {
+      return <FileImageOutlined style={{ fontSize: 24, color: "#48bb78" }} />;
+   }
+   return <FileTextOutlined style={{ fontSize: 24, color: "#4299e1" }} />;
+};
+
+const getFileTypeTag = (contentType) => {
+   if (contentType.startsWith("application/pdf")) {
+      return <Tag color="red">PDF</Tag>;
+   } else if (contentType.startsWith("image/")) {
+      return <Tag color="green">IMAGE</Tag>;
+   }
+   return <Tag color="blue">FICHIER</Tag>;
+};
+
 const GestionDocuments = () => {
    const [fileList, setFileList] = useState([]);
    const [previewOpen, setPreviewOpen] = useState(false);
    const [previewContent, setPreviewContent] = useState("");
    const [isPdf, setIsPdf] = useState(false);
+   const [uploading, setUploading] = useState(false);
    const { Dragger } = Upload;
 
    const fetchDocuments = async () => {
@@ -100,9 +138,7 @@ const GestionDocuments = () => {
             })
          );
 
-         // Tri par date du plus récent au plus ancien
          list.sort((a, b) => b.uploadedAt - a.uploadedAt);
-
          setFileList(list);
       } catch {
          message.error("Erreur lors de la récupération des documents");
@@ -125,6 +161,7 @@ const GestionDocuments = () => {
          return onError(new Error("Type non autorisé"));
       }
 
+      setUploading(true);
       const formData = new FormData();
       formData.append("file", file);
 
@@ -140,6 +177,8 @@ const GestionDocuments = () => {
       } catch (err) {
          onError(err);
          message.error(`${file.name} upload échoué.`);
+      } finally {
+         setUploading(false);
       }
    };
 
@@ -156,124 +195,513 @@ const GestionDocuments = () => {
    };
 
    return (
-      <div className="documents-container">
-         {/* Upload drag & drop */}
-         <Dragger
-            customRequest={handleCustomUpload}
-            multiple
-            accept=".png,.jpg,.jpeg,.pdf"
-            showUploadList={false}
-            style={{ marginBottom: 20 }}
+      <div style={{ width: "100%" }}>
+         {/* Upload Area */}
+         <Card
+            style={{
+               background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+               border: "none",
+               borderRadius: "24px",
+               marginBottom: "32px",
+               overflow: "hidden",
+               
+            }}
+            bodyStyle={{ padding: 0 }}
          >
-            <p className="ant-upload-drag-icon">
-               <PlusOutlined />
-            </p>
-            <p className="ant-upload-text">
-               Glissez-déposez vos fichiers ici ou cliquez pour ajouter
-            </p>
-         </Dragger>
+            <Dragger
+               customRequest={handleCustomUpload}
+               multiple
+               accept=".png,.jpg,.jpeg,.pdf"
+               showUploadList={false}
+               disabled={uploading}
+               style={{
+                  background: "rgba(255, 255, 255, 0.95)",
+                  border: "2px dashed rgba(245, 87, 108, 0.3)",
+                  borderRadius: "20px",
+                  margin: "16px",
+                  backdropFilter: "blur(10px)",
+                  width: "calc(100% - 32px)",
+               
+               }}
+            >
+               <div style={{ padding: "48px 24px", textAlign: "center" }}>
+                  <div
+                     style={{
+                        background:
+                           "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                        width: "80px",
+                        height: "80px",
+                        borderRadius: "50%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        margin: "0 auto 24px",
+                        boxShadow: "0 8px 32px rgba(99, 102, 241, 0.3)",
+                     }}
+                  >
+                     <CloudUploadOutlined
+                        style={{ fontSize: 36, color: "#ffffff" }}
+                     />
+                  </div>
 
-         {/* Liste des documents */}
-         <div className="documents-grid">
-            {fileList.map((file) => (
-               <div key={file.uid} className="document-item">
-                  <img
-                     src={file.thumbUrl}
-                     alt={file.name}
-                     className="document-thumb"
-                     onClick={() => handlePreview(file)}
-                  />
+                  <Title
+                     level={3}
+                     style={{ color: "#1a202c", marginBottom: "8px" }}
+                  >
+                     {uploading
+                        ? "Téléchargement en cours..."
+                        : "Glissez vos fichiers ici"}
+                  </Title>
 
-                  <div className="button-group">
-                     <Button
-                        className="action-button"
-                        icon={<DeleteOutlined />}
-                        onClick={(e) => {
-                           e.stopPropagation();
-                           handleDelete(file.uid);
-                        }}
-                     />
-                     <Button
-                        className="action-button"
-                        icon={<SearchOutlined />}
-                        onClick={(e) => {
-                           e.stopPropagation();
-                           handleAnalyse(file.uid);
-                        }}
-                     />
-                     <Button
-                        className="action-button"
-                        icon={<GlobalOutlined />}
-                        onClick={(e) => {
-                           e.stopPropagation();
-                           handleTranslate(file.uid);
-                        }}
-                     />
-                     {/* Bouton 3 points */}
-                     <Dropdown
-                        overlay={
-                           <Menu>
-                              <Menu.Item key="name">
-                                 Nom : {file.name}
-                              </Menu.Item>
-                              <Menu.Item key="date">
-                                 Date :{" "}
-                                 {file.uploadedAt.toLocaleString("fr-FR")}
-                              </Menu.Item>
-                           </Menu>
-                        }
-                        trigger={["click"]}
+                  <Text style={{ color: "#64748b", fontSize: "16px" }}>
+                     ou cliquez pour sélectionner des fichiers (PDF, JPG, PNG)
+                  </Text>
+
+                  <div style={{ marginTop: "16px" }}>
+                     <Tag
+                        color="blue"
+                        style={{ borderRadius: "8px", padding: "4px 12px" }}
                      >
-                        <Button
-                           className="action-button"
-                           icon={<MoreOutlined />}
-                           onClick={(e) => e.stopPropagation()}
-                        />
-                     </Dropdown>
+                        PDF
+                     </Tag>
+                     <Tag
+                        color="green"
+                        style={{ borderRadius: "8px", padding: "4px 12px" }}
+                     >
+                        JPG
+                     </Tag>
+                     <Tag
+                        color="orange"
+                        style={{ borderRadius: "8px", padding: "4px 12px" }}
+                     >
+                        PNG
+                     </Tag>
                   </div>
                </div>
+            </Dragger>
+         </Card>
+
+         {/* Documents Grid */}
+         <div
+            style={{
+               display: "grid",
+               gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+               gap: "24px",
+               marginTop: "32px",
+            }}
+         >
+            {fileList.map((file) => (
+               <Card
+                  key={file.uid}
+                  hoverable
+                  style={{
+                     borderRadius: "20px",
+                     border: "1px solid rgba(0,0,0,0.08)",
+                     boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
+                     overflow: "hidden",
+                     background: "#ffffff",
+                     transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                  }}
+                  bodyStyle={{ padding: 0 }}
+                  onMouseEnter={(e) => {
+                     e.currentTarget.style.transform = "translateY(-4px)";
+                     e.currentTarget.style.boxShadow =
+                        "0 12px 40px rgba(0,0,0,0.12)";
+                  }}
+                  onMouseLeave={(e) => {
+                     e.currentTarget.style.transform = "translateY(0)";
+                     e.currentTarget.style.boxShadow =
+                        "0 4px 24px rgba(0,0,0,0.06)";
+                  }}
+               >
+                  {/* Document Preview */}
+                  <div
+                     style={{
+                        position: "relative",
+                        height: "200px",
+                        background:
+                           "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer",
+                        overflow: "hidden",
+                     }}
+                     onClick={() => handlePreview(file)}
+                  >
+                     {file.contentType.startsWith("image/") ? (
+                        <img
+                           src={file.thumbUrl}
+                           alt={file.name}
+                           style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                           }}
+                        />
+                     ) : (
+                        <div style={{ textAlign: "center", color: "#ffffff" }}>
+                           {getFileIcon(file.contentType)}
+                           <div
+                              style={{
+                                 marginTop: "16px",
+                                 fontSize: "14px",
+                                 opacity: 0.9,
+                              }}
+                           >
+                              Cliquez pour prévisualiser
+                           </div>
+                        </div>
+                     )}
+
+                     {/* Overlay */}
+                     <div
+                        style={{
+                           position: "absolute",
+                           top: 0,
+                           left: 0,
+                           right: 0,
+                           bottom: 0,
+                           background: "rgba(0,0,0,0.4)",
+                           display: "flex",
+                           alignItems: "center",
+                           justifyContent: "center",
+                           opacity: 0,
+                           transition: "opacity 0.3s ease",
+                        }}
+                        className="document-overlay"
+                     >
+                        <Button
+                           type="primary"
+                           icon={<EyeOutlined />}
+                           size="large"
+                           style={{
+                              background: "rgba(255, 255, 255, 0.9)",
+                              color: "#1a202c",
+                              border: "none",
+                              borderRadius: "12px",
+                              fontWeight: 600,
+                           }}
+                        >
+                           Prévisualiser
+                        </Button>
+                     </div>
+
+                     {/* File Type Badge */}
+                     <div
+                        style={{
+                           position: "absolute",
+                           top: "12px",
+                           right: "12px",
+                        }}
+                     >
+                        {getFileTypeTag(file.contentType)}
+                     </div>
+                  </div>
+
+                  {/* Document Info */}
+                  <div style={{ padding: "20px" }}>
+                     <div style={{ marginBottom: "16px" }}>
+                        <Text
+                           strong
+                           style={{
+                              fontSize: "16px",
+                              color: "#1a202c",
+                              display: "block",
+                              marginBottom: "4px",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                           }}
+                        >
+                           {file.name}
+                        </Text>
+                        <Text
+                           style={{
+                              color: "#64748b",
+                              fontSize: "14px",
+                           }}
+                        >
+                           {file.uploadedAt.toLocaleDateString("fr-FR", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                           })}
+                        </Text>
+                     </div>
+
+                     {/* Action Buttons */}
+                     <div
+                        style={{
+                           display: "flex",
+                           gap: "8px",
+                           flexWrap: "wrap",
+                        }}
+                     >
+                        <Tooltip title="Supprimer">
+                           <Button
+                              danger
+                              icon={<DeleteOutlined />}
+                              size="small"
+                              style={{
+                                 borderRadius: "8px",
+                                 background: "#fef2f2",
+                                 border: "1px solid #fecaca",
+                                 color: "#dc2626",
+                              }}
+                              onClick={(e) => {
+                                 e.stopPropagation();
+                                 handleDelete(file.uid);
+                              }}
+                           />
+                        </Tooltip>
+
+                        <Tooltip title="Analyser">
+                           <Button
+                              icon={<SearchOutlined />}
+                              size="small"
+                              style={{
+                                 borderRadius: "8px",
+                                 background: "#f0f9ff",
+                                 border: "1px solid #bae6fd",
+                                 color: "#0369a1",
+                              }}
+                              onClick={(e) => {
+                                 e.stopPropagation();
+                                 handleAnalyse(file.uid);
+                              }}
+                           />
+                        </Tooltip>
+
+                        <Tooltip title="Traduire">
+                           <Button
+                              icon={<GlobalOutlined />}
+                              size="small"
+                              style={{
+                                 borderRadius: "8px",
+                                 background: "#f0fdf4",
+                                 border: "1px solid #bbf7d0",
+                                 color: "#166534",
+                              }}
+                              onClick={(e) => {
+                                 e.stopPropagation();
+                                 handleTranslate(file.uid);
+                              }}
+                           />
+                        </Tooltip>
+
+                        <Dropdown
+                           overlay={
+                              <Menu
+                                 style={{
+                                    borderRadius: "12px",
+                                    padding: "8px",
+                                 }}
+                              >
+                                 <Menu.Item
+                                    key="name"
+                                    style={{
+                                       borderRadius: "8px",
+                                       margin: "4px 0",
+                                    }}
+                                 >
+                                    <Space>
+                                       <FileTextOutlined />
+                                       <div>
+                                          <div style={{ fontWeight: 600 }}>
+                                             Nom du fichier
+                                          </div>
+                                          <div
+                                             style={{
+                                                fontSize: "12px",
+                                                color: "#64748b",
+                                             }}
+                                          >
+                                             {file.name}
+                                          </div>
+                                       </div>
+                                    </Space>
+                                 </Menu.Item>
+                                 <Menu.Divider />
+                                 <Menu.Item
+                                    key="date"
+                                    style={{
+                                       borderRadius: "8px",
+                                       margin: "4px 0",
+                                    }}
+                                 >
+                                    <Space>
+                                       <div>
+                                          <div style={{ fontWeight: 600 }}>
+                                             Date d'upload
+                                          </div>
+                                          <div
+                                             style={{
+                                                fontSize: "12px",
+                                                color: "#64748b",
+                                             }}
+                                          >
+                                             {file.uploadedAt.toLocaleString(
+                                                "fr-FR"
+                                             )}
+                                          </div>
+                                       </div>
+                                    </Space>
+                                 </Menu.Item>
+                              </Menu>
+                           }
+                           trigger={["click"]}
+                        >
+                           <Button
+                              icon={<MoreOutlined />}
+                              size="small"
+                              style={{
+                                 borderRadius: "8px",
+                                 background: "#f8fafc",
+                                 border: "1px solid #e2e8f0",
+                                 color: "#64748b",
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                           />
+                        </Dropdown>
+                     </div>
+                  </div>
+               </Card>
             ))}
          </div>
 
-         {/* Modal aperçu */}
+         {/* Empty State */}
+         {fileList.length === 0 && !uploading && (
+            <Card
+               style={{
+                  borderRadius: "20px",
+                  border: "2px dashed #e2e8f0",
+                  background: "#f8fafc",
+                  textAlign: "center",
+                  padding: "60px 40px",
+                  marginTop: "32px",
+               }}
+            >
+               <div
+                  style={{
+                     background:
+                        "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                     width: "80px",
+                     height: "80px",
+                     borderRadius: "50%",
+                     display: "flex",
+                     alignItems: "center",
+                     justifyContent: "center",
+                     margin: "0 auto 24px",
+                     opacity: 0.8,
+                  }}
+               >
+                  <FileTextOutlined
+                     style={{ fontSize: 36, color: "#ffffff" }}
+                  />
+               </div>
+
+               <Title
+                  level={3}
+                  style={{ color: "#64748b", marginBottom: "8px" }}
+               >
+                  Aucun document
+               </Title>
+
+               <Text style={{ color: "#94a3b8", fontSize: "16px" }}>
+                  Commencez par télécharger votre premier document médical
+               </Text>
+            </Card>
+         )}
+
+         {/* Preview Modal */}
          <Modal
             open={previewOpen}
             footer={null}
             onCancel={() => setPreviewOpen(false)}
             centered
-            width={isPdf ? "80%" : "auto"}
+            width={isPdf ? "90%" : "auto"}
+            style={{ maxWidth: "1200px" }}
             bodyStyle={{
                padding: 0,
                display: "flex",
                justifyContent: "center",
+               background: "#f8fafc",
+               borderRadius: "16px",
+               overflow: "hidden",
             }}
-            
+            closable={false}
          >
-            {isPdf ? (
-               <iframe
-                  src={previewContent}
-                  title="PDF Preview"
+            <div
+               style={{
+                  position: "relative",
+                  width: "100%",
+                  background: "#ffffff",
+                  borderRadius: "16px",
+                  overflow: "hidden",
+               }}
+            >
+               {/* Modal Header */}
+               <div
                   style={{
-                     border: "none",
-                     width: "97%",
-                     minHeight: "600px", // you can keep a minHeight for readability
+                     background:
+                        "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                     color: "#ffffff",
+                     padding: "16px 24px",
+                     display: "flex",
+                     justifyContent: "space-between",
+                     alignItems: "center",
                   }}
-               />
-            ) : (
-               <img
-                  src={previewContent}
-                  alt="preview"
-                  style={{
-                     display: "block",
-                     maxWidth: "80vw", // max width relative to viewport
-                     maxHeight: "80vh", // max height relative to viewport
-                     width: "auto",
-                     height: "auto",
-                    
-                  }}
-               />
-            )}
+               >
+                  <Title level={4} style={{ color: "#ffffff", margin: 0 }}>
+                     Prévisualisation du document
+                  </Title>
+                  <Button
+                     type="text"
+                     style={{ color: "#ffffff" }}
+                     onClick={() => setPreviewOpen(false)}
+                  >
+                     ✕
+                  </Button>
+               </div>
+
+               {/* Modal Content */}
+               <div style={{ padding: "24px" }}>
+                  {isPdf ? (
+                     <iframe
+                        src={previewContent}
+                        title="PDF Preview"
+                        style={{
+                           border: "none",
+                           width: "100%",
+                           minHeight: "70vh",
+                           borderRadius: "12px",
+                           boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
+                        }}
+                     />
+                  ) : (
+                     <div style={{ textAlign: "center" }}>
+                        <img
+                           src={previewContent}
+                           alt="preview"
+                           style={{
+                              maxWidth: "100%",
+                              maxHeight: "70vh",
+                              borderRadius: "12px",
+                              boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
+                           }}
+                        />
+                     </div>
+                  )}
+               </div>
+            </div>
          </Modal>
+
+         <style jsx>{`
+            .document-item:hover .document-overlay {
+               opacity: 1 !important;
+            }
+         `}</style>
       </div>
    );
 };

@@ -10,9 +10,11 @@ import {
    Spin,
    Select,
    Avatar,
-   Divider,
    Space,
    Typography,
+   Row,
+   Col,
+   Divider,
 } from "antd";
 import {
    EditOutlined,
@@ -20,12 +22,16 @@ import {
    CloseOutlined,
    UserOutlined,
    CameraOutlined,
+   MailOutlined,
+   PhoneOutlined,
+   CalendarOutlined,
+   TeamOutlined,
 } from "@ant-design/icons";
 import moment from "moment";
 import { apiFetch, getEmailFromToken } from "../utils/api";
 
 const { Option } = Select;
-const { Text } = Typography;
+const { Text, Title } = Typography;
 
 export default function GestionProfile() {
    const [isEditing, setIsEditing] = useState(false);
@@ -35,7 +41,6 @@ export default function GestionProfile() {
    const [previewImage, setPreviewImage] = useState(null);
    const [uploading, setUploading] = useState(false);
 
-   // Fetch user data
    useEffect(() => {
       const fetchUserData = async () => {
          try {
@@ -67,7 +72,6 @@ export default function GestionProfile() {
       fetchUserData();
    }, [form]);
 
-   // Cleanup preview image URL
    useEffect(() => {
       return () => {
          if (previewImage && previewImage.startsWith("blob:")) {
@@ -136,7 +140,6 @@ export default function GestionProfile() {
       }
    };
 
-   // Upload profile photo
    const handleUpload = async ({ file }) => {
       const formData = new FormData();
       formData.append("file", file);
@@ -189,19 +192,40 @@ export default function GestionProfile() {
                display: "flex",
                justifyContent: "center",
                alignItems: "center",
-               minHeight: "400px",
+               minHeight: "500px",
+               background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+               borderRadius: "24px",
             }}
          >
-            <Spin size="large" tip="Chargement de votre profil..." />
+            <div style={{ textAlign: "center", color: "#ffffff" }}>
+               <Spin size="large" style={{ color: "#ffffff" }} />
+               <div style={{ marginTop: "16px", fontSize: "18px" }}>
+                  Chargement de votre profil...
+               </div>
+            </div>
          </div>
       );
    }
 
    if (!userData) {
       return (
-         <div style={{ textAlign: "center", marginTop: 50, padding: 20 }}>
-            <Text type="secondary">Aucune donnée disponible</Text>
-         </div>
+         <Card
+            style={{
+               textAlign: "center",
+               padding: "60px",
+               borderRadius: "24px",
+               background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+               border: "none",
+               color: "#ffffff",
+            }}
+         >
+            <Title level={3} style={{ color: "#ffffff" }}>
+               Aucune donnée disponible
+            </Title>
+            <Text style={{ color: "rgba(255, 255, 255, 0.8)", fontSize: "16px" }}>
+               Impossible de charger les informations du profil
+            </Text>
+         </Card>
       );
    }
 
@@ -214,144 +238,203 @@ export default function GestionProfile() {
          : undefined);
 
    return (
-      <div
-         style={{
-            padding: "10px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-         }}
-      >
-         <Card
-            style={{
-               borderRadius: 24,
-               boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
-               border: "none",
-               display: "flex",
-               overflow: "hidden",
-            }}
-            bodyStyle={{ padding: 0 }}
-         >
-            <div style={{ display: "flex", gap: "40px", width: "100%" }}>
-               {/* Left Section */}
+      <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+         {!isEditing ? (
+            // View Mode - Full Screen Profile Display
+            <Card
+               style={{
+                  borderRadius: "32px",
+                  border: "none",
+                  overflow: "hidden",
+                  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                  minHeight: "600px",
+                  position: "relative",
+               }}
+               bodyStyle={{ padding: 0 }}
+            >
+               {/* Background Pattern */}
                <div
                   style={{
-                     background:
-                        "linear-gradient(135deg, #31c1e1 0%, #31e1cf 100%)",
-                     color: "white",
-                     padding: "0px",
-                     width: isEditing ? "50%" : "100%", // expand if not editing
+                     position: "absolute",
+                     top: 0,
+                     left: 0,
+                     right: 0,
+                     bottom: 0,
+                     backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+                  }}
+               />
+
+               {/* Content */}
+               <div
+                  style={{
+                     position: "relative",
+                     zIndex: 2,
+                     padding: "80px 60px",
                      textAlign: "center",
-                     display: "flex",
-                     flexDirection: "column",
-                     alignItems: "center",
-                     justifyContent: "center",
+                     color: "#ffffff",
                   }}
                >
-                  {/* Show big full photo when not editing */}
-                  {!isEditing ? (
+                  {/* Profile Image */}
+                  <div
+                     style={{
+                        position: "relative",
+                        display: "inline-block",
+                        marginBottom: "32px",
+                     }}
+                  >
+                     <Avatar
+                        size={200}
+                        src={displayImage}
+                        icon={<UserOutlined />}
+                        style={{
+                           border: "6px solid rgba(255, 255, 255, 0.2)",
+                           boxShadow: "0 16px 48px rgba(0,0,0,0.2)",
+                           backgroundColor: "rgba(255, 255, 255, 0.1)",
+                        }}
+                     />
+                     
+                     {/* Online indicator */}
                      <div
                         style={{
-                           position: "relative",
-                           width: "100%",
-                           height: "100%",
-                           borderRadius: "24px",
-                           overflow: "hidden",
+                           position: "absolute",
+                           bottom: "10px",
+                           right: "10px",
+                           width: "24px",
+                           height: "24px",
+                           background: "#48bb78",
+                           border: "4px solid #ffffff",
+                           borderRadius: "50%",
+                           boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                        }}
+                     />
+                  </div>
+
+                  {/* User Info */}
+                  <div style={{ marginBottom: "40px" }}>
+                     <Title
+                        level={1}
+                        style={{
+                           color: "#ffffff",
+                           fontSize: "36px",
+                           fontWeight: 700,
+                           marginBottom: "8px",
+                           letterSpacing: "-1px",
                         }}
                      >
-                        <img
-                           src={displayImage}
-                           alt="profile"
-                           style={{
-                              width: "auto",
-                              height: "60vh",
+                        {userData.firstName && userData.lastName
+                           ? `${userData.firstName} ${userData.lastName}`
+                           : "Utilisateur VitaCare"}
+                     </Title>
+                     
+                     <Text
+                        style={{
+                           color: "rgba(255, 255, 255, 0.8)",
+                           fontSize: "18px",
+                           display: "block",
+                           marginBottom: "24px",
+                        }}
+                     >
+                        {userData.email}
+                     </Text>
 
-                              objectFit: "cover",
-                           }}
-                        />
-
-                        {/* Glass overlay with user info + button */}
-                        <div
-                           style={{
-                              position: "absolute",
-                              bottom: 0,
-                              left: 0,
-                              width: "100%",
-                              padding: "20px",
-                              background:
-                                 "linear-gradient(to top, rgba(0,0,0,0.6), rgba(0,0,0,0))",
-                              color: "white",
-                              textAlign: "center",
-                           }}
-                        >
-                           <h3 style={{ margin: 0 }}>
-                              {userData.firstName && userData.lastName
-                                 ? `${userData.firstName} ${userData.lastName}`
-                                 : userData.email}
-                           </h3>
-                           <Text style={{ color: "rgba(255,255,255,0.85)" }}>
-                              {userData.email}
-                           </Text>
-
-                           {/* Animated Modify button */}
-                           <div style={{ marginTop: "15px" }}>
-                              <Button
-                                 icon={<EditOutlined />}
-                                 onClick={handleEdit}
-                                 size="large"
-                                 style={{
-                                    borderRadius: "8px",
-                                    background: "rgba(255,255,255,0.2)",
-                                    border: "none",
-                                    color: "white",
-                                    backdropFilter: "blur(8px)",
-                                    padding: "0 32px",
-                                    opacity: 0.8,
-                                    transition: "all 0.3s ease",
-                                 }}
-                                 onMouseEnter={(e) => {
-                                    e.currentTarget.style.transform =
-                                       "scale(1.05)";
-                                    e.currentTarget.style.opacity = 1;
-                                    e.currentTarget.style.boxShadow =
-                                       "0 6px 20px rgba(255,255,255,0.3)";
-                                 }}
-                                 onMouseLeave={(e) => {
-                                    e.currentTarget.style.transform =
-                                       "scale(1)";
-                                    e.currentTarget.style.opacity = 0.8;
-                                    e.currentTarget.style.boxShadow = "none";
-                                 }}
-                                 onMouseDown={(e) =>
-                                    (e.currentTarget.style.transform =
-                                       "scale(0.95)")
-                                 }
-                                 onMouseUp={(e) =>
-                                    (e.currentTarget.style.transform =
-                                       "scale(1.05)")
-                                 }
-                              >
-                                 Modifier mon profil
-                              </Button>
+                     {/* Quick Stats */}
+                     <div
+                        style={{
+                           display: "flex",
+                           justifyContent: "center",
+                           gap: "48px",
+                           marginBottom: "32px",
+                           flexWrap: "wrap",
+                        }}
+                     >
+                        {userData.phoneNumber && (
+                           <div style={{ textAlign: "center" }}>
+                              <PhoneOutlined style={{ fontSize: "24px", marginBottom: "8px" }} />
+                              <div style={{ fontSize: "14px", opacity: 0.8 }}>
+                                 {userData.phoneNumber}
+                              </div>
                            </div>
-                        </div>
+                        )}
+                        
+                        {userData.dateOfBirth && (
+                           <div style={{ textAlign: "center" }}>
+                              <CalendarOutlined style={{ fontSize: "24px", marginBottom: "8px" }} />
+                              <div style={{ fontSize: "14px", opacity: 0.8 }}>
+                                 {moment(userData.dateOfBirth).format("DD/MM/YYYY")}
+                              </div>
+                           </div>
+                        )}
+                        
+                        {userData.gender && (
+                           <div style={{ textAlign: "center" }}>
+                              <TeamOutlined style={{ fontSize: "24px", marginBottom: "8px" }} />
+                              <div style={{ fontSize: "14px", opacity: 0.8 }}>
+                                 {userData.gender === "MALE" ? "Homme" : "Femme"}
+                              </div>
+                           </div>
+                        )}
                      </div>
-                  ) : (
-                     /* Keep your old avatar + upload button for editing */
+                  </div>
 
-                     <div
-                        style={{
-                           position: "relative",
-                           display: "inline-block",
-                        }}
-                     >
+                  {/* Edit Button */}
+                  <Button
+                     type="primary"
+                     size="large"
+                     icon={<EditOutlined />}
+                     onClick={handleEdit}
+                     style={{
+                        background: "#ffffff",
+                        color: "#667eea",
+                        border: "none",
+                        borderRadius: "16px",
+                        padding: "8px 32px",
+                        height: "56px",
+                        fontSize: "16px",
+                        fontWeight: 600,
+                        boxShadow: "0 8px 24px rgba(255, 255, 255, 0.2)",
+                        transform: "translateY(0)",
+                        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                     }}
+                     onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = "translateY(-2px)";
+                        e.currentTarget.style.boxShadow = "0 12px 32px rgba(255, 255, 255, 0.3)";
+                     }}
+                     onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = "translateY(0)";
+                        e.currentTarget.style.boxShadow = "0 8px 24px rgba(255, 255, 255, 0.2)";
+                     }}
+                  >
+                     Modifier mon profil
+                  </Button>
+               </div>
+            </Card>
+         ) : (
+            // Edit Mode - Form Layout
+            <Row gutter={[32, 32]}>
+               {/* Left Column - Profile Picture */}
+               <Col xs={24} lg={8}>
+                  <Card
+                     style={{
+                        borderRadius: "24px",
+                        border: "1px solid rgba(0,0,0,0.08)",
+                        boxShadow: "0 8px 32px rgba(0,0,0,0.08)",
+                        background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                        textAlign: "center",
+                        padding: "40px 20px",
+                        color: "#ffffff",
+                        minHeight: "400px",
+                     }}
+                  >
+                     <div style={{ position: "relative", display: "inline-block", marginBottom: "32px" }}>
                         <Avatar
-                           size={280}
-                           style={{
-                              borderRadius: "15%",
-                           }}
+                           size={180}
                            src={displayImage}
                            icon={<UserOutlined />}
+                           style={{
+                              border: "4px solid rgba(255, 255, 255, 0.3)",
+                              boxShadow: "0 12px 32px rgba(0,0,0,0.2)",
+                              backgroundColor: "rgba(255, 255, 255, 0.1)",
+                           }}
                         />
 
                         <Upload
@@ -364,128 +447,205 @@ export default function GestionProfile() {
                            <Button
                               type="primary"
                               shape="circle"
+                              size="large"
                               icon={<CameraOutlined />}
                               loading={uploading}
                               style={{
                                  position: "absolute",
-                                 bottom: 0,
-                                 right: 0,
-                                 boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                                 bottom: "10px",
+                                 right: "10px",
+                                 background: "#ffffff",
+                                 color: "#6366f1",
+                                 border: "none",
+                                 width: "48px",
+                                 height: "48px",
+                                 boxShadow: "0 4px 16px rgba(0,0,0,0.2)",
                               }}
                            />
                         </Upload>
                      </div>
-                  )}
-               </div>
 
-               {/* Right Section - Form (only when editing) */}
-               {isEditing && (
-                  <div style={{ padding: "30px 40px 30px 0", width: "50%" }}>
+                     <Title level={3} style={{ color: "#ffffff", marginBottom: "8px" }}>
+                        Photo de profil
+                     </Title>
+                     <Text style={{ color: "rgba(255, 255, 255, 0.8)" }}>
+                        Cliquez sur l'icône appareil photo pour changer votre photo
+                     </Text>
+                  </Card>
+               </Col>
+
+               {/* Right Column - Form */}
+               <Col xs={24} lg={16}>
+                  <Card
+                     style={{
+                        borderRadius: "24px",
+                        border: "1px solid rgba(0,0,0,0.08)",
+                        boxShadow: "0 8px 32px rgba(0,0,0,0.08)",
+                     }}
+                     bodyStyle={{ padding: "40px" }}
+                  >
+                     <div style={{ marginBottom: "32px" }}>
+                        <Title level={2} style={{ marginBottom: "8px", fontSize: "28px", fontWeight: 700 }}>
+                           Informations personnelles
+                        </Title>
+                        <Text style={{ color: "#64748b", fontSize: "16px" }}>
+                           Mettez à jour vos informations de profil
+                        </Text>
+                     </div>
+
                      <Form form={form} layout="vertical" size="large">
-                        <div
-                           style={{
-                              display: "grid",
-                              gridTemplateColumns: "1fr 1fr",
-                              gap: "16px",
-                           }}
-                        >
-                           <Form.Item
-                              label={<Text strong>Prénom</Text>}
-                              name="firstName"
-                           >
-                              <Input
-                                 disabled={!isEditing}
-                                 placeholder="Votre prénom"
-                                 style={{ borderRadius: "8px" }}
-                              />
-                           </Form.Item>
-
-                           <Form.Item
-                              label={<Text strong>Nom</Text>}
-                              name="lastName"
-                           >
-                              <Input
-                                 disabled={!isEditing}
-                                 placeholder="Votre nom"
-                                 style={{ borderRadius: "8px" }}
-                              />
-                           </Form.Item>
-                        </div>
-
-                        <Form.Item
-                           label={<Text strong>Adresse e-mail</Text>}
-                           name="email"
-                        >
-                           <Input
-                              disabled={true}
-                              placeholder="votre@email.com"
-                              style={{ borderRadius: "8px" }}
-                              type="email"
-                           />
-                        </Form.Item>
-
-                        <div
-                           style={{
-                              display: "grid",
-                              gridTemplateColumns: "1fr 1fr",
-                              gap: "16px",
-                           }}
-                        >
-                           <Form.Item
-                              label={<Text strong>Téléphone</Text>}
-                              name="phoneNumber"
-                           >
-                              <Input
-                                 disabled={!isEditing}
-                                 placeholder="+216 XX XXX XXX"
-                                 style={{ borderRadius: "8px" }}
-                              />
-                           </Form.Item>
-
-                           <Form.Item
-                              label={<Text strong>Genre</Text>}
-                              name="gender"
-                           >
-                              <Select
-                                 disabled={!isEditing}
-                                 placeholder="Sélectionner"
-                                 style={{ borderRadius: "8px" }}
+                        <Row gutter={[24, 0]}>
+                           <Col xs={24} sm={12}>
+                              <Form.Item
+                                 label={
+                                    <Text strong style={{ fontSize: "16px" }}>
+                                       Prénom
+                                    </Text>
+                                 }
+                                 name="firstName"
                               >
-                                 <Option value="MALE">🚹 Homme</Option>
-                                 <Option value="FEMALE">🚺 Femme</Option>
-                              </Select>
-                           </Form.Item>
-                        </div>
+                                 <Input
+                                    placeholder="Votre prénom"
+                                    style={{
+                                       borderRadius: "12px",
+                                       border: "2px solid #f1f5f9",
+                                       padding: "12px 16px",
+                                       fontSize: "16px",
+                                    }}
+                                    prefix={<UserOutlined style={{ color: "#94a3b8" }} />}
+                                 />
+                              </Form.Item>
+                           </Col>
 
-                        <Form.Item
-                           label={<Text strong>Date de naissance</Text>}
-                           name="dateOfBirth"
-                        >
-                           <DatePicker
-                              disabled={!isEditing}
-                              style={{ width: "100%", borderRadius: "8px" }}
-                              placeholder="Sélectionner une date"
-                              format="DD/MM/YYYY"
-                           />
-                        </Form.Item>
+                           <Col xs={24} sm={12}>
+                              <Form.Item
+                                 label={
+                                    <Text strong style={{ fontSize: "16px" }}>
+                                       Nom
+                                    </Text>
+                                 }
+                                 name="lastName"
+                              >
+                                 <Input
+                                    placeholder="Votre nom"
+                                    style={{
+                                       borderRadius: "12px",
+                                       border: "2px solid #f1f5f9",
+                                       padding: "12px 16px",
+                                       fontSize: "16px",
+                                    }}
+                                    prefix={<UserOutlined style={{ color: "#94a3b8" }} />}
+                                 />
+                              </Form.Item>
+                           </Col>
 
-                        <Divider />
+                           <Col xs={24}>
+                              
+                              <Form.Item
+                                 label={
+                                    <Text strong style={{ fontSize: "16px" }}>
+                                       Adresse e-mail
+                                    </Text>
+                                 }
+                                 name="email"
+                              >
+                                 <Input
+                                    disabled
+                                    placeholder="votre@email"
+                                    style={{
+                                       borderRadius: "12px",
+                                       border: "2px solid #f1f5f9",
+                                       padding: "12px 16px",
+                                       fontSize: "16px",
+                                       backgroundColor: "#f8fafc",
+                                       color: "#94a3b8",
+                                    }}
+                                    prefix={<MailOutlined style={{ color: "#94a3b8" }} />}
+                                 />
+                              </Form.Item>
+                           </Col>
 
-                        <Space
-                           size="middle"
-                           style={{ display: "flex", justifyContent: "center" }}
-                        >
+                           <Col xs={24} sm={12}>
+                              <Form.Item
+                                 label={
+                                    <Text strong style={{ fontSize: "16px" }}>
+                                       Numéro de téléphone
+                                    </Text>
+                                 }
+                                 name="phoneNumber"
+                              >
+                                 <Input
+                                    placeholder="+216 12 345 678"
+                                    style={{
+                                       borderRadius: "12px",
+                                       border: "2px solid #f1f5f9",
+                                       padding: "12px 16px",
+                                       fontSize: "16px",
+                                    }}
+                                    prefix={<PhoneOutlined style={{ color: "#94a3b8" }} />}
+                                 />
+                              </Form.Item>
+                           </Col>
+
+                           <Col xs={24} sm={12}>
+                              <Form.Item
+                                 label={
+                                    <Text strong style={{ fontSize: "16px" }}>
+                                       Date de naissance
+                                    </Text>
+                                 }
+                                 name="dateOfBirth"
+                              >
+                                 <DatePicker
+                                    style={{
+                                       width: "100%",
+                                       borderRadius: "12px",
+                                       border: "2px solid #f1f5f9",
+                                       padding: "12px 16px",
+                                       fontSize: "16px",
+                                    }}
+                                    format="DD/MM/YYYY"
+                                    suffixIcon={<CalendarOutlined style={{ color: "#94a3b8" }} />}
+                                 />
+                              </Form.Item>
+                           </Col>
+
+                           <Col xs={24} sm={12}>
+                              <Form.Item
+                                 label={
+                                    <Text strong style={{ fontSize: "16px" }}>
+                                       Genre
+                                    </Text>
+                                 }
+                                 name="gender"
+                              >
+                                 <Select
+                                    placeholder="Sélectionnez votre genre"
+                                    style={{
+                                       borderRadius: "12px",
+                                       border: "2px solid #f1f5f9",
+                                       fontSize: "16px",
+                                    }}
+                                 >
+                                    <Option value="MALE">Homme</Option>
+                                    <Option value="FEMALE">Femme</Option>
+                                 </Select>
+                              </Form.Item>
+                           </Col>
+                        </Row>
+
+                        {/* Action Buttons */}
+                        <div style={{ display: "flex", gap: "16px", marginTop: "32px" }}>
                            <Button
                               type="primary"
                               icon={<SaveOutlined />}
                               onClick={handleSave}
-                              size="large"
                               style={{
-                                 borderRadius: "8px",
-                                 background:
-                                    "linear-gradient(135deg, #0093E9 0%, #80D0C7 100%)",
+                                 borderRadius: "12px",
+                                 padding: "12px 32px",
+                                 background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
                                  border: "none",
-                                 boxShadow: "0 4px 15px rgba(0, 147, 233, 0.4)",
+                                 fontWeight: 600,
                               }}
                            >
                               Sauvegarder
@@ -493,17 +653,23 @@ export default function GestionProfile() {
                            <Button
                               icon={<CloseOutlined />}
                               onClick={handleCancel}
-                              size="large"
-                              style={{ borderRadius: "8px" }}
+                              style={{
+                                 borderRadius: "12px",
+                                 padding: "12px 32px",
+                                 background: "#f1f5f9",
+                                 border: "none",
+                                 color: "#475569",
+                                 fontWeight: 600,
+                              }}
                            >
                               Annuler
                            </Button>
-                        </Space>
+                        </div>
                      </Form>
-                  </div>
-               )}
-            </div>
-         </Card>
+                  </Card>
+               </Col>
+            </Row>
+         )}
       </div>
    );
 }
