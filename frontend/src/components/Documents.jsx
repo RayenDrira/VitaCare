@@ -173,22 +173,30 @@ const GestionDocuments = () => {
       }
    };
 
-   const handleDelete = async (filename) => {
-      try {
-         const email = getEmailFromToken();
-         await apiFetch(
-            `/api/documents/${encodeURIComponent(
-               filename
-            )}?email=${encodeURIComponent(email)}`,
-            {
-               method: "DELETE",
+   const handleDelete = (filename) => {
+      const email = getEmailFromToken();
+
+      Modal.confirm({
+         title: "Are you sure you want to delete this document?",
+         content: `${filename} will be permanently removed.`,
+         okText: "Yes, delete",
+         okType: "danger",
+         cancelText: "Cancel",
+         onOk: async () => {
+            try {
+               await apiFetch(
+                  `/api/documents/${encodeURIComponent(
+                     filename
+                  )}?email=${encodeURIComponent(email)}`,
+                  { method: "DELETE" }
+               );
+               message.success("Document deleted!");
+               fetchDocuments();
+            } catch {
+               message.error("Error deleting document");
             }
-         );
-         message.success("Document deleted!");
-         fetchDocuments();
-      } catch {
-         message.error("Error deleting document");
-      }
+         },
+      });
    };
 
    return (
