@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+
 import {
    DeleteOutlined,
    SearchOutlined,
@@ -12,6 +13,8 @@ import {
    message,
    Button,
    Modal,
+   Select,
+   border,
    Card,
    Typography,
    Tag,
@@ -20,12 +23,12 @@ import {
 import { pdfjs } from "react-pdf";
 import { apiFetch, getEmailFromToken } from "../utils/api";
 import "../styles/Documents.css";
+import { Document as PdfDocument, Page } from "react-pdf";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 const { Title, Text } = Typography;
 const ACCEPTED_TYPES = ["image/", "application/pdf"];
-
 const generatePdfThumbnail = async (url) => {
    try {
       const pdf = await pdfjs.getDocument(url).promise;
@@ -81,14 +84,19 @@ const getFileTypeTag = (contentType) => {
    return <Tag color="blue">FILE</Tag>;
 };
 
-const GestionDocuments = () => {
+const GestionDocuments = ({ searchQuery = "" }) => {
    const [fileList, setFileList] = useState([]);
    const [previewOpen, setPreviewOpen] = useState(false);
    const [previewContent, setPreviewContent] = useState("");
    const [isPdf, setIsPdf] = useState(false);
    const [uploading, setUploading] = useState(false);
    const { Dragger } = Upload;
+   const [sortBy, setSortBy] = useState("latest");
+   const [numPages, setNumPages] = useState(null);
 
+   const onPdfLoad = ({ numPages }) => {
+      setNumPages(numPages);
+   };
    const fetchDocuments = async () => {
       try {
          const email = getEmailFromToken();
@@ -105,7 +113,15 @@ const GestionDocuments = () => {
                )}?email=${encodeURIComponent(email)}`;
                const fileRes = await apiFetch(url);
                const blob = await fileRes.blob();
-               const objectUrl = URL.createObjectURL(blob);
+               const contentType = fileRes.headers.get("Content-Type");
+
+               const fixedBlob =
+                  contentType?.includes("pdf") &&
+                  blob.type !== "application/pdf"
+                     ? new Blob([blob], { type: "application/pdf" })
+                     : blob;
+
+               const objectUrl = URL.createObjectURL(fixedBlob);
 
                let thumbUrl = objectUrl;
                if (doc.fileType?.startsWith("application/pdf")) {
@@ -116,7 +132,8 @@ const GestionDocuments = () => {
                   uid: doc.filename,
                   name: doc.filename,
                   contentType: doc.fileType,
-                  url: objectUrl,
+                  url: objectUrl, // blob preview url
+                  blob: fixedBlob, // keep raw blob too ✅
                   thumbUrl,
                   uploadedAt: doc.uploadedAt
                      ? new Date(doc.uploadedAt)
@@ -135,10 +152,32 @@ const GestionDocuments = () => {
    useEffect(() => {
       fetchDocuments();
    }, []);
-
+   const filteredDocs = fileList
+      .filter(
+         (file) =>
+            file.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            file.contentType.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+      .sort((a, b) => {
+         if (sortBy === "latest") return b.uploadedAt - a.uploadedAt;
+         if (sortBy === "alpha") return a.name.localeCompare(b.name);
+         if (sortBy === "type")
+            return a.contentType.localeCompare(b.contentType);
+         return 0;
+      });
    const handlePreview = (file) => {
       setIsPdf(file.contentType.startsWith("application/pdf"));
-      setPreviewContent(file.url);
+
+      if (file.contentType.startsWith("application/pdf")) {
+         // force PDF to render inside iframe
+         const pdfUrl = URL.createObjectURL(
+            new Blob([file.blob], { type: "application/pdf" })
+         );
+         setPreviewContent(pdfUrl);
+      } else {
+         setPreviewContent(file.url);
+      }
+
       setPreviewOpen(true);
    };
 
@@ -257,6 +296,23 @@ const GestionDocuments = () => {
                </div>
             </Dragger>
          </Card>
+         <div
+            style={{
+               display: "flex",
+               justifyContent: "flex-end",
+               marginBottom: "16px",
+            }}
+         >
+            <Select
+               value={sortBy}
+               onChange={(val) => setSortBy(val)}
+               style={{ width: 200 }}
+            >
+               <Select.Option value="latest">📅 Latest Uploaded</Select.Option>
+               <Select.Option value="alpha">🔤 Alphabetical</Select.Option>
+               <Select.Option value="type">📂 File Type</Select.Option>
+            </Select>
+         </div>
 
          {/* Documents Grid */}
          <div
@@ -267,7 +323,7 @@ const GestionDocuments = () => {
                marginTop: "32px",
             }}
          >
-            {fileList.map((file) => (
+            {filteredDocs.map((file) => (
                <Card
                   key={file.uid}
                   hoverable
@@ -293,6 +349,7 @@ const GestionDocuments = () => {
                >
                   {/* Document Preview */}
                   <div
+                     className="document-item"
                      style={{
                         position: "relative",
                         height: "200px",
@@ -519,39 +576,18 @@ const GestionDocuments = () => {
                   overflow: "hidden",
                }}
             >
-               <div
-                  style={{
-                     background:
-                        "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
-                     color: "#ffffff",
-                     padding: "16px 24px",
-                     display: "flex",
-                     justifyContent: "space-between",
-                     alignItems: "center",
-                  }}
-               >
-                  <Title level={4} style={{ color: "#ffffff", margin: 0 }}>
-                     Document Preview
-                  </Title>
-                  <Button
-                     type="text"
-                     style={{ color: "#ffffff" }}
-                     onClick={() => setPreviewOpen(false)}
-                  >
-                     ✕
-                  </Button>
-               </div>
-               <div style={{ padding: "24px" }}>
+               <div>
                   {isPdf ? (
                      <iframe
                         src={previewContent}
                         title="PDF Preview"
+                        width="100%"
+                        height="600px"
                         style={{
                            border: "none",
                            width: "100%",
-                           minHeight: "70vh",
-                           borderRadius: "12px",
-                           boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
+                           minHeight: "600px",
+                           // you can keep a minHeight for readability
                         }}
                      />
                   ) : (

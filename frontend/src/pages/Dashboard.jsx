@@ -14,6 +14,7 @@ import {
    Avatar,
    Dropdown,
    Button,
+   Input,
    Space,
 } from "antd";
 import {
@@ -32,6 +33,18 @@ const { Title, Text } = Typography;
 export default function Dashboard() {
    const [collapsed, setCollapsed] = useState(false);
    const [activePage, setActivePage] = useState("1");
+   const pageTitles = {
+      1: { title: "Dashboard", subtitle: "Bienvenue sur VitaCare" },
+      2: {
+         title: "Analytics",
+         subtitle: "Visualisez vos statistiques de santé",
+      },
+      9: {
+         title: "Documents",
+         subtitle: "Organisez et gérez tous vos documents médicaux",
+      },
+      10: { title: "Profil", subtitle: "Gérez vos informations personnelles" },
+   };
 
    const siderItems = [
       {
@@ -53,13 +66,10 @@ export default function Dashboard() {
          label: "Documents",
          style: { margin: "8px 0", borderRadius: "12px" },
       },
-      {
-         key: "10",
-         icon: <UserOutlined style={{ fontSize: "18px" }} />,
-         label: "Profil",
-         style: { margin: "8px 0", borderRadius: "12px" },
-      },
    ];
+
+   // inside Dashboard component
+   const [searchQuery, setSearchQuery] = useState(""); // add state
 
    const userMenu = (
       <Menu
@@ -209,22 +219,43 @@ export default function Dashboard() {
                      height: 80,
                      display: "flex",
                      alignItems: "center",
-                     justifyContent: "flex-end",
+                     justifyContent: "space-between",
                      boxShadow: "0 2px 24px rgba(0,0,0,0.04)",
                      borderBottom: "1px solid rgba(0,0,0,0.06)",
                   }}
                >
-                  {/* Right side controls */}
-                  <Space size="large">
-                     <Button
-                        type="text"
-                        icon={<SearchOutlined />}
-                        shape="circle"
-                        size="large"
+                  {/* Left: Page Title */}
+                  <div style={{ display: "flex", flexDirection: "column" }}>
+                     <Title level={4} style={{ margin: 0, padding: " 0" }}>
+                        {pageTitles[activePage]?.title || ""}
+                     </Title>
+                     <Text type="secondary">
+                        {pageTitles[activePage]?.subtitle || ""}
+                     </Text>
+                  </div>
+
+                  {/* Right: Controls */}
+                  <Space
+                     size="large"
+                     style={{
+                        alignItems: "center",
+                        display: "flex",
+                        justifyContent: "center",
+                     }}
+                  >
+                     <Input
+                        placeholder="Search documents..."
+                        prefix={<SearchOutlined />}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onPressEnter={() => setActivePage("9")} // ⬅️ Go to Documents on Enter
                         style={{
+                           width: 250,
+                           height: 40,
+                           borderRadius: "12px",
                            background: "#f8fafc",
                            border: "1px solid #e2e8f0",
-                           color: "#64748b",
+                           centered: "true",
                         }}
                      />
                      <Badge count={3} size="small">
@@ -327,10 +358,7 @@ export default function Dashboard() {
                            flex: 1,
                         }}
                         bodyStyle={{ padding: "32px" }}
-                     >
-                        <Title level={2}>Analytics</Title>
-                        <Text>Visualisez vos statistiques de santé</Text>
-                     </Card>
+                     ></Card>
                   )}
 
                   {/* Documents Page */}
@@ -346,13 +374,7 @@ export default function Dashboard() {
                         }}
                         bodyStyle={{ padding: "32px" }}
                      >
-                        <div style={{ marginBottom: "24px" }}>
-                           <Title level={2}>Gestion des Documents</Title>
-                           <Text>
-                              Organisez et gérez tous vos documents médicaux
-                           </Text>
-                        </div>
-                        <GestionDocuments />
+                        <GestionDocuments searchQuery={searchQuery} />
                      </Card>
                   )}
 

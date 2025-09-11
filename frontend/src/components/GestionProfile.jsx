@@ -288,7 +288,7 @@ export default function GestionProfile() {
                   style={{
                      position: "relative",
                      zIndex: 2,
-                     padding: "50px 60px",
+                     padding: "80px 60px",
                      textAlign: "center",
                      color: "#ffffff",
                   }}
