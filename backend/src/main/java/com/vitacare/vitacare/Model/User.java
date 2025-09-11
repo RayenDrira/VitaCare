@@ -1,10 +1,13 @@
 package com.vitacare.vitacare.Model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import java.util.List;
+import java.util.ArrayList;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -60,6 +63,24 @@ public class User {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    // --- New Health Fields ---
+    private Double weight; // in kg
+    private Double height; // in cm
+
+    @Column(name = "blood_type")
+    private String bloodType; // e.g., A+, O-, etc.
+
+    private String allergies; // optional, comma-separated
+
+    @Column(name = "chronic_conditions")
+    private String chronicConditions; // optional, comma-separated
+
+    @JsonBackReference // prevents infinite loop
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Document> documents = new ArrayList<>();
+
+
+    // --- Enums ---
     public enum AuthProvider {
         LOCAL,
         GOOGLE
@@ -68,6 +89,6 @@ public class User {
     public enum Gender {
         MALE,
         FEMALE,
-        OTHER
+
     }
 }

@@ -1,32 +1,24 @@
 import React, { useState, useEffect } from "react";
 import {
-   PlusOutlined,
    DeleteOutlined,
    SearchOutlined,
    GlobalOutlined,
-   MoreOutlined,
    FileTextOutlined,
-   FilePdfOutlined,
-   FileImageOutlined,
    EyeOutlined,
    CloudUploadOutlined,
 } from "@ant-design/icons";
 import {
    Upload,
-   Image,
    message,
    Button,
    Modal,
-   Dropdown,
-   Menu,
    Card,
    Typography,
-   Space,
    Tag,
    Tooltip,
 } from "antd";
 import { pdfjs } from "react-pdf";
-import { apiFetch } from "../utils/api";
+import { apiFetch, getEmailFromToken } from "../utils/api";
 import "../styles/Documents.css";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -46,56 +38,47 @@ const generatePdfThumbnail = async (url) => {
          .promise;
       return canvas.toDataURL();
    } catch {
-      return "/pdf-fallback.png";
+      return "/pdf-fallback.png"; // fallback if PDF is corrupted
    }
 };
 
 const handleAnalyse = async (filename) => {
    try {
+      const email = getEmailFromToken();
       const res = await apiFetch(
-         `/api/documents/analyse/${encodeURIComponent(filename)}`,
-         {
-            method: "POST",
-         }
+         `/api/documents/analyse/${encodeURIComponent(
+            filename
+         )}?email=${encodeURIComponent(email)}`,
+         { method: "POST" }
       );
-      if (!res) throw new Error("Analyse échouée");
-      message.success(`Analyse de ${filename} terminée !`);
+      if (!res) throw new Error("Analyse failed");
+      message.success(`Analyse of ${filename} completed!`);
    } catch {
-      message.error("Erreur lors de l'analyse du document");
+      message.error("Error during document analysis");
    }
 };
 
 const handleTranslate = async (filename) => {
    try {
+      const email = getEmailFromToken();
       const res = await apiFetch(
-         `/api/documents/traduire/${encodeURIComponent(filename)}`,
-         {
-            method: "POST",
-         }
+         `/api/documents/traduire/${encodeURIComponent(
+            filename
+         )}?email=${encodeURIComponent(email)}`,
+         { method: "POST" }
       );
-      if (!res) throw new Error("Traduction échouée");
-      message.success(`Traduction de ${filename} terminée !`);
+      if (!res) throw new Error("Translation failed");
+      message.success(`Translation of ${filename} completed!`);
    } catch {
-      message.error("Erreur lors de la traduction du document");
+      message.error("Error during document translation");
    }
-};
-
-const getFileIcon = (contentType) => {
-   if (contentType.startsWith("application/pdf")) {
-      return <FilePdfOutlined style={{ fontSize: 24, color: "#f56565" }} />;
-   } else if (contentType.startsWith("image/")) {
-      return <FileImageOutlined style={{ fontSize: 24, color: "#48bb78" }} />;
-   }
-   return <FileTextOutlined style={{ fontSize: 24, color: "#4299e1" }} />;
 };
 
 const getFileTypeTag = (contentType) => {
-   if (contentType.startsWith("application/pdf")) {
+   if (contentType.startsWith("application/pdf"))
       return <Tag color="red">PDF</Tag>;
-   } else if (contentType.startsWith("image/")) {
-      return <Tag color="green">IMAGE</Tag>;
-   }
-   return <Tag color="blue">FICHIER</Tag>;
+   if (contentType.startsWith("image/")) return <Tag color="green">IMAGE</Tag>;
+   return <Tag color="blue">FILE</Tag>;
 };
 
 const GestionDocuments = () => {
@@ -108,7 +91,10 @@ const GestionDocuments = () => {
 
    const fetchDocuments = async () => {
       try {
-         const res = await apiFetch("/api/documents");
+         const email = getEmailFromToken();
+         const res = await apiFetch(
+            `/api/documents?email=${encodeURIComponent(email)}`
+         );
          if (!res) return;
          const data = await res.json();
 
@@ -116,14 +102,15 @@ const GestionDocuments = () => {
             data.map(async (doc) => {
                const url = `/api/documents/uploads/${encodeURIComponent(
                   doc.filename
-               )}`;
+               )}?email=${encodeURIComponent(email)}`;
                const fileRes = await apiFetch(url);
                const blob = await fileRes.blob();
                const objectUrl = URL.createObjectURL(blob);
 
                let thumbUrl = objectUrl;
-               if (doc.fileType.startsWith("application/pdf"))
+               if (doc.fileType?.startsWith("application/pdf")) {
                   thumbUrl = await generatePdfThumbnail(objectUrl);
+               }
 
                return {
                   uid: doc.filename,
@@ -141,7 +128,7 @@ const GestionDocuments = () => {
          list.sort((a, b) => b.uploadedAt - a.uploadedAt);
          setFileList(list);
       } catch {
-         message.error("Erreur lors de la récupération des documents");
+         message.error("Error fetching documents");
       }
    };
 
@@ -157,8 +144,8 @@ const GestionDocuments = () => {
 
    const handleCustomUpload = async ({ file, onSuccess, onError }) => {
       if (!ACCEPTED_TYPES.some((type) => file.type.startsWith(type))) {
-         message.error("Type de fichier non autorisé !");
-         return onError(new Error("Type non autorisé"));
+         message.error("File type not allowed!");
+         return onError(new Error("Unauthorized type"));
       }
 
       setUploading(true);
@@ -166,17 +153,21 @@ const GestionDocuments = () => {
       formData.append("file", file);
 
       try {
-         const res = await apiFetch("/api/documents/upload", {
-            method: "POST",
-            body: formData,
-         });
+         const email = getEmailFromToken();
+         const res = await apiFetch(
+            `/api/documents/upload?email=${encodeURIComponent(email)}`,
+            {
+               method: "POST",
+               body: formData,
+            }
+         );
          if (!res) throw new Error("Upload failed");
          onSuccess(null);
          fetchDocuments();
-         message.success(`${file.name} uploadé avec succès !`);
+         message.success(`${file.name} uploaded successfully!`);
       } catch (err) {
          onError(err);
-         message.error(`${file.name} upload échoué.`);
+         message.error(`${file.name} upload failed.`);
       } finally {
          setUploading(false);
       }
@@ -184,13 +175,19 @@ const GestionDocuments = () => {
 
    const handleDelete = async (filename) => {
       try {
-         await apiFetch(`/api/documents/${encodeURIComponent(filename)}`, {
-            method: "DELETE",
-         });
-         message.success("Document supprimé !");
+         const email = getEmailFromToken();
+         await apiFetch(
+            `/api/documents/${encodeURIComponent(
+               filename
+            )}?email=${encodeURIComponent(email)}`,
+            {
+               method: "DELETE",
+            }
+         );
+         message.success("Document deleted!");
          fetchDocuments();
       } catch {
-         message.error("Erreur lors de la suppression");
+         message.error("Error deleting document");
       }
    };
 
@@ -199,12 +196,10 @@ const GestionDocuments = () => {
          {/* Upload Area */}
          <Card
             style={{
-               background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
                border: "none",
                borderRadius: "24px",
                marginBottom: "32px",
                overflow: "hidden",
-               
             }}
             bodyStyle={{ padding: 0 }}
          >
@@ -221,7 +216,6 @@ const GestionDocuments = () => {
                   margin: "16px",
                   backdropFilter: "blur(10px)",
                   width: "calc(100% - 32px)",
-               
                }}
             >
                <div style={{ padding: "48px 24px", textAlign: "center" }}>
@@ -243,40 +237,15 @@ const GestionDocuments = () => {
                         style={{ fontSize: 36, color: "#ffffff" }}
                      />
                   </div>
-
                   <Title
                      level={3}
                      style={{ color: "#1a202c", marginBottom: "8px" }}
                   >
-                     {uploading
-                        ? "Téléchargement en cours..."
-                        : "Glissez vos fichiers ici"}
+                     {uploading ? "Uploading..." : "Drag your files here"}
                   </Title>
-
                   <Text style={{ color: "#64748b", fontSize: "16px" }}>
-                     ou cliquez pour sélectionner des fichiers (PDF, JPG, PNG)
+                     or click to select files
                   </Text>
-
-                  <div style={{ marginTop: "16px" }}>
-                     <Tag
-                        color="blue"
-                        style={{ borderRadius: "8px", padding: "4px 12px" }}
-                     >
-                        PDF
-                     </Tag>
-                     <Tag
-                        color="green"
-                        style={{ borderRadius: "8px", padding: "4px 12px" }}
-                     >
-                        JPG
-                     </Tag>
-                     <Tag
-                        color="orange"
-                        style={{ borderRadius: "8px", padding: "4px 12px" }}
-                     >
-                        PNG
-                     </Tag>
-                  </div>
                </div>
             </Dragger>
          </Card>
@@ -319,8 +288,6 @@ const GestionDocuments = () => {
                      style={{
                         position: "relative",
                         height: "200px",
-                        background:
-                           "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -329,30 +296,15 @@ const GestionDocuments = () => {
                      }}
                      onClick={() => handlePreview(file)}
                   >
-                     {file.contentType.startsWith("image/") ? (
-                        <img
-                           src={file.thumbUrl}
-                           alt={file.name}
-                           style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "cover",
-                           }}
-                        />
-                     ) : (
-                        <div style={{ textAlign: "center", color: "#ffffff" }}>
-                           {getFileIcon(file.contentType)}
-                           <div
-                              style={{
-                                 marginTop: "16px",
-                                 fontSize: "14px",
-                                 opacity: 0.9,
-                              }}
-                           >
-                              Cliquez pour prévisualiser
-                           </div>
-                        </div>
-                     )}
+                     <img
+                        src={file.thumbUrl}
+                        alt={file.name}
+                        style={{
+                           width: "100%",
+                           height: "100%",
+                           objectFit: "cover",
+                        }}
+                     />
 
                      {/* Overlay */}
                      <div
@@ -383,7 +335,7 @@ const GestionDocuments = () => {
                               fontWeight: 600,
                            }}
                         >
-                           Prévisualiser
+                           Preview
                         </Button>
                      </div>
 
@@ -416,12 +368,7 @@ const GestionDocuments = () => {
                         >
                            {file.name}
                         </Text>
-                        <Text
-                           style={{
-                              color: "#64748b",
-                              fontSize: "14px",
-                           }}
-                        >
+                        <Text style={{ color: "#64748b", fontSize: "14px" }}>
                            {file.uploadedAt.toLocaleDateString("fr-FR", {
                               year: "numeric",
                               month: "long",
@@ -438,7 +385,7 @@ const GestionDocuments = () => {
                            flexWrap: "wrap",
                         }}
                      >
-                        <Tooltip title="Supprimer">
+                        <Tooltip title="Delete">
                            <Button
                               danger
                               icon={<DeleteOutlined />}
@@ -456,7 +403,7 @@ const GestionDocuments = () => {
                            />
                         </Tooltip>
 
-                        <Tooltip title="Analyser">
+                        <Tooltip title="Analyse">
                            <Button
                               icon={<SearchOutlined />}
                               size="small"
@@ -473,7 +420,7 @@ const GestionDocuments = () => {
                            />
                         </Tooltip>
 
-                        <Tooltip title="Traduire">
+                        <Tooltip title="Translate">
                            <Button
                               icon={<GlobalOutlined />}
                               size="small"
@@ -489,81 +436,6 @@ const GestionDocuments = () => {
                               }}
                            />
                         </Tooltip>
-
-                        <Dropdown
-                           overlay={
-                              <Menu
-                                 style={{
-                                    borderRadius: "12px",
-                                    padding: "8px",
-                                 }}
-                              >
-                                 <Menu.Item
-                                    key="name"
-                                    style={{
-                                       borderRadius: "8px",
-                                       margin: "4px 0",
-                                    }}
-                                 >
-                                    <Space>
-                                       <FileTextOutlined />
-                                       <div>
-                                          <div style={{ fontWeight: 600 }}>
-                                             Nom du fichier
-                                          </div>
-                                          <div
-                                             style={{
-                                                fontSize: "12px",
-                                                color: "#64748b",
-                                             }}
-                                          >
-                                             {file.name}
-                                          </div>
-                                       </div>
-                                    </Space>
-                                 </Menu.Item>
-                                 <Menu.Divider />
-                                 <Menu.Item
-                                    key="date"
-                                    style={{
-                                       borderRadius: "8px",
-                                       margin: "4px 0",
-                                    }}
-                                 >
-                                    <Space>
-                                       <div>
-                                          <div style={{ fontWeight: 600 }}>
-                                             Date d'upload
-                                          </div>
-                                          <div
-                                             style={{
-                                                fontSize: "12px",
-                                                color: "#64748b",
-                                             }}
-                                          >
-                                             {file.uploadedAt.toLocaleString(
-                                                "fr-FR"
-                                             )}
-                                          </div>
-                                       </div>
-                                    </Space>
-                                 </Menu.Item>
-                              </Menu>
-                           }
-                           trigger={["click"]}
-                        >
-                           <Button
-                              icon={<MoreOutlined />}
-                              size="small"
-                              style={{
-                                 borderRadius: "8px",
-                                 background: "#f8fafc",
-                                 border: "1px solid #e2e8f0",
-                                 color: "#64748b",
-                              }}
-                              onClick={(e) => e.stopPropagation()}
-                           />
-                        </Dropdown>
                      </div>
                   </div>
                </Card>
@@ -600,16 +472,14 @@ const GestionDocuments = () => {
                      style={{ fontSize: 36, color: "#ffffff" }}
                   />
                </div>
-
                <Title
                   level={3}
                   style={{ color: "#64748b", marginBottom: "8px" }}
                >
-                  Aucun document
+                  No documents
                </Title>
-
                <Text style={{ color: "#94a3b8", fontSize: "16px" }}>
-                  Commencez par télécharger votre premier document médical
+                  Start by uploading your first medical document
                </Text>
             </Card>
          )}
@@ -641,7 +511,6 @@ const GestionDocuments = () => {
                   overflow: "hidden",
                }}
             >
-               {/* Modal Header */}
                <div
                   style={{
                      background:
@@ -654,7 +523,7 @@ const GestionDocuments = () => {
                   }}
                >
                   <Title level={4} style={{ color: "#ffffff", margin: 0 }}>
-                     Prévisualisation du document
+                     Document Preview
                   </Title>
                   <Button
                      type="text"
@@ -664,8 +533,6 @@ const GestionDocuments = () => {
                      ✕
                   </Button>
                </div>
-
-               {/* Modal Content */}
                <div style={{ padding: "24px" }}>
                   {isPdf ? (
                      <iframe

@@ -1,11 +1,11 @@
 package com.vitacare.vitacare.Service;
 
 import com.vitacare.vitacare.Model.Document;
+import com.vitacare.vitacare.Model.User;
 import com.vitacare.vitacare.Repository.DocumentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.time.LocalDateTime;
@@ -24,32 +24,32 @@ public class DocumentService {
         }
     }
 
-    // Upload d’un fichier
-    public Document uploadFile(MultipartFile file) throws IOException {
+    // Upload a file and associate with a user
+    public Document uploadFile(MultipartFile file, User user) throws IOException {
         String filename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
         Path filePath = uploadDir.resolve(filename);
         file.transferTo(filePath);
 
-        Document document = new Document(
-                null,
-                filename,
-                file.getContentType(),
-                file.getSize(),
-                filePath.toString(),
-                LocalDateTime.now()
-        );
+        Document document = new Document();
+        document.setFilename(filename);
+        document.setFileType(file.getContentType());
+        document.setFileSize(file.getSize());
+        document.setFilePath(filePath.toString());
+        document.setUser(user);
+        document.setUploadedAt(LocalDateTime.now());
+
         return documentRepository.save(document);
     }
 
-    // Lister tous les fichiers
-    public List<Document> getAllDocuments() {
-        return documentRepository.findAll();
+    // List documents for a specific user
+    public List<Document> getDocumentsByUser(User user) {
+        return documentRepository.findByUserId(user.getId());
     }
 
-    // Supprimer un fichier
-    public void deleteDocument(Long id) throws IOException {
-        Document doc = documentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Document non trouvé"));
+    // Delete a document, only if it belongs to the user
+    public void deleteDocument(User user, String filename) throws IOException {
+        Document doc = documentRepository.findByFilenameAndUserId(filename, user.getId())
+                .orElseThrow(() -> new RuntimeException("Document not found or access denied"));
 
         Path filePath = Paths.get(doc.getFilePath());
         if (Files.exists(filePath)) {
@@ -57,5 +57,13 @@ public class DocumentService {
         }
 
         documentRepository.delete(doc);
+    }
+
+    // Get a file resource for download
+    public Path getDocumentPath(User user, String filename) {
+        Document doc = documentRepository.findByFilenameAndUserId(filename, user.getId())
+                .orElseThrow(() -> new RuntimeException("Document not found or access denied"));
+
+        return Paths.get(doc.getFilePath());
     }
 }

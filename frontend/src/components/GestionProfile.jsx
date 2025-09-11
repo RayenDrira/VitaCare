@@ -61,6 +61,11 @@ export default function GestionProfile() {
                phoneNumber: user.phoneNumber || "",
                dateOfBirth: user.dateOfBirth ? moment(user.dateOfBirth) : null,
                gender: user.gender || "",
+               weight: user.weight || null,
+               height: user.height || null,
+               bloodType: user.bloodType || null,
+               allergies: user.allergies || "",
+               chronicConditions: user.chronicConditions || "",
             });
          } catch (err) {
             console.error(err);
@@ -98,6 +103,11 @@ export default function GestionProfile() {
                ? moment(userData.dateOfBirth)
                : null,
             gender: userData.gender || "",
+            weight: userData.weight || null,
+            height: userData.height || null,
+            bloodType: userData.bloodType || null,
+            allergies: userData.allergies || "",
+            chronicConditions: userData.chronicConditions || "",
          });
       }
    };
@@ -115,6 +125,11 @@ export default function GestionProfile() {
                ? values.dateOfBirth.format("YYYY-MM-DD")
                : null,
             gender: values.gender || null,
+            weight: values.weight || null,
+            height: values.height || null,
+            bloodType: values.bloodType || null,
+            allergies: values.allergies || null,
+            chronicConditions: values.chronicConditions || null,
          };
 
          const res = await apiFetch(`/api/profile/${userData.id}`, {
@@ -222,7 +237,9 @@ export default function GestionProfile() {
             <Title level={3} style={{ color: "#ffffff" }}>
                Aucune donnée disponible
             </Title>
-            <Text style={{ color: "rgba(255, 255, 255, 0.8)", fontSize: "16px" }}>
+            <Text
+               style={{ color: "rgba(255, 255, 255, 0.8)", fontSize: "16px" }}
+            >
                Impossible de charger les informations du profil
             </Text>
          </Card>
@@ -246,8 +263,10 @@ export default function GestionProfile() {
                   borderRadius: "32px",
                   border: "none",
                   overflow: "hidden",
-                  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                  minHeight: "600px",
+                  background:
+                     "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+
+                  height: "80vh",
                   position: "relative",
                }}
                bodyStyle={{ padding: 0 }}
@@ -269,7 +288,7 @@ export default function GestionProfile() {
                   style={{
                      position: "relative",
                      zIndex: 2,
-                     padding: "80px 60px",
+                     padding: "50px 60px",
                      textAlign: "center",
                      color: "#ffffff",
                   }}
@@ -292,7 +311,7 @@ export default function GestionProfile() {
                            backgroundColor: "rgba(255, 255, 255, 0.1)",
                         }}
                      />
-                     
+
                      {/* Online indicator */}
                      <div
                         style={{
@@ -325,7 +344,7 @@ export default function GestionProfile() {
                            ? `${userData.firstName} ${userData.lastName}`
                            : "Utilisateur VitaCare"}
                      </Title>
-                     
+
                      <Text
                         style={{
                            color: "rgba(255, 255, 255, 0.8)",
@@ -349,27 +368,46 @@ export default function GestionProfile() {
                      >
                         {userData.phoneNumber && (
                            <div style={{ textAlign: "center" }}>
-                              <PhoneOutlined style={{ fontSize: "24px", marginBottom: "8px" }} />
+                              <PhoneOutlined
+                                 style={{
+                                    fontSize: "24px",
+                                    marginBottom: "8px",
+                                 }}
+                              />
                               <div style={{ fontSize: "14px", opacity: 0.8 }}>
                                  {userData.phoneNumber}
                               </div>
                            </div>
                         )}
-                        
+
                         {userData.dateOfBirth && (
                            <div style={{ textAlign: "center" }}>
-                              <CalendarOutlined style={{ fontSize: "24px", marginBottom: "8px" }} />
+                              <CalendarOutlined
+                                 style={{
+                                    fontSize: "24px",
+                                    marginBottom: "8px",
+                                 }}
+                              />
                               <div style={{ fontSize: "14px", opacity: 0.8 }}>
-                                 {moment(userData.dateOfBirth).format("DD/MM/YYYY")}
+                                 {moment(userData.dateOfBirth).format(
+                                    "DD/MM/YYYY"
+                                 )}
                               </div>
                            </div>
                         )}
-                        
+
                         {userData.gender && (
                            <div style={{ textAlign: "center" }}>
-                              <TeamOutlined style={{ fontSize: "24px", marginBottom: "8px" }} />
+                              <TeamOutlined
+                                 style={{
+                                    fontSize: "24px",
+                                    marginBottom: "8px",
+                                 }}
+                              />
                               <div style={{ fontSize: "14px", opacity: 0.8 }}>
-                                 {userData.gender === "MALE" ? "Homme" : "Femme"}
+                                 {userData.gender === "MALE"
+                                    ? "Homme"
+                                    : "Femme"}
                               </div>
                            </div>
                         )}
@@ -397,11 +435,13 @@ export default function GestionProfile() {
                      }}
                      onMouseEnter={(e) => {
                         e.currentTarget.style.transform = "translateY(-2px)";
-                        e.currentTarget.style.boxShadow = "0 12px 32px rgba(255, 255, 255, 0.3)";
+                        e.currentTarget.style.boxShadow =
+                           "0 12px 32px rgba(255, 255, 255, 0.3)";
                      }}
                      onMouseLeave={(e) => {
                         e.currentTarget.style.transform = "translateY(0)";
-                        e.currentTarget.style.boxShadow = "0 8px 24px rgba(255, 255, 255, 0.2)";
+                        e.currentTarget.style.boxShadow =
+                           "0 8px 24px rgba(255, 255, 255, 0.2)";
                      }}
                   >
                      Modifier mon profil
@@ -418,14 +458,21 @@ export default function GestionProfile() {
                         borderRadius: "24px",
                         border: "1px solid rgba(0,0,0,0.08)",
                         boxShadow: "0 8px 32px rgba(0,0,0,0.08)",
-                        background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                        background:
+                           "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
                         textAlign: "center",
                         padding: "40px 20px",
                         color: "#ffffff",
                         minHeight: "400px",
                      }}
                   >
-                     <div style={{ position: "relative", display: "inline-block", marginBottom: "32px" }}>
+                     <div
+                        style={{
+                           position: "relative",
+                           display: "inline-block",
+                           marginBottom: "32px",
+                        }}
+                     >
                         <Avatar
                            size={180}
                            src={displayImage}
@@ -465,11 +512,15 @@ export default function GestionProfile() {
                         </Upload>
                      </div>
 
-                     <Title level={3} style={{ color: "#ffffff", marginBottom: "8px" }}>
+                     <Title
+                        level={3}
+                        style={{ color: "#ffffff", marginBottom: "8px" }}
+                     >
                         Photo de profil
                      </Title>
                      <Text style={{ color: "rgba(255, 255, 255, 0.8)" }}>
-                        Cliquez sur l'icône appareil photo pour changer votre photo
+                        Cliquez sur l'icône appareil photo pour changer votre
+                        photo
                      </Text>
                   </Card>
                </Col>
@@ -485,7 +536,14 @@ export default function GestionProfile() {
                      bodyStyle={{ padding: "40px" }}
                   >
                      <div style={{ marginBottom: "32px" }}>
-                        <Title level={2} style={{ marginBottom: "8px", fontSize: "28px", fontWeight: 700 }}>
+                        <Title
+                           level={2}
+                           style={{
+                              marginBottom: "8px",
+                              fontSize: "28px",
+                              fontWeight: 700,
+                           }}
+                        >
                            Informations personnelles
                         </Title>
                         <Text style={{ color: "#64748b", fontSize: "16px" }}>
@@ -512,7 +570,11 @@ export default function GestionProfile() {
                                        padding: "12px 16px",
                                        fontSize: "16px",
                                     }}
-                                    prefix={<UserOutlined style={{ color: "#94a3b8" }} />}
+                                    prefix={
+                                       <UserOutlined
+                                          style={{ color: "#94a3b8" }}
+                                       />
+                                    }
                                  />
                               </Form.Item>
                            </Col>
@@ -534,13 +596,16 @@ export default function GestionProfile() {
                                        padding: "12px 16px",
                                        fontSize: "16px",
                                     }}
-                                    prefix={<UserOutlined style={{ color: "#94a3b8" }} />}
+                                    prefix={
+                                       <UserOutlined
+                                          style={{ color: "#94a3b8" }}
+                                       />
+                                    }
                                  />
                               </Form.Item>
                            </Col>
 
                            <Col xs={24}>
-                              
                               <Form.Item
                                  label={
                                     <Text strong style={{ fontSize: "16px" }}>
@@ -560,7 +625,11 @@ export default function GestionProfile() {
                                        backgroundColor: "#f8fafc",
                                        color: "#94a3b8",
                                     }}
-                                    prefix={<MailOutlined style={{ color: "#94a3b8" }} />}
+                                    prefix={
+                                       <MailOutlined
+                                          style={{ color: "#94a3b8" }}
+                                       />
+                                    }
                                  />
                               </Form.Item>
                            </Col>
@@ -582,7 +651,11 @@ export default function GestionProfile() {
                                        padding: "12px 16px",
                                        fontSize: "16px",
                                     }}
-                                    prefix={<PhoneOutlined style={{ color: "#94a3b8" }} />}
+                                    prefix={
+                                       <PhoneOutlined
+                                          style={{ color: "#94a3b8" }}
+                                       />
+                                    }
                                  />
                               </Form.Item>
                            </Col>
@@ -605,7 +678,11 @@ export default function GestionProfile() {
                                        fontSize: "16px",
                                     }}
                                     format="DD/MM/YYYY"
-                                    suffixIcon={<CalendarOutlined style={{ color: "#94a3b8" }} />}
+                                    suffixIcon={
+                                       <CalendarOutlined
+                                          style={{ color: "#94a3b8" }}
+                                       />
+                                    }
                                  />
                               </Form.Item>
                            </Col>
@@ -632,10 +709,136 @@ export default function GestionProfile() {
                                  </Select>
                               </Form.Item>
                            </Col>
+                           {/* Blood Type */}
+                           <Col xs={24} sm={12}>
+                              <Form.Item
+                                 label={
+                                    <Text strong style={{ fontSize: "16px" }}>
+                                       Groupe sanguin
+                                    </Text>
+                                 }
+                                 name="bloodType"
+                              >
+                                 <Select
+                                    placeholder="Sélectionnez votre groupe sanguin"
+                                    style={{
+                                       borderRadius: "12px",
+                                       border: "2px solid #f1f5f9",
+                                       fontSize: "16px",
+                                    }}
+                                 >
+                                    <Option value="A+">A+</Option>
+                                    <Option value="A-">A-</Option>
+                                    <Option value="B+">B+</Option>
+                                    <Option value="B-">B-</Option>
+                                    <Option value="AB+">AB+</Option>
+                                    <Option value="AB-">AB-</Option>
+                                    <Option value="O+">O+</Option>
+                                    <Option value="O-">O-</Option>
+                                 </Select>
+                              </Form.Item>
+                           </Col>
+                           {/* Weight */}
+                           <Col xs={24} sm={12}>
+                              <Form.Item
+                                 label={
+                                    <Text strong style={{ fontSize: "16px" }}>
+                                       Poids (kg)
+                                    </Text>
+                                 }
+                                 name="weight"
+                              >
+                                 <Input
+                                    type="number"
+                                    placeholder="Ex: 70"
+                                    style={{
+                                       borderRadius: "12px",
+                                       border: "2px solid #f1f5f9",
+                                       padding: "12px 16px",
+                                       fontSize: "16px",
+                                    }}
+                                 />
+                              </Form.Item>
+                           </Col>
+
+                           {/* Height */}
+                           <Col xs={24} sm={12}>
+                              <Form.Item
+                                 label={
+                                    <Text strong style={{ fontSize: "16px" }}>
+                                       Taille (cm)
+                                    </Text>
+                                 }
+                                 name="height"
+                              >
+                                 <Input
+                                    type="number"
+                                    placeholder="Ex: 175"
+                                    style={{
+                                       borderRadius: "12px",
+                                       border: "2px solid #f1f5f9",
+                                       padding: "12px 16px",
+                                       fontSize: "16px",
+                                    }}
+                                 />
+                              </Form.Item>
+                           </Col>
+
+                           {/* Allergies */}
+                           <Col xs={24}>
+                              <Form.Item
+                                 label={
+                                    <Text strong style={{ fontSize: "16px" }}>
+                                       Allergies
+                                    </Text>
+                                 }
+                                 name="allergies"
+                              >
+                                 <Input.TextArea
+                                    placeholder="Listez vos allergies, si applicable"
+                                    style={{
+                                       borderRadius: "12px",
+                                       border: "2px solid #f1f5f9",
+                                       padding: "12px 16px",
+                                       fontSize: "16px",
+                                    }}
+                                    rows={2}
+                                 />
+                              </Form.Item>
+                           </Col>
+
+                           {/* Chronic Conditions */}
+                           <Col xs={24}>
+                              <Form.Item
+                                 label={
+                                    <Text strong style={{ fontSize: "16px" }}>
+                                       Conditions chroniques
+                                    </Text>
+                                 }
+                                 name="chronicConditions"
+                              >
+                                 <Input.TextArea
+                                    placeholder="Listez vos conditions médicales chroniques, si applicable"
+                                    style={{
+                                       borderRadius: "12px",
+                                       border: "2px solid #f1f5f9",
+                                       padding: "12px 16px",
+                                       fontSize: "16px",
+                                    }}
+                                    rows={2}
+                                 />
+                              </Form.Item>
+                           </Col>
                         </Row>
 
                         {/* Action Buttons */}
-                        <div style={{ display: "flex", gap: "16px", marginTop: "32px" }}>
+                        <div
+                           style={{
+                              display: "flex",
+                              gap: "16px",
+                              marginTop: "32px",
+                           }}
+                        >
                            <Button
                               type="primary"
                               icon={<SaveOutlined />}
@@ -643,7 +846,8 @@ export default function GestionProfile() {
                               style={{
                                  borderRadius: "12px",
                                  padding: "12px 32px",
-                                 background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                                 background:
+                                    "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
                                  border: "none",
                                  fontWeight: 600,
                               }}

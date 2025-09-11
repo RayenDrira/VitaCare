@@ -8,7 +8,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.*;
-import java.util.UUID;
 
 @Service
 public class UserProfileService {
@@ -34,6 +33,13 @@ public class UserProfileService {
         if (updatedData.getDateOfBirth() != null) user.setDateOfBirth(updatedData.getDateOfBirth());
         if (updatedData.getGender() != null) user.setGender(updatedData.getGender());
 
+        // --- New Health Fields ---
+        if (updatedData.getWeight() != null) user.setWeight(updatedData.getWeight());
+        if (updatedData.getHeight() != null) user.setHeight(updatedData.getHeight());
+        if (updatedData.getBloodType() != null) user.setBloodType(updatedData.getBloodType());
+        if (updatedData.getAllergies() != null) user.setAllergies(updatedData.getAllergies());
+        if (updatedData.getChronicConditions() != null) user.setChronicConditions(updatedData.getChronicConditions());
+
         return userRepository.save(user);
     }
 
@@ -42,17 +48,14 @@ public class UserProfileService {
         User user = getProfile(userId);
 
         if (file != null && !file.isEmpty()) {
-            // Assurez-vous que le dossier "uploads" existe
             Path uploadDir = Paths.get("uploads");
             if (!Files.exists(uploadDir)) {
                 Files.createDirectories(uploadDir);
             }
 
-            // Générer un nom de fichier unique
             String filename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
             Path filePath = uploadDir.resolve(filename);
 
-            // Sauvegarder le fichier
             file.transferTo(filePath);
 
             // Supprimer l'ancienne photo si elle existe
@@ -61,7 +64,6 @@ public class UserProfileService {
                 Files.deleteIfExists(oldPhotoPath);
             }
 
-            // Stocker seulement le nom relatif dans la base de données
             user.setProfilePictureUrl(filename);
             userRepository.save(user);
         }
@@ -74,7 +76,10 @@ public class UserProfileService {
         User user = getProfile(userId);
 
         if (user.getProfilePictureUrl() != null) {
-            Files.deleteIfExists(Paths.get(user.getProfilePictureUrl()));
+            Path uploadDir = Paths.get("uploads");
+            Path photoPath = uploadDir.resolve(Paths.get(user.getProfilePictureUrl()).getFileName());
+            Files.deleteIfExists(photoPath);
+
             user.setProfilePictureUrl(null);
             userRepository.save(user);
         }

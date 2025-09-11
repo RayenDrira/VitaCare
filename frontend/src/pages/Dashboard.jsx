@@ -21,11 +21,9 @@ import {
    FileTextOutlined,
    UserOutlined,
    BarChartOutlined,
-   TeamOutlined,
    SettingOutlined,
    BellOutlined,
    SearchOutlined,
-   MenuOutlined,
 } from "@ant-design/icons";
 
 const { Header, Content, Sider } = Layout;
@@ -33,7 +31,7 @@ const { Title, Text } = Typography;
 
 export default function Dashboard() {
    const [collapsed, setCollapsed] = useState(false);
-   const [activeTopMenu, setActiveTopMenu] = useState("1");
+   const [activePage, setActivePage] = useState("1");
 
    const siderItems = [
       {
@@ -48,38 +46,37 @@ export default function Dashboard() {
          label: "Analytics",
          style: { margin: "8px 0", borderRadius: "12px" },
       },
-      {
-         key: "sub1",
-         icon: <UserOutlined style={{ fontSize: "18px" }} />,
-         label: "Utilisateurs",
-         style: { margin: "8px 0", borderRadius: "12px" },
-         children: [
-            { key: "3", label: "Dr. Martinez" },
-            { key: "4", label: "Dr. Dubois" },
-            { key: "5", label: "Dr. Rousseau" },
-         ],
-      },
-      {
-         key: "sub2",
-         icon: <TeamOutlined style={{ fontSize: "18px" }} />,
-         label: "Équipes",
-         style: { margin: "8px 0", borderRadius: "12px" },
-         children: [
-            { key: "6", label: "Cardiologie" },
-            { key: "8", label: "Neurologie" },
-         ],
-      },
+
       {
          key: "9",
          icon: <FileTextOutlined style={{ fontSize: "18px" }} />,
          label: "Documents",
          style: { margin: "8px 0", borderRadius: "12px" },
       },
+      {
+         key: "10",
+         icon: <UserOutlined style={{ fontSize: "18px" }} />,
+         label: "Profil",
+         style: { margin: "8px 0", borderRadius: "12px" },
+      },
    ];
 
    const userMenu = (
-      <Menu style={{ borderRadius: "12px", padding: "8px" }}>
-         <Menu.Item key="profile" icon={<UserOutlined />}>
+      <Menu
+         style={{ borderRadius: "12px", padding: "8px" }}
+         onClick={(e) => {
+            if (e.key === "10") {
+               setActivePage("10"); // Go to Profile
+            }
+            if (e.key === "logout") {
+               console.log("Déconnexion...");
+               localStorage.removeItem("jwt");
+
+               window.location.href = "/login";
+            }
+         }}
+      >
+         <Menu.Item key="10" icon={<UserOutlined />}>
             Mon Profil
          </Menu.Item>
          <Menu.Item key="settings" icon={<SettingOutlined />}>
@@ -120,6 +117,7 @@ export default function Dashboard() {
          }}
       >
          <Layout style={{ minHeight: "100vh", background: "#f8fafc" }}>
+            {/* Sidebar */}
             <Sider
                collapsible
                collapsed={collapsed}
@@ -188,9 +186,10 @@ export default function Dashboard() {
                <div style={{ padding: "0 16px" }}>
                   <Menu
                      theme="dark"
-                     defaultSelectedKeys={["1"]}
+                     selectedKeys={[activePage]}
                      mode="inline"
                      items={siderItems}
+                     onClick={(e) => setActivePage(e.key)}
                      style={{
                         background: "transparent",
                         border: "none",
@@ -199,53 +198,9 @@ export default function Dashboard() {
                      }}
                   />
                </div>
-
-               {/* User profile at bottom */}
-               {!collapsed && (
-                  <div
-                     style={{
-                        position: "absolute",
-                        bottom: 24,
-                        left: 16,
-                        right: 16,
-                        background: "rgba(255, 255, 255, 0.05)",
-                        borderRadius: "16px",
-                        padding: "16px",
-                        border: "1px solid rgba(255, 255, 255, 0.1)",
-                        backdropFilter: "blur(10px)",
-                     }}
-                  >
-                     <Space align="center">
-                        <Avatar
-                           size={40}
-                           style={{ backgroundColor: "#6366f1" }}
-                        >
-                           <UserOutlined />
-                        </Avatar>
-                        <div>
-                           <Text
-                              style={{
-                                 color: "#ffffff",
-                                 fontWeight: 600,
-                                 display: "block",
-                              }}
-                           >
-                              Dr. Amira Ben Ali
-                           </Text>
-                           <Text
-                              style={{
-                                 color: "rgba(255, 255, 255, 0.6)",
-                                 fontSize: 12,
-                              }}
-                           >
-                              En ligne
-                           </Text>
-                        </div>
-                     </Space>
-                  </div>
-               )}
             </Sider>
 
+            {/* Main Layout */}
             <Layout style={{ background: "#f8fafc" }}>
                <Header
                   style={{
@@ -254,69 +209,11 @@ export default function Dashboard() {
                      height: 80,
                      display: "flex",
                      alignItems: "center",
-                     justifyContent: "space-between",
+                     justifyContent: "flex-end",
                      boxShadow: "0 2px 24px rgba(0,0,0,0.04)",
                      borderBottom: "1px solid rgba(0,0,0,0.06)",
                   }}
                >
-                  {/* Navigation Pills */}
-                  <div
-                     style={{
-                        display: "flex",
-                        background: "#f1f5f9",
-                        borderRadius: "16px",
-                        padding: "6px",
-                        gap: "4px",
-                     }}
-                  >
-                     {[
-                        {
-                           key: "1",
-                           label: "Accueil",
-                           icon: <DashboardOutlined />,
-                        },
-                        {
-                           key: "2",
-                           label: "Documents",
-                           icon: <FileTextOutlined />,
-                        },
-                        { key: "3", label: "Profil", icon: <UserOutlined /> },
-                     ].map((item) => (
-                        <Button
-                           key={item.key}
-                           type={
-                              activeTopMenu === item.key ? "primary" : "text"
-                           }
-                           icon={item.icon}
-                           onClick={() => setActiveTopMenu(item.key)}
-                           style={{
-                              borderRadius: "12px",
-                              fontWeight: 600,
-                              fontSize: "14px",
-                              height: "40px",
-                              padding: "0 20px",
-                              border: "none",
-                              background:
-                                 activeTopMenu === item.key
-                                    ? "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)"
-                                    : "transparent",
-                              color:
-                                 activeTopMenu === item.key
-                                    ? "#ffffff"
-                                    : "#64748b",
-                              boxShadow:
-                                 activeTopMenu === item.key
-                                    ? "0 4px 16px rgba(99, 102, 241, 0.3)"
-                                    : "none",
-                              transition:
-                                 "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                           }}
-                        >
-                           {item.label}
-                        </Button>
-                     ))}
-                  </div>
-
                   {/* Right side controls */}
                   <Space size="large">
                      <Button
@@ -372,7 +269,8 @@ export default function Dashboard() {
                      minHeight: "calc(100vh - 144px)",
                   }}
                >
-                  {activeTopMenu === "1" && (
+                  {/* Dashboard Page */}
+                  {activePage === "1" && (
                      <div
                         style={{
                            background:
@@ -386,105 +284,57 @@ export default function Dashboard() {
                            boxShadow: "0 20px 60px rgba(102, 126, 234, 0.3)",
                         }}
                      >
-                        {/* Decorative elements */}
-                        <div
+                        <Title
+                           level={1}
                            style={{
-                              position: "absolute",
-                              top: "-50px",
-                              right: "-50px",
-                              width: "200px",
-                              height: "200px",
-                              background: "rgba(255, 255, 255, 0.1)",
-                              borderRadius: "50%",
-                              backdropFilter: "blur(10px)",
+                              color: "#ffffff",
+                              fontSize: "48px",
+                              fontWeight: 800,
+                              marginBottom: "16px",
+                              letterSpacing: "-2px",
+                              lineHeight: 1.2,
                            }}
-                        />
-                        <div
+                        >
+                           Bienvenue sur VitaCare
+                        </Title>
+                        <Text
                            style={{
-                              position: "absolute",
-                              bottom: "-30px",
-                              left: "-30px",
-                              width: "150px",
-                              height: "150px",
-                              background: "rgba(255, 255, 255, 0.05)",
-                              borderRadius: "50%",
-                              backdropFilter: "blur(5px)",
+                              color: "rgba(255, 255, 255, 0.9)",
+                              fontSize: "20px",
+                              fontWeight: 400,
+                              lineHeight: 1.6,
+                              maxWidth: "600px",
+                              margin: "0 auto",
+                              display: "block",
                            }}
-                        />
-
-                        <div style={{ position: "relative", zIndex: 2 }}>
-                           <Title
-                              level={1}
-                              style={{
-                                 color: "#ffffff",
-                                 fontSize: "48px",
-                                 fontWeight: 800,
-                                 marginBottom: "16px",
-                                 letterSpacing: "-2px",
-                                 lineHeight: 1.2,
-                              }}
-                           >
-                              Bienvenue sur VitaCare
-                           </Title>
-                           <Text
-                              style={{
-                                 color: "rgba(255, 255, 255, 0.9)",
-                                 fontSize: "20px",
-                                 fontWeight: 400,
-                                 lineHeight: 1.6,
-                                 maxWidth: "600px",
-                                 margin: "0 auto",
-                                 display: "block",
-                              }}
-                           >
-                              Gérez vos documents médicaux, consultez vos
-                              analyses et maintenez votre profil de santé en
-                              toute simplicité.
-                           </Text>
-
-                           <Space size="large" style={{ marginTop: "40px" }}>
-                              <Button
-                                 size="large"
-                                 style={{
-                                    background: "#ffffff",
-                                    color: "#667eea",
-                                    border: "none",
-                                    borderRadius: "16px",
-                                    padding: "0 32px",
-                                    height: "48px",
-                                    fontWeight: 600,
-                                    fontSize: "16px",
-                                    boxShadow:
-                                       "0 8px 24px rgba(255, 255, 255, 0.2)",
-                                 }}
-                                 onClick={() => setActiveTopMenu("2")}
-                              >
-                                 Voir mes documents
-                              </Button>
-                              <Button
-                                 size="large"
-                                 style={{
-                                    background: "rgba(255, 255, 255, 0.2)",
-                                    color: "#ffffff",
-                                    border:
-                                       "1px solid rgba(255, 255, 255, 0.3)",
-                                    borderRadius: "16px",
-                                    padding: "0 32px",
-                                    height: "48px",
-                                    fontWeight: 600,
-                                    fontSize: "16px",
-                                    backdropFilter: "blur(10px)",
-                                 }}
-                                 onClick={() => setActiveTopMenu("3")}
-                              >
-                                 Modifier mon profil
-                              </Button>
-                           </Space>
-                        </div>
+                        >
+                           Gérez vos documents médicaux, consultez vos analyses
+                           et maintenez votre profil de santé en toute
+                           simplicité.
+                        </Text>
                      </div>
                   )}
 
-                  {activeTopMenu === "2" && (
+                  {/* Analytics Page */}
+                  {activePage === "2" && (
+                     <Card
+                        style={{
+                           background: "#ffffff",
+                           borderRadius: "24px",
+                           border: "1px solid rgba(0,0,0,0.06)",
+                           boxShadow: "0 8px 32px rgba(0,0,0,0.08)",
+                           padding: "8px",
+                           flex: 1,
+                        }}
+                        bodyStyle={{ padding: "32px" }}
+                     >
+                        <Title level={2}>Analytics</Title>
+                        <Text>Visualisez vos statistiques de santé</Text>
+                     </Card>
+                  )}
+
+                  {/* Documents Page */}
+                  {activePage === "9" && (
                      <Card
                         style={{
                            background: "#ffffff",
@@ -497,26 +347,8 @@ export default function Dashboard() {
                         bodyStyle={{ padding: "32px" }}
                      >
                         <div style={{ marginBottom: "24px" }}>
-                           <Title
-                              level={2}
-                              style={{
-                                 fontSize: "28px",
-                                 fontWeight: 700,
-                                 color: "#1a202c",
-                                 margin: 0,
-                                 letterSpacing: "-0.5px",
-                              }}
-                           >
-                              Gestion des Documents
-                           </Title>
-                           <Text
-                              style={{
-                                 color: "#64748b",
-                                 fontSize: "16px",
-                                 marginTop: "8px",
-                                 display: "block",
-                              }}
-                           >
+                           <Title level={2}>Gestion des Documents</Title>
+                           <Text>
                               Organisez et gérez tous vos documents médicaux
                            </Text>
                         </div>
@@ -524,7 +356,8 @@ export default function Dashboard() {
                      </Card>
                   )}
 
-                  {activeTopMenu === "3" && (
+                  {/* Profile Page */}
+                  {activePage === "10" && (
                      <div style={{ flex: 1 }}>
                         <GestionProfile />
                      </div>
