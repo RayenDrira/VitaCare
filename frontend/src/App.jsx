@@ -9,7 +9,6 @@ import {
 import {jwtDecode} from "jwt-decode";
 import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
-import "./styles/Auth.css";
 function OAuth2RedirectHandler({ setIsAuthenticated }) {
    const navigate = useNavigate();
 

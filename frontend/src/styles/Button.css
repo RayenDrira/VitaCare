@@ -9,14 +9,14 @@ html {
   font-size: 1.1em;
   text-transform: capitalize;
   border-radius: 10px;
-  color: #535353;
+  color: #ffff;
   background-color: #31c1e1;
   border: 2px solid #31c1e1;
   cursor: pointer;
 }
 .btx-blue:hover {
-  color: #535353;
-  border: 2px solid #535353;
+  color: #31c1e1;
+  border: 2px solid #31c1e1;
 }
 .btx-blue::before {
   width: 200%;
@@ -91,14 +91,15 @@ html {
   gap: 0.5em;
 }
 .btx-white:hover {
-  color: #535353;
-  border: 2px solid #535353;
+  color: #fff;
+  border: 2px solid #fff;
 }
 .btx-white::before {
   width: 200%;
   height: 180%;
   background: white;
 }
+
 .btx-white:hover::before {
   height: 0%;
 }

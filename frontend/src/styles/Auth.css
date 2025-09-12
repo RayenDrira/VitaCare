@@ -1,36 +1,45 @@
 @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap");
+
 * {
-   font-family: Outfit;
+   font-family: Outfit, sans-serif;
    margin: 0;
    padding: 0;
    box-sizing: border-box;
    scroll-behavior: smooth;
 }
-html{
+
+html {
    font-size: 16px;
-   background: linear-gradient(157deg, #31c1e1 58.93%, #31e1cf 84.16%);
+   
 }
 
-body{
-   height: 100vh;
+body {
+   min-height: 101vh;
+   color: #ffffff; /* clearer contrast */
+   background-image: url("../assets/bg.jpg");
+   background-size: cover;
+   background-repeat: no-repeat;
+   background-attachment: fixed;
+   background-position: center;
 }
-
+.container{
+   display: flex;
+   justify-content: center;
+   align-items: center;
+}
 /* Links */
-.forgot-password {
-   text-align: right;
-}
-a,
+.glassy-card a,
 .flip-clicker {
    position: relative;
-   color: #535353;
+   color: rgba(255, 255, 255, 0.85);
    text-transform: capitalize;
    text-decoration: none;
    cursor: pointer;
-   text-align: right;
    display: inline-block;
+   transition: color 0.3s ease;
 }
 
-a::after,
+.glassy-card a::after,
 .flip-clicker::after {
    content: "";
    position: absolute;
@@ -38,8 +47,13 @@ a::after,
    height: 1.5px;
    left: 0;
    bottom: -2px;
-   background-color: #535353;
+   background-color: rgba(255, 255, 255, 0.7);
    transition: width 0.3s ease;
+}
+
+.glassy-card a:hover,
+.flip-clicker:hover {
+   color: #ffffff;
 }
 
 a:hover::after,
@@ -48,13 +62,14 @@ a:hover::after,
 }
 
 #new a {
-   position: relative;
-   color: #535353;
+   color: #ffffff;
    font-weight: 600;
    text-transform: capitalize;
    text-decoration: none;
    cursor: pointer;
+   transition: color 0.3s ease;
 }
+
 #new a::after {
    content: "";
    position: absolute;
@@ -62,7 +77,7 @@ a:hover::after,
    height: 1.5px;
    left: 0;
    bottom: -2px;
-   background-color: #535353;
+   background-color: rgba(255, 255, 255, 0.7);
    transition: width 0.3s ease;
 }
 
@@ -70,100 +85,122 @@ a:hover::after,
    width: 100%;
 }
 
-
-/* top part */
-h1 {
+/* Headings */
+.glassy-card h1 {
    font-size: 2.8em;
    font-weight: 700;
    text-align: center;
-   line-height: 60px;
+   line-height: 1.2;
    letter-spacing: 2px;
-   background: linear-gradient(94deg, #31c1e1 1.39%, #31e1cf 99.3%);
+   //background: linear-gradient(94deg, #31c1e1 1.39%, /*#31e1cf*/#fff 90.3%);
+   background: white;
    background-clip: text;
    -webkit-background-clip: text;
    -webkit-text-fill-color: transparent;
    margin: 0;
 }
-.logo-container {
+
+.glassy-card .logo-container {
    display: flex;
    justify-content: center;
    align-items: center;
    flex-direction: column;
-   padding: 1em 0;
+   padding: 1em 0 0 0;
 }
+
 .glassy-card .logo-img {
    height: 90px;
    width: 88px;
-   padding: 0;
 }
-
-/* Card */
-
-.container {
-   display: flex;
-   justify-content: center;
-   align-items: center;
-   margin: 4em 6em;
-}
+/* Glassy Card with higher contrast */
 .glassy-card {
+   position: relative;
    display: flex;
    flex-direction: column;
    align-items: center;
-   gap: 1em;
-   padding: 1.5em 1.875em;
+   gap: 1.5em;
+   padding: 2em;
    width: 30em;
-   height: 37em;
+   height: 38em;
    border-radius: 20px;
 
-   /* soft aqua border */
-   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-   background: linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.82) 20%,
-      rgba(255, 255, 255, 0.41) 100%
-   );
-   backdrop-filter: blur(5px);
+   /* darker glass background */
+   background: rgba(20, 20, 20, 0.35);
+   backdrop-filter: blur(20px) saturate(160%);
+   -webkit-backdrop-filter: blur(20px) saturate(160%);
+
+   /* stronger border + shadow for separation */
+   border: 1px solid rgba(255, 255, 255, 0.3);
+   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
 }
 
+/* Highlight reflection */
+.glassy-card::before {
+   content: "";
+   position: absolute;
+   inset: 0;
+   border-radius: 20px;
+   background: linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.15) 0%,
+      rgba(255, 255, 255, 0) 60%
+   );
+   pointer-events: none;
+}
+
+/* Inputs: stronger contrast */
+.glassy-card input {
+   height: 3.6em;
+   background: rgba(255, 255, 255, 0.12);
+   padding: 1em;
+   border: 1.5px solid rgba(255, 255, 255, 0.45);
+   border-radius: 10px;
+   color: #ffffff;
+   transition: all 0.3s ease;
+}
+
+.glassy-card input:focus {
+   border-color: #31c1e1;
+   box-shadow: 0 0 15px rgba(49, 193, 225, 0.4);
+   background: rgba(255, 255, 255, 0.22);
+}
+
+svg path {
+   transition: fill 0.8s ease-in-out;
+}
+Button:hover svg path {
+   fill: #fff;
+}
 /* Form */
 .glassy-card form {
    display: flex;
    flex-direction: column;
    gap: 1em;
-}
-.glassy-card input {
-   height: 3.6em;
-   background-color: transparent;
-   padding: 1em;
-   border: 1.6px solid #535353;
-   border-radius: 10px;
-}
-.glassy-card input:focus {
-   border-color: rgba(49, 193, 225, 0.8);
-   outline: none;
-   transition: all 0.25s ease;
-   box-shadow: 0 4px 12px rgba(49, 193, 225, 0.15);
+   width: 100%;
 }
 
-#new {
-   display: flex;
-   justify-content: center;
+.glassy-card input::placeholder {
+   color: rgba(255, 255, 255, 0.7);
 }
 
+/* Divider OR */
 .or {
    display: flex;
    align-items: center;
    justify-content: center;
    gap: 1em;
+   width: 100%;
 }
+
 .or hr {
-   width: 11em;
-   border-color: #535353;
-   border-radius: 100px;
+   flex: 1;
+   border: none;
+   border-top: 1px solid rgba(255, 255, 255, 0.4);
 }
+
 p {
    font-size: 1em;
    font-weight: 400;
-   color: #535353;
+   color: rgba(255, 255, 255, 0.85);
+   text-align: center;
 }
-

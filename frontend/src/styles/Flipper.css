@@ -1,7 +1,10 @@
 .card-container {
-   width: 400px;
-   height: 500px;
-
+   width: 30em;
+   height: 38em;
+   top: 50%;
+   left: 50%;
+   position: absolute;
+   transform: translate(-50%, -50%);
    perspective: 1000px; /* 3D perspective for flip */
 }
 

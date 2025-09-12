@@ -249,11 +249,11 @@ export default function GestionProfile() {
    const displayImage =
       previewImage ||
       (userData.profilePictureUrl
-         ? userData.profilePictureUrl.startsWith("http")
+         ? userData.profilePictureUrl.startsWith("https")
             ? userData.profilePictureUrl
             : `http://localhost:8081/uploads/${userData.profilePictureUrl}`
          : undefined);
-
+      console.log("User Data:", userData);
    return (
       <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
          {!isEditing ? (
