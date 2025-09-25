@@ -7,6 +7,8 @@ import {
    FileTextOutlined,
    EyeOutlined,
    CloudUploadOutlined,
+   HeartOutlined,
+   MedicineBoxOutlined,
 } from "@ant-design/icons";
 import {
    Upload,
@@ -14,7 +16,6 @@ import {
    Button,
    Modal,
    Select,
-   border,
    Card,
    Typography,
    Tag,
@@ -29,6 +30,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/$
 
 const { Title, Text } = Typography;
 const ACCEPTED_TYPES = ["image/", "application/pdf"];
+
 const generatePdfThumbnail = async (url) => {
    try {
       const pdf = await pdfjs.getDocument(url).promise;
@@ -41,7 +43,7 @@ const generatePdfThumbnail = async (url) => {
          .promise;
       return canvas.toDataURL();
    } catch {
-      return "/pdf-fallback.png"; // fallback if PDF is corrupted
+      return "/pdf-fallback.png";
    }
 };
 
@@ -79,9 +81,10 @@ const handleTranslate = async (filename) => {
 
 const getFileTypeTag = (contentType) => {
    if (contentType.startsWith("application/pdf"))
-      return <Tag color="red">PDF</Tag>;
-   if (contentType.startsWith("image/")) return <Tag color="green">IMAGE</Tag>;
-   return <Tag color="blue">FILE</Tag>;
+      return <Tag color="#31c1e1" style={{ borderRadius: "12px", fontWeight: 600 }}>PDF</Tag>;
+   if (contentType.startsWith("image/")) 
+      return <Tag color="#4dd0e7" style={{ borderRadius: "12px", fontWeight: 600 }}>IMAGE</Tag>;
+   return <Tag color="#87ceeb" style={{ borderRadius: "12px", fontWeight: 600 }}>FILE</Tag>;
 };
 
 const GestionDocuments = ({ searchQuery = "" }) => {
@@ -97,6 +100,7 @@ const GestionDocuments = ({ searchQuery = "" }) => {
    const onPdfLoad = ({ numPages }) => {
       setNumPages(numPages);
    };
+
    const fetchDocuments = async () => {
       try {
          const email = getEmailFromToken();
@@ -132,8 +136,8 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                   uid: doc.filename,
                   name: doc.filename,
                   contentType: doc.fileType,
-                  url: objectUrl, // blob preview url
-                  blob: fixedBlob, // keep raw blob too ✅
+                  url: objectUrl,
+                  blob: fixedBlob,
                   thumbUrl,
                   uploadedAt: doc.uploadedAt
                      ? new Date(doc.uploadedAt)
@@ -152,6 +156,7 @@ const GestionDocuments = ({ searchQuery = "" }) => {
    useEffect(() => {
       fetchDocuments();
    }, []);
+
    const filteredDocs = fileList
       .filter(
          (file) =>
@@ -165,11 +170,11 @@ const GestionDocuments = ({ searchQuery = "" }) => {
             return a.contentType.localeCompare(b.contentType);
          return 0;
       });
+
    const handlePreview = (file) => {
       setIsPdf(file.contentType.startsWith("application/pdf"));
 
       if (file.contentType.startsWith("application/pdf")) {
-         // force PDF to render inside iframe
          const pdfUrl = URL.createObjectURL(
             new Blob([file.blob], { type: "application/pdf" })
          );
@@ -183,8 +188,8 @@ const GestionDocuments = ({ searchQuery = "" }) => {
 
    const handleCustomUpload = async ({ file, onSuccess, onError }) => {
       if (!ACCEPTED_TYPES.some((type) => file.type.startsWith(type))) {
-         message.error("File type not allowed!");
-         return onError(new Error("Unauthorized type"));
+         message.error("Type de fichier non autorisé!");
+         return onError(new Error("Type non autorisé"));
       }
 
       setUploading(true);
@@ -203,10 +208,10 @@ const GestionDocuments = ({ searchQuery = "" }) => {
          if (!res) throw new Error("Upload failed");
          onSuccess(null);
          fetchDocuments();
-         message.success(`${file.name} uploaded successfully!`);
+         message.success(`${file.name} téléchargé avec succès!`);
       } catch (err) {
          onError(err);
-         message.error(`${file.name} upload failed.`);
+         message.error(`Échec du téléchargement de ${file.name}.`);
       } finally {
          setUploading(false);
       }
@@ -216,11 +221,11 @@ const GestionDocuments = ({ searchQuery = "" }) => {
       const email = getEmailFromToken();
 
       Modal.confirm({
-         title: "Are you sure you want to delete this document?",
-         content: `${filename} will be permanently removed.`,
-         okText: "Yes, delete",
+         title: "Êtes-vous sûr de vouloir supprimer ce document?",
+         content: `${filename} sera définitivement supprimé.`,
+         okText: "Oui, supprimer",
          okType: "danger",
-         cancelText: "Cancel",
+         cancelText: "Annuler",
          onOk: async () => {
             try {
                await apiFetch(
@@ -229,10 +234,10 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                   )}?email=${encodeURIComponent(email)}`,
                   { method: "DELETE" }
                );
-               message.success("Document deleted!");
+               message.success("Document supprimé!");
                fetchDocuments();
             } catch {
-               message.error("Error deleting document");
+               message.error("Erreur lors de la suppression");
             }
          },
       });
@@ -243,10 +248,13 @@ const GestionDocuments = ({ searchQuery = "" }) => {
          {/* Upload Area */}
          <Card
             style={{
-               border: "none",
+               background: "rgba(255, 255, 255, 0.98)",
+               backdropFilter: "blur(15px)",
+               border: "2px solid rgba(49, 193, 225, 0.2)",
                borderRadius: "24px",
                marginBottom: "32px",
                overflow: "hidden",
+               boxShadow: "0 8px 32px rgba(49, 193, 225, 0.1)",
             }}
             bodyStyle={{ padding: 0 }}
          >
@@ -257,60 +265,80 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                showUploadList={false}
                disabled={uploading}
                style={{
-                  background: "rgba(255, 255, 255, 0.95)",
-                  border: "2px dashed rgba(245, 87, 108, 0.3)",
+                  background: "transparent",
+                  border: "none",
                   borderRadius: "20px",
                   margin: "16px",
-                  backdropFilter: "blur(10px)",
                   width: "calc(100% - 32px)",
                }}
             >
                <div style={{ padding: "48px 24px", textAlign: "center" }}>
                   <div
                      style={{
-                        background:
-                           "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
-                        width: "80px",
-                        height: "80px",
+                        background: "linear-gradient(135deg, #31c1e1 0%, #4dd0e7 100%)",
+                        width: "100px",
+                        height: "100px",
                         borderRadius: "50%",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        margin: "0 auto 24px",
-                        boxShadow: "0 8px 32px rgba(99, 102, 241, 0.3)",
+                        margin: "0 auto 32px",
+                        boxShadow: "0 12px 40px rgba(49, 193, 225, 0.3)",
+                        transform: uploading ? "scale(1.05)" : "scale(1)",
+                        transition: "all 0.3s ease",
                      }}
                   >
                      <CloudUploadOutlined
-                        style={{ fontSize: 36, color: "#ffffff" }}
+                        style={{ 
+                           fontSize: 42, 
+                           color: "#ffffff",
+                           animation: uploading ? "pulse 2s infinite" : "none"
+                        }}
                      />
                   </div>
                   <Title
                      level={3}
-                     style={{ color: "#1a202c", marginBottom: "8px" }}
+                     style={{ 
+                        color: "#2c5aa0", 
+                        marginBottom: "12px",
+                        fontFamily: "Outfit",
+                        fontWeight: 600
+                     }}
                   >
-                     {uploading ? "Uploading..." : "Drag your files here"}
+                     {uploading ? "Téléchargement en cours..." : "Glissez vos fichiers ici"}
                   </Title>
-                  <Text style={{ color: "#64748b", fontSize: "16px" }}>
-                     or click to select files
+                  <Text style={{ color: "#31c1e1", fontSize: "16px", fontWeight: 500 }}>
+                     ou cliquez pour sélectionner des fichiers
                   </Text>
+                  <div style={{ marginTop: "16px" }}>
+                     <Text style={{ color: "#87ceeb", fontSize: "14px" }}>
+                        Formats supportés: PDF, JPG, PNG
+                     </Text>
+                  </div>
                </div>
             </Dragger>
          </Card>
+
+         {/* Sort Controls */}
          <div
             style={{
                display: "flex",
                justifyContent: "flex-end",
-               marginBottom: "16px",
+               marginBottom: "24px",
             }}
          >
             <Select
                value={sortBy}
                onChange={(val) => setSortBy(val)}
-               style={{ width: 200 }}
+               style={{ 
+                  width: 200,
+                  borderRadius: "16px"
+               }}
+               size="large"
             >
-               <Select.Option value="latest">📅 Latest Uploaded</Select.Option>
-               <Select.Option value="alpha">🔤 Alphabetical</Select.Option>
-               <Select.Option value="type">📂 File Type</Select.Option>
+               <Select.Option value="latest">📅 Plus récents</Select.Option>
+               <Select.Option value="alpha">🔤 Alphabétique</Select.Option>
+               <Select.Option value="type">📂 Type de fichier</Select.Option>
             </Select>
          </div>
 
@@ -318,7 +346,7 @@ const GestionDocuments = ({ searchQuery = "" }) => {
          <div
             style={{
                display: "grid",
-               gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+               gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
                gap: "24px",
                marginTop: "32px",
             }}
@@ -328,23 +356,22 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                   key={file.uid}
                   hoverable
                   style={{
-                     borderRadius: "20px",
-                     border: "1px solid rgba(0,0,0,0.08)",
-                     boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
+                     borderRadius: "24px",
+                     border: "2px solid rgba(49, 193, 225, 0.2)",
+                     boxShadow: "0 8px 32px rgba(49, 193, 225, 0.1)",
                      overflow: "hidden",
-                     background: "#ffffff",
+                     background: "rgba(255, 255, 255, 0.95)",
+                     backdropFilter: "blur(10px)",
                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                   }}
                   bodyStyle={{ padding: 0 }}
                   onMouseEnter={(e) => {
-                     e.currentTarget.style.transform = "translateY(-4px)";
-                     e.currentTarget.style.boxShadow =
-                        "0 12px 40px rgba(0,0,0,0.12)";
+                     e.currentTarget.style.transform = "translateY(-8px)";
+                     e.currentTarget.style.boxShadow = "0 16px 48px rgba(49, 193, 225, 0.2)";
                   }}
                   onMouseLeave={(e) => {
                      e.currentTarget.style.transform = "translateY(0)";
-                     e.currentTarget.style.boxShadow =
-                        "0 4px 24px rgba(0,0,0,0.06)";
+                     e.currentTarget.style.boxShadow = "0 8px 32px rgba(49, 193, 225, 0.1)";
                   }}
                >
                   {/* Document Preview */}
@@ -358,6 +385,7 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                         justifyContent: "center",
                         cursor: "pointer",
                         overflow: "hidden",
+                        background: "linear-gradient(135deg, #f8fdff 0%, #e8f8fc 100%)",
                      }}
                      onClick={() => handlePreview(file)}
                   >
@@ -368,6 +396,7 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                            width: "100%",
                            height: "100%",
                            objectFit: "cover",
+                           transition: "transform 0.3s ease",
                         }}
                      />
 
@@ -379,12 +408,13 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                            left: 0,
                            right: 0,
                            bottom: 0,
-                           background: "rgba(0,0,0,0.4)",
+                           background: "rgba(49, 193, 225, 0.8)",
                            display: "flex",
                            alignItems: "center",
                            justifyContent: "center",
                            opacity: 0,
                            transition: "opacity 0.3s ease",
+                           backdropFilter: "blur(4px)",
                         }}
                         className="document-overlay"
                      >
@@ -393,14 +423,15 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                            icon={<EyeOutlined />}
                            size="large"
                            style={{
-                              background: "rgba(255, 255, 255, 0.9)",
-                              color: "#1a202c",
-                              border: "none",
-                              borderRadius: "12px",
+                              background: "rgba(255, 255, 255, 0.95)",
+                              color: "#31c1e1",
+                              border: "2px solid rgba(49, 193, 225, 0.3)",
+                              borderRadius: "16px",
                               fontWeight: 600,
+                              boxShadow: "0 4px 20px rgba(255, 255, 255, 0.3)",
                            }}
                         >
-                           Preview
+                           Aperçu
                         </Button>
                      </div>
 
@@ -417,23 +448,29 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                   </div>
 
                   {/* Document Info */}
-                  <div style={{ padding: "20px" }}>
-                     <div style={{ marginBottom: "16px" }}>
+                  <div style={{ padding: "24px" }}>
+                     <div style={{ marginBottom: "20px" }}>
                         <Text
                            strong
                            style={{
                               fontSize: "16px",
-                              color: "#1a202c",
+                              color: "#2c5aa0",
                               display: "block",
-                              marginBottom: "4px",
+                              marginBottom: "8px",
                               overflow: "hidden",
                               textOverflow: "ellipsis",
                               whiteSpace: "nowrap",
+                              fontFamily: "Outfit",
+                              fontWeight: 600,
                            }}
                         >
                            {file.name}
                         </Text>
-                        <Text style={{ color: "#64748b", fontSize: "14px" }}>
+                        <Text style={{ 
+                           color: "#31c1e1", 
+                           fontSize: "14px",
+                           fontWeight: 500
+                        }}>
                            {file.uploadedAt.toLocaleDateString("fr-FR", {
                               year: "numeric",
                               month: "long",
@@ -446,20 +483,21 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                      <div
                         style={{
                            display: "flex",
-                           gap: "8px",
+                           gap: "12px",
                            flexWrap: "wrap",
                         }}
                      >
-                        <Tooltip title="Delete">
+                        <Tooltip title="Supprimer">
                            <Button
                               danger
                               icon={<DeleteOutlined />}
-                              size="small"
+                              size="large"
                               style={{
-                                 borderRadius: "8px",
-                                 background: "#fef2f2",
-                                 border: "1px solid #fecaca",
-                                 color: "#dc2626",
+                                 borderRadius: "12px",
+                                 background: "rgba(255, 77, 77, 0.1)",
+                                 border: "2px solid rgba(255, 77, 77, 0.2)",
+                                 color: "#ff4d4d",
+                                 fontWeight: 600,
                               }}
                               onClick={(e) => {
                                  e.stopPropagation();
@@ -468,15 +506,16 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                            />
                         </Tooltip>
 
-                        <Tooltip title="Analyse">
+                        <Tooltip title="Analyser">
                            <Button
                               icon={<SearchOutlined />}
-                              size="small"
+                              size="large"
                               style={{
-                                 borderRadius: "8px",
-                                 background: "#f0f9ff",
-                                 border: "1px solid #bae6fd",
-                                 color: "#0369a1",
+                                 borderRadius: "12px",
+                                 background: "rgba(49, 193, 225, 0.1)",
+                                 border: "2px solid rgba(49, 193, 225, 0.2)",
+                                 color: "#31c1e1",
+                                 fontWeight: 600,
                               }}
                               onClick={(e) => {
                                  e.stopPropagation();
@@ -485,15 +524,16 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                            />
                         </Tooltip>
 
-                        <Tooltip title="Translate">
+                        <Tooltip title="Traduire">
                            <Button
                               icon={<GlobalOutlined />}
-                              size="small"
+                              size="large"
                               style={{
-                                 borderRadius: "8px",
-                                 background: "#f0fdf4",
-                                 border: "1px solid #bbf7d0",
-                                 color: "#166534",
+                                 borderRadius: "12px",
+                                 background: "rgba(77, 208, 231, 0.1)",
+                                 border: "2px solid rgba(77, 208, 231, 0.2)",
+                                 color: "#4dd0e7",
+                                 fontWeight: 600,
                               }}
                               onClick={(e) => {
                                  e.stopPropagation();
@@ -511,9 +551,10 @@ const GestionDocuments = ({ searchQuery = "" }) => {
          {fileList.length === 0 && !uploading && (
             <Card
                style={{
-                  borderRadius: "20px",
-                  border: "2px dashed #e2e8f0",
-                  background: "#f8fafc",
+                  borderRadius: "24px",
+                  border: "2px dashed rgba(49, 193, 225, 0.3)",
+                  background: "rgba(255, 255, 255, 0.5)",
+                  backdropFilter: "blur(10px)",
                   textAlign: "center",
                   padding: "60px 40px",
                   marginTop: "32px",
@@ -521,30 +562,79 @@ const GestionDocuments = ({ searchQuery = "" }) => {
             >
                <div
                   style={{
-                     background:
-                        "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
-                     width: "80px",
-                     height: "80px",
+                     background: "linear-gradient(135deg, #31c1e1 0%, #4dd0e7 100%)",
+                     width: "100px",
+                     height: "100px",
                      borderRadius: "50%",
                      display: "flex",
                      alignItems: "center",
                      justifyContent: "center",
-                     margin: "0 auto 24px",
-                     opacity: 0.8,
+                     margin: "0 auto 32px",
+                     boxShadow: "0 12px 40px rgba(49, 193, 225, 0.3)",
                   }}
                >
                   <FileTextOutlined
-                     style={{ fontSize: 36, color: "#ffffff" }}
+                     style={{ fontSize: 42, color: "#ffffff" }}
                   />
                </div>
                <Title
                   level={3}
-                  style={{ color: "#64748b", marginBottom: "8px" }}
+                  style={{ 
+                     color: "#2c5aa0", 
+                     marginBottom: "12px",
+                     fontFamily: "Outfit",
+                     fontWeight: 600
+                  }}
                >
-                  No documents
+                  Aucun document
                </Title>
-               <Text style={{ color: "#94a3b8", fontSize: "16px" }}>
-                  Start by uploading your first medical document
+               <Text style={{ 
+                  color: "#31c1e1", 
+                  fontSize: "16px",
+                  fontWeight: 500
+               }}>
+                  Commencez par télécharger votre premier document médical
+               </Text>
+            </Card>
+         )}
+
+         {/* Filtered Empty State */}
+         {fileList.length > 0 && filteredDocs.length === 0 && (
+            <Card
+               style={{
+                  borderRadius: "24px",
+                  border: "2px dashed rgba(49, 193, 225, 0.3)",
+                  background: "rgba(255, 255, 255, 0.5)",
+                  backdropFilter: "blur(10px)",
+                  textAlign: "center",
+                  padding: "60px 40px",
+                  marginTop: "32px",
+               }}
+            >
+               <SearchOutlined 
+                  style={{ 
+                     fontSize: 64, 
+                     color: "#31c1e1", 
+                     marginBottom: 24 
+                  }} 
+               />
+               <Title
+                  level={3}
+                  style={{ 
+                     color: "#2c5aa0", 
+                     marginBottom: "12px",
+                     fontFamily: "Outfit",
+                     fontWeight: 600
+                  }}
+               >
+                  Aucun document trouvé
+               </Title>
+               <Text style={{ 
+                  color: "#31c1e1", 
+                  fontSize: "16px",
+                  fontWeight: 500
+               }}>
+                  Essayez avec d'autres termes de recherche
                </Text>
             </Card>
          )}
@@ -561,45 +651,52 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                padding: 0,
                display: "flex",
                justifyContent: "center",
-               background: "#f8fafc",
-               borderRadius: "16px",
+               background: "rgba(248, 253, 255, 0.95)",
+               backdropFilter: "blur(15px)",
+               borderRadius: "24px",
                overflow: "hidden",
             }}
             closable={false}
+            maskStyle={{
+               background: "rgba(49, 193, 225, 0.1)",
+               backdropFilter: "blur(8px)",
+            }}
          >
             <div
                style={{
                   position: "relative",
                   width: "100%",
-                  background: "#ffffff",
-                  borderRadius: "16px",
+                  background: "rgba(255, 255, 255, 0.98)",
+                  borderRadius: "24px",
                   overflow: "hidden",
+                  border: "2px solid rgba(49, 193, 225, 0.2)",
+                  boxShadow: "0 20px 60px rgba(49, 193, 225, 0.2)",
                }}
             >
                <div>
                   {isPdf ? (
                      <iframe
                         src={previewContent}
-                        title="PDF Preview"
+                        title="Aperçu PDF"
                         width="100%"
                         height="600px"
                         style={{
                            border: "none",
                            width: "100%",
                            minHeight: "600px",
-                           // you can keep a minHeight for readability
+                           borderRadius: "24px",
                         }}
                      />
                   ) : (
-                     <div style={{ textAlign: "center" }}>
+                     <div style={{ textAlign: "center", padding: "20px" }}>
                         <img
                            src={previewContent}
-                           alt="preview"
+                           alt="aperçu"
                            style={{
                               maxWidth: "100%",
                               maxHeight: "70vh",
-                              borderRadius: "12px",
-                              boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
+                              borderRadius: "16px",
+                              boxShadow: "0 8px 32px rgba(49, 193, 225, 0.15)",
                            }}
                         />
                      </div>
@@ -611,6 +708,22 @@ const GestionDocuments = ({ searchQuery = "" }) => {
          <style jsx>{`
             .document-item:hover .document-overlay {
                opacity: 1 !important;
+            }
+            
+            .document-item:hover img {
+               transform: scale(1.05);
+            }
+            
+            @keyframes pulse {
+               0% {
+                  transform: scale(1);
+               }
+               50% {
+                  transform: scale(1.05);
+               }
+               100% {
+                  transform: scale(1);
+               }
             }
          `}</style>
       </div>

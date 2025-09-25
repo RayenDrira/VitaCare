@@ -15,15 +15,27 @@ html {
 body {
    min-height: 100vh;
    color: #222; /* softer black for readability */
-   background-image: url("../assets/bg.jpg");
-   background-size: cover;
-   background-repeat: no-repeat;
-   background-attachment: fixed;
-   background-position: center;
+   
+
+}
+.container {
+   width: 100%;
+   height: 100vh; 
    display: flex;
    justify-content: center;
    align-items: center;
-   padding: 2rem;
+
+   background: url('../assets/bg.jpg') center/cover no-repeat;
+   position: relative;
+}
+
+.container::before {
+   content: "";
+   position: absolute;
+   inset: 0;
+ 
+  
+   z-index: 0;
 }
 
 /* Glassy Card */
@@ -101,7 +113,7 @@ body {
 }
 .forgot-password {
    align-self: flex-end;
-   margin-top: 0.4em;
+   margin-top: 0.47em;
    margin-bottom: 1.2em;
 }
 .glassy-card a::after,
