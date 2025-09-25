@@ -265,8 +265,6 @@ export default function GestionProfile() {
                   overflow: "hidden",
                   background:
                      "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-
-                  height: "80vh",
                   position: "relative",
                }}
                bodyStyle={{ padding: 0 }}

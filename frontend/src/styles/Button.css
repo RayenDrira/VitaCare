@@ -10,20 +10,49 @@ html {
   text-transform: capitalize;
   border-radius: 10px;
   color: #ffff;
-  background-color: #31c1e1;
-  border: 2px solid #31c1e1;
+  background-color: #1a8bb7;
+  border: 2px solid #1a8bb7;
   cursor: pointer;
 }
 .btx-blue:hover {
-  color: #31c1e1;
-  border: 2px solid #31c1e1;
+  color: #1a8bb7;
+  border: 2px solid #1a8bb7;
 }
 .btx-blue::before {
   width: 200%;
   height: 180%;
-  background: #31c1e1;
+  background: #1a8bb7;
 }
 .btx-blue:hover::before {
+  height: 0%;
+}
+/* teal */
+/*blue*/
+.btx-teal {
+  padding: 5px 41px;
+  font-weight: 400;
+  font-size: 1.1em;
+  text-transform: capitalize;
+  border-radius: 10px;
+  color: #ffff;
+  background-color: #27c6b0;
+  border: 2px solid #27c6b0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+}
+.btx-teal:hover {
+  color: #27c6b0;
+  border: 2px solid #27c6b0;
+}
+.btx-teal::before {
+  width: 200%;
+  height: 180%;
+  background: #27c6b0;
+}
+.btx-teal:hover::before {
   height: 0%;
 }
 /* blue-reverse */
@@ -134,6 +163,7 @@ html {
 }
 /* animations */
 .btx-blue,
+.btx-teal,
 .btx-blue-reverse,
 .btx-blue-blue,
 .btx-white,
@@ -149,7 +179,8 @@ html {
 .btx-blue-reverse::before,
 .btx-blue-blue::before,
 .btx-white::before,
-.btx-white-reverse::before {
+.btx-white-reverse::before,
+.btx-teal::before {
   content: "";
   position: absolute;
   left: 0;
@@ -205,6 +236,7 @@ html {
   font-weight: 500;
 }
 
-.btx-white-reverse,.btx-white,.btx-blue{
+.btx-white-reverse,.btx-white,.btx-blue,.btx-teal {
   height:40px;
+  letter-spacing: 1px;
 }
