@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-
 import {
    DeleteOutlined,
    SearchOutlined,
@@ -20,11 +19,22 @@ import {
    Typography,
    Tag,
    Tooltip,
+   Space,
 } from "antd";
 import { pdfjs } from "react-pdf";
 import { apiFetch, getEmailFromToken } from "../utils/api";
 import "../styles/Documents.css";
 import { Document as PdfDocument, Page } from "react-pdf";
+
+// Dashboard palette
+const PRIMARY = "#1A8BB7";
+const SECONDARY = "#1ABC9C";
+const BG_LIGHT = "#F8FAFC";
+const BG_CARD = "#fff";
+const SIDEBAR_BORDER = "#E3E8EF";
+const TEXT_DARK = "#22313F";
+const TEXT_MEDIUM = "#4B5C6B";
+const GREY = "#B0B8C1";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
@@ -57,9 +67,9 @@ const handleAnalyse = async (filename) => {
          { method: "POST" }
       );
       if (!res) throw new Error("Analyse failed");
-      message.success(`Analyse of ${filename} completed!`);
+      message.success(`Analyse de ${filename} terminée !`);
    } catch {
-      message.error("Error during document analysis");
+      message.error("Erreur lors de l'analyse du document");
    }
 };
 
@@ -73,18 +83,57 @@ const handleTranslate = async (filename) => {
          { method: "POST" }
       );
       if (!res) throw new Error("Translation failed");
-      message.success(`Translation of ${filename} completed!`);
+      message.success(`Traduction de ${filename} terminée !`);
    } catch {
-      message.error("Error during document translation");
+      message.error("Erreur lors de la traduction du document");
    }
 };
 
 const getFileTypeTag = (contentType) => {
    if (contentType.startsWith("application/pdf"))
-      return <Tag color="#31c1e1" style={{ borderRadius: "12px", fontWeight: 600 }}>PDF</Tag>;
-   if (contentType.startsWith("image/")) 
-      return <Tag color="#4dd0e7" style={{ borderRadius: "12px", fontWeight: 600 }}>IMAGE</Tag>;
-   return <Tag color="#87ceeb" style={{ borderRadius: "12px", fontWeight: 600 }}>FILE</Tag>;
+      return (
+         <Tag
+            color={PRIMARY}
+            style={{
+               borderRadius: "12px",
+               fontWeight: 600,
+               background: "rgba(26,139,183,0.10)",
+               color: PRIMARY,
+               border: "none",
+            }}
+         >
+            PDF
+         </Tag>
+      );
+   if (contentType.startsWith("image/"))
+      return (
+         <Tag
+            color={SECONDARY}
+            style={{
+               borderRadius: "12px",
+               fontWeight: 600,
+               background: "rgba(26,188,156,0.10)",
+               color: SECONDARY,
+               border: "none",
+            }}
+         >
+            IMAGE
+         </Tag>
+      );
+   return (
+      <Tag
+         color={GREY}
+         style={{
+            borderRadius: "12px",
+            fontWeight: 600,
+            background: "rgba(176,184,193,0.10)",
+            color: GREY,
+            border: "none",
+         }}
+      >
+         FILE
+      </Tag>
+   );
 };
 
 const GestionDocuments = ({ searchQuery = "" }) => {
@@ -149,7 +198,7 @@ const GestionDocuments = ({ searchQuery = "" }) => {
          list.sort((a, b) => b.uploadedAt - a.uploadedAt);
          setFileList(list);
       } catch {
-         message.error("Error fetching documents");
+         message.error("Erreur lors de la récupération des documents");
       }
    };
 
@@ -248,13 +297,12 @@ const GestionDocuments = ({ searchQuery = "" }) => {
          {/* Upload Area */}
          <Card
             style={{
-               background: "rgba(255, 255, 255, 0.98)",
-               backdropFilter: "blur(15px)",
-               border: "2px solid rgba(49, 193, 225, 0.2)",
-               borderRadius: "24px",
+               background: BG_CARD,
+               border: `1.5px solid ${SIDEBAR_BORDER}`,
+               borderRadius: "20px",
                marginBottom: "32px",
+               boxShadow: "0 8px 32px rgba(26,139,183,0.08)",
                overflow: "hidden",
-               boxShadow: "0 8px 32px rgba(49, 193, 225, 0.1)",
             }}
             bodyStyle={{ padding: 0 }}
          >
@@ -275,7 +323,7 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                <div style={{ padding: "48px 24px", textAlign: "center" }}>
                   <div
                      style={{
-                        background: "linear-gradient(135deg, #31c1e1 0%, #4dd0e7 100%)",
+                        background: PRIMARY,
                         width: "100px",
                         height: "100px",
                         borderRadius: "50%",
@@ -283,35 +331,48 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                         alignItems: "center",
                         justifyContent: "center",
                         margin: "0 auto 32px",
-                        boxShadow: "0 12px 40px rgba(49, 193, 225, 0.3)",
+                        boxShadow: "0 12px 40px rgba(26,139,183,0.15)",
                         transform: uploading ? "scale(1.05)" : "scale(1)",
                         transition: "all 0.3s ease",
                      }}
                   >
                      <CloudUploadOutlined
-                        style={{ 
-                           fontSize: 42, 
+                        style={{
+                           fontSize: 42,
                            color: "#ffffff",
-                           animation: uploading ? "pulse 2s infinite" : "none"
+                           animation: uploading ? "pulse 2s infinite" : "none",
                         }}
                      />
                   </div>
                   <Title
                      level={3}
-                     style={{ 
-                        color: "#2c5aa0", 
+                     style={{
+                        color: TEXT_DARK,
                         marginBottom: "12px",
                         fontFamily: "Outfit",
-                        fontWeight: 600
+                        fontWeight: 600,
                      }}
                   >
-                     {uploading ? "Téléchargement en cours..." : "Glissez vos fichiers ici"}
+                     {uploading
+                        ? "Téléchargement en cours..."
+                        : "Glissez vos fichiers ici"}
                   </Title>
-                  <Text style={{ color: "#31c1e1", fontSize: "16px", fontWeight: 500 }}>
+                  <Text
+                     style={{
+                        color: PRIMARY,
+                        fontSize: "16px",
+                        fontWeight: 500,
+                     }}
+                  >
                      ou cliquez pour sélectionner des fichiers
                   </Text>
                   <div style={{ marginTop: "16px" }}>
-                     <Text style={{ color: "#87ceeb", fontSize: "14px" }}>
+                     <Text
+                        style={{
+                           color: SECONDARY,
+                           fontSize: "14px",
+                        }}
+                     >
                         Formats supportés: PDF, JPG, PNG
                      </Text>
                   </div>
@@ -330,9 +391,11 @@ const GestionDocuments = ({ searchQuery = "" }) => {
             <Select
                value={sortBy}
                onChange={(val) => setSortBy(val)}
-               style={{ 
+               style={{
                   width: 200,
-                  borderRadius: "16px"
+                  borderRadius: "16px",
+                  background: BG_CARD,
+                  border: `1.5px solid ${SIDEBAR_BORDER}`,
                }}
                size="large"
             >
@@ -346,7 +409,7 @@ const GestionDocuments = ({ searchQuery = "" }) => {
          <div
             style={{
                display: "grid",
-               gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+               gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
                gap: "24px",
                marginTop: "32px",
             }}
@@ -356,22 +419,23 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                   key={file.uid}
                   hoverable
                   style={{
-                     borderRadius: "24px",
-                     border: "2px solid rgba(49, 193, 225, 0.2)",
-                     boxShadow: "0 8px 32px rgba(49, 193, 225, 0.1)",
+                     borderRadius: "20px",
+                     border: `1.5px solid ${SIDEBAR_BORDER}`,
+                     boxShadow: "0 8px 32px rgba(26,139,183,0.08)",
                      overflow: "hidden",
-                     background: "rgba(255, 255, 255, 0.95)",
-                     backdropFilter: "blur(10px)",
+                     background: BG_CARD,
                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                   }}
                   bodyStyle={{ padding: 0 }}
                   onMouseEnter={(e) => {
-                     e.currentTarget.style.transform = "translateY(-8px)";
-                     e.currentTarget.style.boxShadow = "0 16px 48px rgba(49, 193, 225, 0.2)";
+                     e.currentTarget.style.transform = "translateY(-6px)";
+                     e.currentTarget.style.boxShadow =
+                        "0 16px 48px rgba(26,139,183,0.13)";
                   }}
                   onMouseLeave={(e) => {
                      e.currentTarget.style.transform = "translateY(0)";
-                     e.currentTarget.style.boxShadow = "0 8px 32px rgba(49, 193, 225, 0.1)";
+                     e.currentTarget.style.boxShadow =
+                        "0 8px 32px rgba(26,139,183,0.08)";
                   }}
                >
                   {/* Document Preview */}
@@ -385,7 +449,8 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                         justifyContent: "center",
                         cursor: "pointer",
                         overflow: "hidden",
-                        background: "linear-gradient(135deg, #f8fdff 0%, #e8f8fc 100%)",
+                        background: BG_LIGHT,
+                        borderBottom: `1.5px solid ${SIDEBAR_BORDER}`,
                      }}
                      onClick={() => handlePreview(file)}
                   >
@@ -408,13 +473,13 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                            left: 0,
                            right: 0,
                            bottom: 0,
-                           background: "rgba(49, 193, 225, 0.8)",
+                           background: "rgba(26,139,183,0.10)",
                            display: "flex",
                            alignItems: "center",
                            justifyContent: "center",
                            opacity: 0,
                            transition: "opacity 0.3s ease",
-                           backdropFilter: "blur(4px)",
+                           backdropFilter: "blur(2px)",
                         }}
                         className="document-overlay"
                      >
@@ -423,12 +488,12 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                            icon={<EyeOutlined />}
                            size="large"
                            style={{
-                              background: "rgba(255, 255, 255, 0.95)",
-                              color: "#31c1e1",
-                              border: "2px solid rgba(49, 193, 225, 0.3)",
+                              background: BG_CARD,
+                              color: PRIMARY,
+                              border: `1.5px solid ${PRIMARY}`,
                               borderRadius: "16px",
                               fontWeight: 600,
-                              boxShadow: "0 4px 20px rgba(255, 255, 255, 0.3)",
+                              boxShadow: "0 4px 20px rgba(26,139,183,0.08)",
                            }}
                         >
                            Aperçu
@@ -454,7 +519,7 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                            strong
                            style={{
                               fontSize: "16px",
-                              color: "#2c5aa0",
+                              color: TEXT_DARK,
                               display: "block",
                               marginBottom: "8px",
                               overflow: "hidden",
@@ -466,11 +531,13 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                         >
                            {file.name}
                         </Text>
-                        <Text style={{ 
-                           color: "#31c1e1", 
-                           fontSize: "14px",
-                           fontWeight: 500
-                        }}>
+                        <Text
+                           style={{
+                              color: PRIMARY,
+                              fontSize: "14px",
+                              fontWeight: 500,
+                           }}
+                        >
                            {file.uploadedAt.toLocaleDateString("fr-FR", {
                               year: "numeric",
                               month: "long",
@@ -480,13 +547,7 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                      </div>
 
                      {/* Action Buttons */}
-                     <div
-                        style={{
-                           display: "flex",
-                           gap: "12px",
-                           flexWrap: "wrap",
-                        }}
-                     >
+                     <Space>
                         <Tooltip title="Supprimer">
                            <Button
                               danger
@@ -494,8 +555,8 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                               size="large"
                               style={{
                                  borderRadius: "12px",
-                                 background: "rgba(255, 77, 77, 0.1)",
-                                 border: "2px solid rgba(255, 77, 77, 0.2)",
+                                 background: "rgba(255, 77, 77, 0.08)",
+                                 border: "1.5px solid #ff4d4d22",
                                  color: "#ff4d4d",
                                  fontWeight: 600,
                               }}
@@ -512,9 +573,9 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                               size="large"
                               style={{
                                  borderRadius: "12px",
-                                 background: "rgba(49, 193, 225, 0.1)",
-                                 border: "2px solid rgba(49, 193, 225, 0.2)",
-                                 color: "#31c1e1",
+                                 background: "rgba(26,139,183,0.08)",
+                                 border: `1.5px solid ${PRIMARY}22`,
+                                 color: PRIMARY,
                                  fontWeight: 600,
                               }}
                               onClick={(e) => {
@@ -530,9 +591,9 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                               size="large"
                               style={{
                                  borderRadius: "12px",
-                                 background: "rgba(77, 208, 231, 0.1)",
-                                 border: "2px solid rgba(77, 208, 231, 0.2)",
-                                 color: "#4dd0e7",
+                                 background: "rgba(26,188,156,0.08)",
+                                 border: `1.5px solid ${SECONDARY}22`,
+                                 color: SECONDARY,
                                  fontWeight: 600,
                               }}
                               onClick={(e) => {
@@ -541,7 +602,7 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                               }}
                            />
                         </Tooltip>
-                     </div>
+                     </Space>
                   </div>
                </Card>
             ))}
@@ -551,18 +612,18 @@ const GestionDocuments = ({ searchQuery = "" }) => {
          {fileList.length === 0 && !uploading && (
             <Card
                style={{
-                  borderRadius: "24px",
-                  border: "2px dashed rgba(49, 193, 225, 0.3)",
-                  background: "rgba(255, 255, 255, 0.5)",
-                  backdropFilter: "blur(10px)",
+                  borderRadius: "20px",
+                  border: `1.5px dashed ${PRIMARY}33`,
+                  background: BG_CARD,
                   textAlign: "center",
                   padding: "60px 40px",
                   marginTop: "32px",
+                  boxShadow: "0 8px 32px rgba(26,139,183,0.08)",
                }}
             >
                <div
                   style={{
-                     background: "linear-gradient(135deg, #31c1e1 0%, #4dd0e7 100%)",
+                     background: PRIMARY,
                      width: "100px",
                      height: "100px",
                      borderRadius: "50%",
@@ -570,7 +631,7 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                      alignItems: "center",
                      justifyContent: "center",
                      margin: "0 auto 32px",
-                     boxShadow: "0 12px 40px rgba(49, 193, 225, 0.3)",
+                     boxShadow: "0 12px 40px rgba(26,139,183,0.15)",
                   }}
                >
                   <FileTextOutlined
@@ -579,20 +640,22 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                </div>
                <Title
                   level={3}
-                  style={{ 
-                     color: "#2c5aa0", 
+                  style={{
+                     color: TEXT_DARK,
                      marginBottom: "12px",
                      fontFamily: "Outfit",
-                     fontWeight: 600
+                     fontWeight: 600,
                   }}
                >
                   Aucun document
                </Title>
-               <Text style={{ 
-                  color: "#31c1e1", 
-                  fontSize: "16px",
-                  fontWeight: 500
-               }}>
+               <Text
+                  style={{
+                     color: PRIMARY,
+                     fontSize: "16px",
+                     fontWeight: 500,
+                  }}
+               >
                   Commencez par télécharger votre premier document médical
                </Text>
             </Card>
@@ -602,38 +665,40 @@ const GestionDocuments = ({ searchQuery = "" }) => {
          {fileList.length > 0 && filteredDocs.length === 0 && (
             <Card
                style={{
-                  borderRadius: "24px",
-                  border: "2px dashed rgba(49, 193, 225, 0.3)",
-                  background: "rgba(255, 255, 255, 0.5)",
-                  backdropFilter: "blur(10px)",
+                  borderRadius: "20px",
+                  border: `1.5px dashed ${PRIMARY}33`,
+                  background: BG_CARD,
                   textAlign: "center",
                   padding: "60px 40px",
                   marginTop: "32px",
+                  boxShadow: "0 8px 32px rgba(26,139,183,0.08)",
                }}
             >
-               <SearchOutlined 
-                  style={{ 
-                     fontSize: 64, 
-                     color: "#31c1e1", 
-                     marginBottom: 24 
-                  }} 
+               <SearchOutlined
+                  style={{
+                     fontSize: 64,
+                     color: PRIMARY,
+                     marginBottom: 24,
+                  }}
                />
                <Title
                   level={3}
-                  style={{ 
-                     color: "#2c5aa0", 
+                  style={{
+                     color: TEXT_DARK,
                      marginBottom: "12px",
                      fontFamily: "Outfit",
-                     fontWeight: 600
+                     fontWeight: 600,
                   }}
                >
                   Aucun document trouvé
                </Title>
-               <Text style={{ 
-                  color: "#31c1e1", 
-                  fontSize: "16px",
-                  fontWeight: 500
-               }}>
+               <Text
+                  style={{
+                     color: PRIMARY,
+                     fontSize: "16px",
+                     fontWeight: 500,
+                  }}
+               >
                   Essayez avec d'autres termes de recherche
                </Text>
             </Card>
@@ -651,14 +716,13 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                padding: 0,
                display: "flex",
                justifyContent: "center",
-               background: "rgba(248, 253, 255, 0.95)",
-               backdropFilter: "blur(15px)",
-               borderRadius: "24px",
+               background: BG_LIGHT,
+               borderRadius: "20px",
                overflow: "hidden",
             }}
             closable={false}
             maskStyle={{
-               background: "rgba(49, 193, 225, 0.1)",
+               background: `${PRIMARY}11`,
                backdropFilter: "blur(8px)",
             }}
          >
@@ -666,11 +730,11 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                style={{
                   position: "relative",
                   width: "100%",
-                  background: "rgba(255, 255, 255, 0.98)",
-                  borderRadius: "24px",
+                  background: BG_CARD,
+                  borderRadius: "20px",
                   overflow: "hidden",
-                  border: "2px solid rgba(49, 193, 225, 0.2)",
-                  boxShadow: "0 20px 60px rgba(49, 193, 225, 0.2)",
+                  border: `1.5px solid ${SIDEBAR_BORDER}`,
+                  boxShadow: "0 20px 60px rgba(26,139,183,0.10)",
                }}
             >
                <div>
@@ -684,7 +748,7 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                            border: "none",
                            width: "100%",
                            minHeight: "600px",
-                           borderRadius: "24px",
+                           borderRadius: "20px",
                         }}
                      />
                   ) : (
@@ -696,7 +760,7 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                               maxWidth: "100%",
                               maxHeight: "70vh",
                               borderRadius: "16px",
-                              boxShadow: "0 8px 32px rgba(49, 193, 225, 0.15)",
+                              boxShadow: "0 8px 32px rgba(26,139,183,0.10)",
                            }}
                         />
                      </div>
@@ -709,11 +773,9 @@ const GestionDocuments = ({ searchQuery = "" }) => {
             .document-item:hover .document-overlay {
                opacity: 1 !important;
             }
-            
             .document-item:hover img {
                transform: scale(1.05);
             }
-            
             @keyframes pulse {
                0% {
                   transform: scale(1);

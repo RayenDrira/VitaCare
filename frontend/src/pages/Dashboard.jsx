@@ -31,10 +31,23 @@ import {
    HeartOutlined,
    MedicineBoxOutlined,
    CalendarOutlined,
+   LeftOutlined,
+   RightOutlined,
 } from "@ant-design/icons";
 
 const { Header, Content, Sider } = Layout;
 const { Title, Text } = Typography;
+
+// Color palette
+const PRIMARY = "#1A8BB7";
+const SECONDARY = "#1ABC9C";
+const BG_LIGHT = "#F8FAFC";
+const BG_CARD = "#fff";
+const SIDEBAR_BG = "#F3F6F9";
+const SIDEBAR_BORDER = "#E3E8EF";
+const TEXT_DARK = "#22313F";
+const TEXT_MEDIUM = "#4B5C6B";
+const GREY = "#B0B8C1";
 
 export default function Dashboard() {
    const [collapsed, setCollapsed] = useState(false);
@@ -55,21 +68,18 @@ export default function Dashboard() {
    const siderItems = [
       {
          key: "1",
-         icon: <DashboardOutlined style={{ fontSize: "18px" }} />,
+         icon: <DashboardOutlined />,
          label: "Dashboard",
-         style: { margin: "8px 0" },
       },
       {
          key: "2",
-         icon: <BarChartOutlined style={{ fontSize: "18px" }} />,
+         icon: <BarChartOutlined />,
          label: "Analytics",
-         style: { margin: "8px 0" },
       },
       {
          key: "9",
-         icon: <FileTextOutlined style={{ fontSize: "18px" }} />,
+         icon: <FileTextOutlined />,
          label: "Documents",
-         style: { margin: "8px 0" },
       },
    ];
 
@@ -83,7 +93,6 @@ export default function Dashboard() {
                setActivePage("10");
             }
             if (e.key === "logout") {
-               console.log("Déconnexion...");
                localStorage.removeItem("jwt");
                window.location.href = "/login";
             }
@@ -106,25 +115,25 @@ export default function Dashboard() {
       <ConfigProvider
          theme={{
             token: {
-               colorPrimary: "#1A8BB7",
-               colorBgContainer: "#ffffff",
-               colorBgElevated: "#ffffff",
-               borderRadius: 0,
-               boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+               colorPrimary: PRIMARY,
+               colorBgContainer: BG_LIGHT,
+               colorBgElevated: BG_CARD,
+               borderRadius: 16,
+               boxShadow: "0 4px 24px rgba(26,139,183,0.08)",
                fontFamily:
                   "'Outfit', -apple-system, BlinkMacSystemFont, sans-serif",
             },
             components: {
                Menu: {
                   itemBg: "transparent",
-                  itemSelectedBg: "rgba(49, 193, 225, 0.1)",
-                  itemSelectedColor: "#1A8BB7",
-                  itemHoverBg: "rgba(49, 193, 225, 0.05)",
+                  itemSelectedBg: "rgba(26, 139, 183, 0.10)",
+                  itemSelectedColor: PRIMARY,
+                  itemHoverBg: "rgba(26, 139, 183, 0.06)",
                   subMenuItemBg: "transparent",
                },
                Layout: {
-                  siderBg: "linear-gradient(145deg, #f8fdff 0%, #e8f8fc 100%)",
-                  headerBg: "#ffffff",
+                  siderBg: SIDEBAR_BG,
+                  headerBg: BG_CARD,
                },
             },
          }}
@@ -132,81 +141,108 @@ export default function Dashboard() {
          <Layout
             style={{
                minHeight: "100vh",
-               background:
-                  "#0F2438",
+               background: BG_LIGHT,
             }}
          >
             {/* Sidebar */}
             <Sider
                collapsible
                collapsed={collapsed}
-               onCollapse={setCollapsed}
-               width={280}
+               width={260}
                collapsedWidth={80}
+               trigger={null}
                style={{
-                  background: "rgba(255, 255, 255, 0.95)",
-                  backdropFilter: "blur(10px)",
-                  borderRadius: collapsed ? "0" : "0",
-                  boxShadow: "0 8px 32px rgba(49, 193, 225, 0.15)",
+                  background: SIDEBAR_BG,
+                  borderRight: `1.5px solid ${SIDEBAR_BORDER}`,
+                  boxShadow: "0 2px 16px rgba(26,139,183,0.04)",
+                  zIndex: 10,
                   transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                  position: "relative",
                }}
             >
                <div
                   style={{
                      height: 80,
-                     margin: "24px 16px",
                      display: "flex",
                      alignItems: "center",
                      justifyContent: collapsed ? "center" : "flex-start",
-                     background:
-                        "linear-gradient(135deg, #31c1e1 0%, #4dd0e7 100%)",
-                     borderRadius: "20px",
-                     padding: "0 16px",
-                     transition: "all 0.3s ease",
-                     boxShadow: "0 4px 20px rgba(49, 193, 225, 0.3)",
+                     paddingLeft: collapsed ? 0 : 24,
+                     gap: 10,
+                     position: "relative",
                   }}
                >
                   <img
                      src={Logo}
                      style={{
-                        width: collapsed ? 32 : 40,
-                        height: collapsed ? 32 : 40,
-                        transition: "all 0.3s ease",
+                        width: 40,
+                        height: 40,
+                        transition: "all 0.3s",
+                        display: "block",
+                        margin: collapsed ? "0 auto" : 0,
                      }}
                      alt="VitaCare"
                   />
                   {!collapsed && (
-                     <div style={{ marginLeft: 16 }}>
-                        <Text
-                           style={{
-                              color: "#ffffff",
-                              fontSize: 20,
-                              fontWeight: 700,
-                              letterSpacing: "-0.5px",
-                           }}
-                        >
-                           VitaCare
-                        </Text>
-                        <div>
-                           <Text
-                              style={{
-                                 color: "rgba(255, 255, 255, 0.8)",
-                                 fontSize: 12,
-                                 fontWeight: 500,
-                              }}
-                           >
-                              Healthcare Platform
-                           </Text>
-                        </div>
-                     </div>
+                     <span
+                        style={{
+                           color: PRIMARY,
+                           fontSize: 24,
+                           fontWeight: 700,
+                           letterSpacing: "1px",
+                           fontFamily: "Outfit",
+                           marginLeft: 8,
+                        }}
+                     >
+                        VitaCare
+                     </span>
                   )}
                </div>
-
-               <div style={{ padding: "0 16px" }}>
+               <div style={{ padding: "0 8px" }}>
                   <Menu
                      selectedKeys={[activePage]}
                      mode="inline"
-                     items={siderItems}
+                     items={siderItems.map((item) => ({
+                        ...item,
+                        icon: React.cloneElement(item.icon, {
+                           style: {
+                              color: activePage === item.key ? PRIMARY : GREY,
+                              fontSize: 20,
+                              transition: "color 0.2s",
+                           },
+                        }),
+                        label: (
+                           <span
+                              style={{
+                                 color:
+                                    activePage === item.key
+                                       ? PRIMARY
+                                       : TEXT_MEDIUM,
+                                 fontWeight:
+                                    activePage === item.key ? 700 : 500,
+                                 letterSpacing: "0.2px",
+                                 fontSize: 16,
+                                 transition: "color 0.2s",
+                              }}
+                           >
+                              {item.label}
+                           </span>
+                        ),
+                        style: {
+                           margin: "8px 0",
+                           borderRadius: "10px",
+                           background:
+                              activePage === item.key
+                                 ? "rgba(26,139,183,0.10)"
+                                 : "transparent",
+                           boxShadow:
+                              activePage === item.key
+                                 ? "0 4px 16px rgba(26,139,183,0.08)"
+                                 : "none",
+                           color:
+                              activePage === item.key ? PRIMARY : TEXT_MEDIUM,
+                           transition: "background 0.2s, box-shadow 0.2s",
+                        },
+                     }))}
                      onClick={(e) => setActivePage(e.key)}
                      style={{
                         background: "transparent",
@@ -214,31 +250,84 @@ export default function Dashboard() {
                         fontSize: "15px",
                         fontWeight: 500,
                      }}
+                     theme="light"
                   />
                </div>
             </Sider>
 
             {/* Main Layout */}
-            <Layout style={{ background: "transparent" }}>
-               <Header
+            <Layout style={{ backgroundColor: BG_LIGHT }}>
+               {/* Topbar as part of content */}
+               <div
                   style={{
-                     background: "rgba(255, 255, 255, 0.95)",
-                     backdropFilter: "blur(10px)",
+                     background: BG_CARD,
+                     margin: "0px 0px 0 0px",
                      padding: "0 32px",
                      height: 80,
                      display: "flex",
                      alignItems: "center",
                      justifyContent: "space-between",
-                     boxShadow: "0 2px 24px rgba(49, 193, 225, 0.1)",
-                     borderRadius: "0",
-                     margin: "0",
+                     borderBottom: `1.5px solid ${SIDEBAR_BORDER}`,
+                     boxShadow: "0 2px 12px rgba(26,139,183,0.04)",
                   }}
                >
-                  <div style={{ display: "flex", flexDirection: "column" }}>
-                     <Title level={4} style={{ margin: 0, color: "#2c5aa0" }}>
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                     <Title
+                        level={3}
+                        style={{
+                           margin: 0,
+                           color: TEXT_DARK,
+                           fontWeight: 700,
+                           letterSpacing: "-0.5px",
+                        }}
+                     >
                         {pageTitles[activePage]?.title || ""}
                      </Title>
-                     <Text style={{ color: "#31c1e1" }}>
+                     <span
+                        onClick={() => setCollapsed((prev) => !prev)}
+                        style={{
+                           marginLeft: 12,
+                           cursor: "pointer",
+                           display: "flex",
+                           alignItems: "center",
+                           height: 32,
+                           width: 24,
+                           userSelect: "none",
+                        }}
+                        tabIndex={0}
+                        role="button"
+                        aria-label={
+                           collapsed ? "Expand sidebar" : "Collapse sidebar"
+                        }
+                     >
+                        {collapsed ? (
+                           <RightOutlined
+                              style={{
+                                 color: SECONDARY,
+                                 fontSize: 16,
+                                 fontWeight: 700,
+                                 lineHeight: 1,
+                              }}
+                           />
+                        ) : (
+                           <LeftOutlined
+                              style={{
+                                 color: SECONDARY,
+                                 fontSize: 16,
+                                 fontWeight: 700,
+                                 lineHeight: 1,
+                              }}
+                           />
+                        )}
+                     </span>
+                     <Text
+                        style={{
+                           color: TEXT_MEDIUM,
+                           fontWeight: 500,
+                           marginLeft: 18,
+                           fontSize: 16,
+                        }}
+                     >
                         {pageTitles[activePage]?.subtitle || ""}
                      </Text>
                   </div>
@@ -246,27 +335,29 @@ export default function Dashboard() {
                   <Space size="large">
                      <Input
                         placeholder="Rechercher des documents..."
-                        prefix={<SearchOutlined style={{ color: "#31c1e1" }} />}
+                        prefix={<SearchOutlined style={{ color: PRIMARY }} />}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         onPressEnter={() => setActivePage("9")}
                         style={{
-                           width: 250,
+                           width: 240,
                            height: 40,
                            borderRadius: "20px",
-                           background: "rgba(255, 255, 255, 0.8)",
-                           border: "2px solid rgba(49, 193, 225, 0.2)",
+                           background: BG_LIGHT,
+                           border: `1.5px solid ${SIDEBAR_BORDER}`,
+                           fontSize: "15px",
+                           color: TEXT_DARK,
                         }}
                      />
                      <Badge count={3} size="small">
                         <Button
                            type="text"
-                           icon={<BellOutlined style={{ color: "#31c1e1" }} />}
+                           icon={<BellOutlined style={{ color: PRIMARY }} />}
                            shape="circle"
                            size="large"
                            style={{
-                              background: "rgba(49, 193, 225, 0.1)",
-                              border: "2px solid rgba(49, 193, 225, 0.2)",
+                              background: BG_LIGHT,
+                              border: `1.5px solid ${SIDEBAR_BORDER}`,
                            }}
                         />
                      </Badge>
@@ -276,24 +367,24 @@ export default function Dashboard() {
                         placement="bottomRight"
                      >
                         <Avatar
-                           size={44}
+                           size={40}
                            style={{
                               cursor: "pointer",
-                              background:
-                                 "linear-gradient(135deg, #31c1e1 0%, #4dd0e7 100%)",
-                              border: "2px solid #ffffff",
-                              boxShadow: "0 4px 16px rgba(49, 193, 225, 0.3)",
+                              background: PRIMARY,
+                              border: "2px solid #fff",
+                              boxShadow: "0 2px 8px rgba(26,139,183,0.10)",
                            }}
                         >
                            <UserOutlined />
                         </Avatar>
                      </Dropdown>
                   </Space>
-               </Header>
+               </div>
 
                <Content
                   style={{
-                     margin: "24px 16px",
+                     margin: "32px",
+                     marginTop: 24,
                      display: "flex",
                      flexDirection: "column",
                      minHeight: "calc(100vh - 144px)",
@@ -305,40 +396,31 @@ export default function Dashboard() {
                         {/* Hero Section */}
                         <Card
                            style={{
-                              background: "rgba(255, 255, 255, 0.95)",
-                              backdropFilter: "blur(10px)",
-                              borderRadius: "16px",
+                              background: BG_CARD,
+                              borderRadius: "20px",
                               padding: "40px",
                               marginBottom: "32px",
-                     
-                              boxShadow: "0 20px 60px rgba(49, 193, 225, 0.15)",
+                              boxShadow: "0 20px 60px rgba(26,139,183,0.10)",
+                              border: `1.5px solid ${SIDEBAR_BORDER}`,
                            }}
                            bodyStyle={{ padding: 0 }}
                         >
                            <div style={{ textAlign: "center" }}>
-                              <div
-                                 style={{
-                                    background:
-                                       "linear-gradient(135deg, #31c1e1 0%, #4dd0e7 100%)",
-                                    width: "120px",
-                                    height: "120px",
-                                    borderRadius: "16px",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    margin: "0 auto 32px",
-                                    boxShadow:
-                                       "0 12px 40px rgba(49, 193, 225, 0.3)",
-                                 }}
-                              >
-                                 <HeartOutlined
-                                    style={{ fontSize: 48, color: "#ffffff" }}
+                              <div>
+                                 <img
+                                    src={Logo}
+                                    style={{
+                                       width: 88,
+                                       height: 88,
+                                       transition: "all 0.3s",
+                                    }}
+                                    alt="VitaCare"
                                  />
                               </div>
                               <Title
                                  level={1}
                                  style={{
-                                    color: "#2c5aa0",
+                                    color: PRIMARY,
                                     fontSize: "42px",
                                     fontWeight: 700,
                                     marginBottom: "16px",
@@ -349,7 +431,7 @@ export default function Dashboard() {
                               </Title>
                               <Text
                                  style={{
-                                    color: "#31c1e1",
+                                    color: TEXT_MEDIUM,
                                     fontSize: "18px",
                                     fontWeight: 400,
                                     lineHeight: 1.6,
@@ -370,19 +452,18 @@ export default function Dashboard() {
                            <Col xs={24} sm={12} lg={8}>
                               <Card
                                  style={{
-                                    background: "rgba(255, 255, 255, 0.95)",
-                                    backdropFilter: "blur(10px)",
-                                    borderRadius: "16px",
-                                    border: "1px solid rgba(49, 193, 225, 0.2)",
+                                    background: BG_CARD,
+                                    borderRadius: "20px",
+                                    border: `1.5px solid ${SIDEBAR_BORDER}`,
                                     boxShadow:
-                                       "0 8px 32px rgba(49, 193, 225, 0.1)",
+                                       "0 8px 32px rgba(26,139,183,0.10)",
                                  }}
                               >
                                  <Statistic
                                     title={
                                        <span
                                           style={{
-                                             color: "#2c5aa0",
+                                             color: TEXT_MEDIUM,
                                              fontSize: "16px",
                                              fontWeight: 600,
                                           }}
@@ -393,11 +474,11 @@ export default function Dashboard() {
                                     value={12}
                                     prefix={
                                        <FileTextOutlined
-                                          style={{ color: "#31c1e1" }}
+                                          style={{ color: PRIMARY }}
                                        />
                                     }
                                     valueStyle={{
-                                       color: "#31c1e1",
+                                       color: PRIMARY,
                                        fontSize: "28px",
                                        fontWeight: 700,
                                     }}
@@ -407,19 +488,18 @@ export default function Dashboard() {
                            <Col xs={24} sm={12} lg={8}>
                               <Card
                                  style={{
-                                    background: "rgba(255, 255, 255, 0.95)",
-                                    backdropFilter: "blur(10px)",
-                                    borderRadius: "16px",
-                                    border: "1px solid rgba(49, 193, 225, 0.2)",
+                                    background: BG_CARD,
+                                    borderRadius: "20px",
+                                    border: `1.5px solid ${SIDEBAR_BORDER}`,
                                     boxShadow:
-                                       "0 8px 32px rgba(49, 193, 225, 0.1)",
+                                       "0 8px 32px rgba(26,139,183,0.10)",
                                  }}
                               >
                                  <Statistic
                                     title={
                                        <span
                                           style={{
-                                             color: "#2c5aa0",
+                                             color: TEXT_MEDIUM,
                                              fontSize: "16px",
                                              fontWeight: 600,
                                           }}
@@ -430,11 +510,11 @@ export default function Dashboard() {
                                     value={8}
                                     prefix={
                                        <MedicineBoxOutlined
-                                          style={{ color: "#31c1e1" }}
+                                          style={{ color: PRIMARY }}
                                        />
                                     }
                                     valueStyle={{
-                                       color: "#31c1e1",
+                                       color: PRIMARY,
                                        fontSize: "28px",
                                        fontWeight: 700,
                                     }}
@@ -444,19 +524,18 @@ export default function Dashboard() {
                            <Col xs={24} sm={12} lg={8}>
                               <Card
                                  style={{
-                                    background: "rgba(255, 255, 255, 0.95)",
-                                    backdropFilter: "blur(10px)",
-                                    borderRadius: "16px",
-                                    border: "1px solid rgba(49, 193, 225, 0.2)",
+                                    background: BG_CARD,
+                                    borderRadius: "20px",
+                                    border: `1.5px solid ${SIDEBAR_BORDER}`,
                                     boxShadow:
-                                       "0 8px 32px rgba(49, 193, 225, 0.1)",
+                                       "0 8px 32px rgba(26,139,183,0.10)",
                                  }}
                               >
                                  <Statistic
                                     title={
                                        <span
                                           style={{
-                                             color: "#2c5aa0",
+                                             color: TEXT_MEDIUM,
                                              fontSize: "16px",
                                              fontWeight: 600,
                                           }}
@@ -467,11 +546,11 @@ export default function Dashboard() {
                                     value={3}
                                     prefix={
                                        <CalendarOutlined
-                                          style={{ color: "#31c1e1" }}
+                                          style={{ color: PRIMARY }}
                                        />
                                     }
                                     valueStyle={{
-                                       color: "#31c1e1",
+                                       color: PRIMARY,
                                        fontSize: "28px",
                                        fontWeight: 700,
                                     }}
@@ -486,11 +565,10 @@ export default function Dashboard() {
                   {activePage === "2" && (
                      <Card
                         style={{
-                           background: "rgba(255, 255, 255, 0.95)",
-                           backdropFilter: "blur(10px)",
-                           borderRadius: "24px",
-                           border: "1px solid rgba(49, 193, 225, 0.2)",
-                           boxShadow: "0 8px 32px rgba(49, 193, 225, 0.1)",
+                           background: BG_CARD,
+                           borderRadius: "20px",
+                           border: `1.5px solid ${SIDEBAR_BORDER}`,
+                           boxShadow: "0 8px 32px rgba(26,139,183,0.10)",
                            flex: 1,
                         }}
                         bodyStyle={{ padding: "32px" }}
@@ -501,14 +579,14 @@ export default function Dashboard() {
                            <BarChartOutlined
                               style={{
                                  fontSize: 64,
-                                 color: "#31c1e1",
+                                 color: PRIMARY,
                                  marginBottom: 24,
                               }}
                            />
-                           <Title level={3} style={{ color: "#2c5aa0" }}>
+                           <Title level={3} style={{ color: TEXT_DARK }}>
                               Analytics
                            </Title>
-                           <Text style={{ color: "#31c1e1" }}>
+                           <Text style={{ color: PRIMARY }}>
                               Vos statistiques de santé apparaîtront ici
                            </Text>
                         </div>
@@ -519,11 +597,10 @@ export default function Dashboard() {
                   {activePage === "9" && (
                      <Card
                         style={{
-                           background: "rgba(255, 255, 255, 0.95)",
-                           backdropFilter: "blur(10px)",
-                           borderRadius: "24px",
-                           border: "1px solid rgba(49, 193, 225, 0.2)",
-                           boxShadow: "0 8px 32px rgba(49, 193, 225, 0.1)",
+                           background: BG_CARD,
+                           borderRadius: "20px",
+                           border: `1.5px solid ${SIDEBAR_BORDER}`,
+                           boxShadow: "0 8px 32px rgba(26,139,183,0.10)",
                            flex: 1,
                         }}
                         bodyStyle={{ padding: "32px" }}

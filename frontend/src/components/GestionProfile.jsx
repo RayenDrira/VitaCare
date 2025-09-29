@@ -208,8 +208,9 @@ export default function GestionProfile() {
                justifyContent: "center",
                alignItems: "center",
                minHeight: "500px",
-               background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+               background: "#1A8BB7",
                borderRadius: "24px",
+               border: "2px solid #E3E8EF",
             }}
          >
             <div style={{ textAlign: "center", color: "#ffffff" }}>
@@ -229,8 +230,8 @@ export default function GestionProfile() {
                textAlign: "center",
                padding: "60px",
                borderRadius: "24px",
-               background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-               border: "none",
+               background: "#ff4d4f",
+               border: "2px solid #E3E8EF",
                color: "#ffffff",
             }}
          >
@@ -253,7 +254,7 @@ export default function GestionProfile() {
             ? userData.profilePictureUrl
             : `http://localhost:8081/uploads/${userData.profilePictureUrl}`
          : undefined);
-      console.log("User Data:", userData);
+   console.log("User Data:", userData);
    return (
       <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
          {!isEditing ? (
@@ -261,23 +262,37 @@ export default function GestionProfile() {
             <Card
                style={{
                   borderRadius: "32px",
-                  border: "none",
+                  border: "3px solid #E3E8EF",
                   overflow: "hidden",
-                  background:
-                     "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                  background: "#1A8BB7",
                   position: "relative",
+                  boxShadow: "0 20px 60px rgba(26,139,183,0.15)",
                }}
                bodyStyle={{ padding: 0 }}
             >
-               {/* Background Pattern */}
+               {/* Subtle geometric accents */}
                <div
                   style={{
                      position: "absolute",
-                     top: 0,
-                     left: 0,
-                     right: 0,
-                     bottom: 0,
-                     backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+                     top: "-100px",
+                     right: "-100px",
+                     width: "300px",
+                     height: "300px",
+                     background: "rgba(26,188,156,0.2)",
+                     borderRadius: "50%",
+                     filter: "blur(80px)",
+                  }}
+               />
+               <div
+                  style={{
+                     position: "absolute",
+                     bottom: "-80px",
+                     left: "-80px",
+                     width: "200px",
+                     height: "200px",
+                     background: "rgba(255,255,255,0.1)",
+                     borderRadius: "50%",
+                     filter: "blur(60px)",
                   }}
                />
 
@@ -420,7 +435,7 @@ export default function GestionProfile() {
                      onClick={handleEdit}
                      style={{
                         background: "#ffffff",
-                        color: "#667eea",
+                        color: "#1A8BB7",
                         border: "none",
                         borderRadius: "16px",
                         padding: "8px 32px",
@@ -454,19 +469,34 @@ export default function GestionProfile() {
                   <Card
                      style={{
                         borderRadius: "24px",
-                        border: "1px solid rgba(0,0,0,0.08)",
-                        boxShadow: "0 8px 32px rgba(0,0,0,0.08)",
-                        background:
-                           "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                        border: "3px solid #E3E8EF",
+                        boxShadow: "0 15px 45px rgba(26,139,183,0.12)",
+                        background: "#1A8BB7",
                         textAlign: "center",
                         padding: "40px 20px",
                         color: "#ffffff",
                         minHeight: "400px",
+                        position: "relative",
+                        overflow: "hidden",
                      }}
                   >
+                     {/* Subtle background accent */}
+                     <div
+                        style={{
+                           position: "absolute",
+                           top: "-50%",
+                           right: "-20%",
+                           width: "200px",
+                           height: "200px",
+                           background: "rgba(26,188,156,0.3)",
+                           borderRadius: "50%",
+                           filter: "blur(60px)",
+                        }}
+                     />
                      <div
                         style={{
                            position: "relative",
+                           zIndex: 2,
                            display: "inline-block",
                            marginBottom: "32px",
                         }}
@@ -500,7 +530,7 @@ export default function GestionProfile() {
                                  bottom: "10px",
                                  right: "10px",
                                  background: "#ffffff",
-                                 color: "#6366f1",
+                                 color: "#1A8BB7",
                                  border: "none",
                                  width: "48px",
                                  height: "48px",
@@ -844,10 +874,19 @@ export default function GestionProfile() {
                               style={{
                                  borderRadius: "12px",
                                  padding: "12px 32px",
-                                 background:
-                                    "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
-                                 border: "none",
+                                 background: "#1A8BB7",
+                                 border: "2px solid #1ABC9C",
                                  fontWeight: 600,
+                                 boxShadow: "0 4px 16px rgba(26,139,183,0.2)",
+                                 transition: "all 0.3s ease",
+                              }}
+                              onMouseEnter={(e) => {
+                                 e.currentTarget.style.background = "#1ABC9C";
+                                 e.currentTarget.style.transform = "translateY(-2px)";
+                              }}
+                              onMouseLeave={(e) => {
+                                 e.currentTarget.style.background = "#1A8BB7";
+                                 e.currentTarget.style.transform = "translateY(0)";
                               }}
                            >
                               Sauvegarder
@@ -858,10 +897,20 @@ export default function GestionProfile() {
                               style={{
                                  borderRadius: "12px",
                                  padding: "12px 32px",
-                                 background: "#f1f5f9",
-                                 border: "none",
-                                 color: "#475569",
+                                 background: "#F8FAFC",
+                                 border: "2px solid #E3E8EF",
+                                 color: "#4B5C6B",
                                  fontWeight: 600,
+                                 boxShadow: "0 2px 8px rgba(75,92,107,0.1)",
+                                 transition: "all 0.3s ease",
+                              }}
+                              onMouseEnter={(e) => {
+                                 e.currentTarget.style.background = "#E3E8EF";
+                                 e.currentTarget.style.transform = "translateY(-1px)";
+                              }}
+                              onMouseLeave={(e) => {
+                                 e.currentTarget.style.background = "#F8FAFC";
+                                 e.currentTarget.style.transform = "translateY(0)";
                               }}
                            >
                               Annuler
