@@ -10,11 +10,9 @@ import {
    Spin,
    Select,
    Avatar,
-   Space,
    Typography,
    Row,
    Col,
-   Divider,
 } from "antd";
 import {
    EditOutlined,
@@ -41,6 +39,98 @@ export default function GestionProfile() {
    const [previewImage, setPreviewImage] = useState(null);
    const [uploading, setUploading] = useState(false);
 
+   // Helper function to calculate profile completion percentage
+   const calculateProfileCompletion = () => {
+      if (!userData) return 0;
+
+      const profileFields = [
+         userData.firstName,
+         userData.lastName,
+         userData.phoneNumber,
+         userData.dateOfBirth,
+         userData.gender,
+         userData.height, // For completion: any value counts (including 0)
+         userData.weight, // For completion: any value counts (including 0)
+         userData.bloodType,
+         userData.allergies,
+         userData.chronicConditions,
+         userData.profilePictureUrl, // ✅ Fixed: use profilePictureUrl instead of profilePicture
+      ];
+
+      // Debug logging to see what's missing
+      const fieldNames = [
+         "firstName",
+         "lastName",
+         "phoneNumber",
+         "dateOfBirth",
+         "gender",
+         "height",
+         "weight",
+         "bloodType",
+         "allergies",
+         "chronicConditions",
+         "profilePictureUrl",
+      ];
+
+      profileFields.forEach((field, index) => {
+         const isEmpty =
+            field === null ||
+            field === undefined ||
+            field === "" ||
+            (typeof field === "string" && field.trim() === "");
+         console.log(`🔍 Field ${index + 1}/11: ${fieldNames[index]}`, {
+            value: field,
+            type: typeof field,
+            isNull: field === null,
+            isUndefined: field === undefined,
+            isEmpty: field === "",
+            isWhitespace: typeof field === "string" && field.trim() === "",
+            passes: !isEmpty ? "✅" : "❌",
+         });
+         if (isEmpty) {
+            console.log(`❌ FAILING FIELD: ${fieldNames[index]} = "${field}"`);
+         }
+      });
+
+      const completedFieldsArray = profileFields.filter(
+         (field) =>
+            field !== null &&
+            field !== undefined &&
+            field !== "" &&
+            (typeof field !== "string" || field.trim() !== "") // ✅ Fixed: handle whitespace-only strings
+      );
+
+      const completedFields = completedFieldsArray.length;
+
+      console.log("🔍 DETAILED CALCULATION:", {
+         totalFields: profileFields.length,
+         totalFieldsArray: profileFields,
+         completedCount: completedFields,
+         completedFieldsArray: completedFieldsArray,
+         exactPercentage: (completedFields / profileFields.length) * 100,
+         roundedPercentage: Math.round(
+            (completedFields / profileFields.length) * 100
+         ),
+      });
+
+      const completionPercentage = Math.round(
+         (completedFields / profileFields.length) * 100
+      );
+      console.log(
+         `🔍 Profile completion: ${completedFields}/${profileFields.length} = ${completionPercentage}%`
+      );
+      console.log("🔍 All field values:", profileFields);
+      console.log("🔍 Raw userData for debugging:", {
+         height: userData.height,
+         weight: userData.weight,
+         heightType: typeof userData.height,
+         weightType: typeof userData.weight,
+         heightAsNumber: Number(userData.height),
+         weightAsNumber: Number(userData.weight),
+      });
+      return completionPercentage;
+   };
+
    useEffect(() => {
       const fetchUserData = async () => {
          try {
@@ -61,8 +151,14 @@ export default function GestionProfile() {
                phoneNumber: user.phoneNumber || "",
                dateOfBirth: user.dateOfBirth ? moment(user.dateOfBirth) : null,
                gender: user.gender || "",
-               weight: user.weight || null,
-               height: user.height || null,
+               weight:
+                  user.weight !== null && user.weight !== undefined
+                     ? user.weight
+                     : null,
+               height:
+                  user.height !== null && user.height !== undefined
+                     ? user.height
+                     : null,
                bloodType: user.bloodType || null,
                allergies: user.allergies || "",
                chronicConditions: user.chronicConditions || "",
@@ -76,6 +172,33 @@ export default function GestionProfile() {
       };
       fetchUserData();
    }, [form]);
+
+   // Sync form fields whenever userData changes
+   useEffect(() => {
+      if (userData && form) {
+         form.setFieldsValue({
+            firstName: userData.firstName || "",
+            lastName: userData.lastName || "",
+            email: userData.email || "",
+            phoneNumber: userData.phoneNumber || "",
+            dateOfBirth: userData.dateOfBirth
+               ? moment(userData.dateOfBirth)
+               : null,
+            gender: userData.gender || "",
+            weight:
+               userData.weight !== null && userData.weight !== undefined
+                  ? userData.weight
+                  : null,
+            height:
+               userData.height !== null && userData.height !== undefined
+                  ? userData.height
+                  : null,
+            bloodType: userData.bloodType || null,
+            allergies: userData.allergies || "",
+            chronicConditions: userData.chronicConditions || "",
+         });
+      }
+   }, [userData, form]);
 
    useEffect(() => {
       return () => {
@@ -103,8 +226,14 @@ export default function GestionProfile() {
                ? moment(userData.dateOfBirth)
                : null,
             gender: userData.gender || "",
-            weight: userData.weight || null,
-            height: userData.height || null,
+            weight:
+               userData.weight !== null && userData.weight !== undefined
+                  ? userData.weight
+                  : null,
+            height:
+               userData.height !== null && userData.height !== undefined
+                  ? userData.height
+                  : null,
             bloodType: userData.bloodType || null,
             allergies: userData.allergies || "",
             chronicConditions: userData.chronicConditions || "",
@@ -115,22 +244,38 @@ export default function GestionProfile() {
    const handleSave = async () => {
       try {
          const values = await form.validateFields();
+         console.log("🔍 Form values before save:", values);
 
          const payload = {
-            firstName: values.firstName || null,
-            lastName: values.lastName || null,
-            email: values.email || null,
-            phoneNumber: values.phoneNumber || null,
+            firstName: values.firstName !== undefined ? values.firstName : "",
+            lastName: values.lastName !== undefined ? values.lastName : "",
+            email: values.email !== undefined ? values.email : "",
+            phoneNumber:
+               values.phoneNumber !== undefined ? values.phoneNumber : "",
             dateOfBirth: values.dateOfBirth
                ? values.dateOfBirth.format("YYYY-MM-DD")
                : null,
-            gender: values.gender || null,
-            weight: values.weight || null,
-            height: values.height || null,
+            gender: values.gender !== undefined ? values.gender : "",
+            weight:
+               values.weight !== undefined &&
+               values.weight !== "" &&
+               values.weight !== null
+                  ? Number(values.weight)
+                  : null,
+            height:
+               values.height !== undefined &&
+               values.height !== "" &&
+               values.height !== null
+                  ? Number(values.height)
+                  : null,
             bloodType: values.bloodType || null,
-            allergies: values.allergies || null,
-            chronicConditions: values.chronicConditions || null,
+            allergies: values.allergies !== undefined ? values.allergies : "",
+            chronicConditions:
+               values.chronicConditions !== undefined
+                  ? values.chronicConditions
+                  : "",
          };
+         console.log("🔍 Payload being sent to API:", payload);
 
          const res = await apiFetch(`/api/profile/${userData.id}`, {
             method: "PUT",
@@ -141,11 +286,39 @@ export default function GestionProfile() {
          if (!res.ok) throw new Error("Erreur lors de la mise à jour");
 
          const updatedUser = await res.json();
+         console.log("🔍 Updated user from API:", updatedUser);
 
-         setUserData({
+         const newUserData = {
             ...updatedUser,
             profilePictureUrl: updatedUser.profilePictureUrl,
+         };
+         console.log("🔍 Setting userData to:", newUserData);
+
+         setUserData(newUserData);
+
+         // Force form update immediately
+         form.setFieldsValue({
+            firstName: updatedUser.firstName || "",
+            lastName: updatedUser.lastName || "",
+            email: updatedUser.email || "",
+            phoneNumber: updatedUser.phoneNumber || "",
+            dateOfBirth: updatedUser.dateOfBirth
+               ? moment(updatedUser.dateOfBirth)
+               : null,
+            gender: updatedUser.gender || "",
+            weight:
+               updatedUser.weight !== null && updatedUser.weight !== undefined
+                  ? updatedUser.weight
+                  : null,
+            height:
+               updatedUser.height !== null && updatedUser.height !== undefined
+                  ? updatedUser.height
+                  : null,
+            bloodType: updatedUser.bloodType || null,
+            allergies: updatedUser.allergies || "",
+            chronicConditions: updatedUser.chronicConditions || "",
          });
+         console.log("🔍 Form forcefully updated after save");
 
          message.success("Profil mis à jour avec succès !");
          setIsEditing(false);
@@ -256,216 +429,818 @@ export default function GestionProfile() {
          : undefined);
    console.log("User Data:", userData);
    return (
-      <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-         {!isEditing ? (
-            // View Mode - Full Screen Profile Display
-            <Card
-               style={{
-                  borderRadius: "32px",
-                  border: "3px solid #E3E8EF",
-                  overflow: "hidden",
-                  background: "#1A8BB7",
-                  position: "relative",
-                  boxShadow: "0 20px 60px rgba(26,139,183,0.15)",
-               }}
-               bodyStyle={{ padding: 0 }}
-            >
-               {/* Subtle geometric accents */}
-               <div
+      <>
+         <style>
+            {`
+               @keyframes pulse-glow {
+                  0%, 100% {
+                     box-shadow: 0 0 20px rgba(26, 188, 156, 0.4);
+                  }
+                  50% {
+                     box-shadow: 0 0 30px rgba(26, 188, 156, 0.8);
+                  }
+               }
+            `}
+         </style>
+         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+            {!isEditing ? (
+               // View Mode - Full Screen Profile Display
+               <Card
                   style={{
-                     position: "absolute",
-                     top: "-100px",
-                     right: "-100px",
-                     width: "300px",
-                     height: "300px",
-                     background: "rgba(26,188,156,0.2)",
-                     borderRadius: "50%",
-                     filter: "blur(80px)",
-                  }}
-               />
-               <div
-                  style={{
-                     position: "absolute",
-                     bottom: "-80px",
-                     left: "-80px",
-                     width: "200px",
-                     height: "200px",
-                     background: "rgba(255,255,255,0.1)",
-                     borderRadius: "50%",
-                     filter: "blur(60px)",
-                  }}
-               />
-
-               {/* Content */}
-               <div
-                  style={{
+                     borderRadius: "32px",
+                     border: "3px solid #E3E8EF",
+                     overflow: "hidden",
+                     background: "#1A8BB7",
                      position: "relative",
-                     zIndex: 2,
-                     padding: "80px 60px",
-                     textAlign: "center",
-                     color: "#ffffff",
+                     boxShadow: "0 20px 60px rgba(26,139,183,0.15)",
                   }}
+                  bodyStyle={{ padding: 0 }}
                >
-                  {/* Profile Image */}
+                  {/* Subtle geometric accents */}
+                  <div
+                     style={{
+                        position: "absolute",
+                        top: "-100px",
+                        right: "-100px",
+                        width: "300px",
+                        height: "300px",
+                        background: "rgba(26,188,156,0.2)",
+                        borderRadius: "50%",
+                        filter: "blur(80px)",
+                     }}
+                  />
+                  <div
+                     style={{
+                        position: "absolute",
+                        bottom: "-80px",
+                        left: "-80px",
+                        width: "200px",
+                        height: "200px",
+                        background: "rgba(255,255,255,0.1)",
+                        borderRadius: "50%",
+                        filter: "blur(60px)",
+                     }}
+                  />
+
+                  {/* Content */}
                   <div
                      style={{
                         position: "relative",
-                        display: "inline-block",
-                        marginBottom: "32px",
+                        zIndex: 2,
+                        padding: "32px 24px",
+                        textAlign: "center",
+                        color: "#ffffff",
                      }}
                   >
-                     <Avatar
-                        size={200}
-                        src={displayImage}
-                        icon={<UserOutlined />}
-                        style={{
-                           border: "6px solid rgba(255, 255, 255, 0.2)",
-                           boxShadow: "0 16px 48px rgba(0,0,0,0.2)",
-                           backgroundColor: "rgba(255, 255, 255, 0.1)",
-                        }}
-                     />
+                     {/* Profile Picture Section */}
 
-                     {/* Online indicator */}
                      <div
                         style={{
                            position: "absolute",
-                           bottom: "10px",
-                           right: "10px",
-                           width: "24px",
-                           height: "24px",
-                           background: "#48bb78",
-                           border: "4px solid #ffffff",
+                           top: "-30%",
+                           right: "-10%",
+                           width: "200px",
+                           height: "200px",
+                           background: "rgba(26,188,156,0.3)",
                            borderRadius: "50%",
-                           boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                           filter: "blur(60px)",
                         }}
                      />
-                  </div>
 
-                  {/* User Info */}
-                  <div style={{ marginBottom: "40px" }}>
-                     <Title
-                        level={1}
-                        style={{
-                           color: "#ffffff",
-                           fontSize: "36px",
-                           fontWeight: 700,
-                           marginBottom: "8px",
-                           letterSpacing: "-1px",
-                        }}
-                     >
-                        {userData.firstName && userData.lastName
-                           ? `${userData.firstName} ${userData.lastName}`
-                           : "Utilisateur VitaCare"}
-                     </Title>
-
-                     <Text
-                        style={{
-                           color: "rgba(255, 255, 255, 0.8)",
-                           fontSize: "18px",
-                           display: "block",
-                           marginBottom: "24px",
-                        }}
-                     >
-                        {userData.email}
-                     </Text>
-
-                     {/* Quick Stats */}
-                     <div
-                        style={{
-                           display: "flex",
-                           justifyContent: "center",
-                           gap: "48px",
-                           marginBottom: "32px",
-                           flexWrap: "wrap",
-                        }}
-                     >
-                        {userData.phoneNumber && (
-                           <div style={{ textAlign: "center" }}>
-                              <PhoneOutlined
+                     <Row align="middle" gutter={[24, 16]}>
+                        <Col xs={24} sm={12} md={8}>
+                           <div
+                              style={{
+                                 position: "relative",
+                                 zIndex: 2,
+                                 textAlign: "center",
+                              }}
+                           >
+                              {/* Profile picture with progress border */}
+                              <div
                                  style={{
-                                    fontSize: "24px",
-                                    marginBottom: "8px",
+                                    position: "relative",
+                                    display: "inline-block",
                                  }}
-                              />
-                              <div style={{ fontSize: "14px", opacity: 0.8 }}>
-                                 {userData.phoneNumber}
+                              >
+                                 {/* Progress circle background */}
+                                 <div
+                                    style={{
+                                       position: "absolute",
+                                       top: "-8px",
+                                       left: "-8px",
+                                       width: "156px",
+                                       height: "156px",
+                                       borderRadius: "50%",
+                                       background: `conic-gradient(
+                                       #1ABC9C 0deg ${(() => {
+                                          // Complete profile fields including health data
+                                          const profileFields = [
+                                             // Basic Info (5 fields)
+                                             userData.firstName,
+                                             userData.lastName,
+                                             userData.phoneNumber,
+                                             userData.dateOfBirth,
+                                             userData.gender,
+                                             // Health Info (6 fields)
+                                             userData.height &&
+                                             Number(userData.height) > 0
+                                                ? userData.height
+                                                : null,
+                                             userData.weight &&
+                                             Number(userData.weight) > 0
+                                                ? userData.weight
+                                                : null,
+                                             userData.bloodType,
+                                             userData.allergies,
+                                             userData.chronicConditions,
+                                             userData.profilePictureUrl,
+                                          ];
+
+                                          const completedFields =
+                                             profileFields.filter(
+                                                (field) =>
+                                                   field !== null &&
+                                                   field !== undefined &&
+                                                   field !== ""
+                                             ).length;
+
+                                          const completionPercentage =
+                                             (completedFields /
+                                                profileFields.length) *
+                                             100;
+                                          return (
+                                             completionPercentage * 3.6
+                                          ).toFixed(1);
+                                       })()}deg,
+                                       rgba(255, 255, 255, 0.2) ${(() => {
+                                          const profileFields = [
+                                             userData.firstName,
+                                             userData.lastName,
+                                             userData.phoneNumber,
+                                             userData.dateOfBirth,
+                                             userData.gender,
+                                             userData.height &&
+                                             Number(userData.height) > 0
+                                                ? userData.height
+                                                : null,
+                                             userData.weight &&
+                                             Number(userData.weight) > 0
+                                                ? userData.weight
+                                                : null,
+                                             userData.bloodType,
+                                             userData.allergies,
+                                             userData.chronicConditions,
+                                             userData.profilePictureUrl,
+                                          ];
+                                          const completedFields =
+                                             profileFields.filter(
+                                                (field) =>
+                                                   field !== null &&
+                                                   field !== undefined &&
+                                                   field !== ""
+                                             ).length;
+                                          const completionPercentage =
+                                             (completedFields /
+                                                profileFields.length) *
+                                             100;
+                                          return (
+                                             completionPercentage * 3.6
+                                          ).toFixed(1);
+                                       })()}deg 360deg
+                                    )`,
+                                       boxShadow: `0 0 20px rgba(26, 188, 156, ${(() => {
+                                          const profileFields = [
+                                             userData.firstName,
+                                             userData.lastName,
+                                             userData.phoneNumber,
+                                             userData.dateOfBirth,
+                                             userData.gender,
+                                             userData.height &&
+                                             Number(userData.height) > 0
+                                                ? userData.height
+                                                : null,
+                                             userData.weight &&
+                                             Number(userData.weight) > 0
+                                                ? userData.weight
+                                                : null,
+                                             userData.bloodType,
+                                             userData.allergies,
+                                             userData.chronicConditions,
+                                             userData.profilePictureUrl,
+                                          ];
+                                          const completedFields =
+                                             profileFields.filter(
+                                                (field) =>
+                                                   field !== null &&
+                                                   field !== undefined &&
+                                                   field !== ""
+                                             ).length;
+                                          const completionPercentage =
+                                             (completedFields /
+                                                profileFields.length) *
+                                             100;
+                                          return (
+                                             (completionPercentage / 100) *
+                                             0.6
+                                          ).toFixed(2);
+                                       })()})`,
+                                       animation:
+                                          "pulse-glow 2s ease-in-out infinite",
+                                    }}
+                                 />
+
+                                 {/* Inner white circle to create border effect */}
+                                 <div
+                                    style={{
+                                       position: "absolute",
+                                       top: "-4px",
+                                       left: "-4px",
+                                       width: "148px",
+                                       height: "148px",
+                                       borderRadius: "50%",
+                                       background: "rgba(255, 255, 255, 0.1)",
+                                    }}
+                                 />
+
+                                 <Avatar
+                                    size={140}
+                                    src={displayImage}
+                                    icon={<UserOutlined />}
+                                    style={{
+                                       border:
+                                          "2px solid rgba(255, 255, 255, 0.3)",
+                                       boxShadow: "0 12px 32px rgba(0,0,0,0.2)",
+                                       backgroundColor:
+                                          "rgba(255, 255, 255, 0.1)",
+                                       position: "relative",
+                                       zIndex: 2,
+                                    }}
+                                 />
+
+                                 <Upload
+                                    showUploadList={false}
+                                    customRequest={handleUpload}
+                                    accept="image/*"
+                                    beforeUpload={beforeUpload}
+                                    disabled={uploading}
+                                 >
+                                    <Button
+                                       type="primary"
+                                       shape="circle"
+                                       size="large"
+                                       icon={<CameraOutlined />}
+                                       loading={uploading}
+                                       style={{
+                                          position: "absolute",
+                                          bottom: "5px",
+                                          right: "5px",
+                                          background: "#ffffff",
+                                          color: "#1A8BB7",
+                                          border: "none",
+                                          width: "40px",
+                                          height: "40px",
+                                          boxShadow:
+                                             "0 4px 16px rgba(0,0,0,0.2)",
+                                          zIndex: 3,
+                                       }}
+                                    />
+                                 </Upload>
+                              </div>
+                              {/* Status indicators below avatar */}
+                              <div
+                                 style={{
+                                    marginTop: "16px",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: "8px",
+                                    alignItems: "center",
+                                 }}
+                              >
+                                 {/* Profile Completion Percentage */}
+                                 <div
+                                    style={{
+                                       background: "rgba(255, 255, 255, 0.15)",
+                                       padding: "6px 12px",
+                                       borderRadius: "12px",
+                                       backdropFilter: "blur(10px)",
+                                       border:
+                                          "1px solid rgba(255, 255, 255, 0.2)",
+                                    }}
+                                 >
+                                    <Text
+                                       style={{
+                                          color: "rgba(255, 255, 255, 0.9)",
+                                          fontSize: "12px",
+                                          fontWeight: 600,
+                                       }}
+                                    >
+                                       📋 Profil{" "}
+                                       {(() => {
+                                          const profileFields = [
+                                             userData.firstName,
+                                             userData.lastName,
+                                             userData.phoneNumber,
+                                             userData.dateOfBirth,
+                                             userData.gender,
+                                             userData.height &&
+                                             Number(userData.height) > 0
+                                                ? userData.height
+                                                : null,
+                                             userData.weight &&
+                                             Number(userData.weight) > 0
+                                                ? userData.weight
+                                                : null,
+                                             userData.bloodType,
+                                             userData.allergies,
+                                             userData.chronicConditions,
+                                             userData.profilePictureUrl,
+                                          ];
+                                          const completedFields =
+                                             profileFields.filter(
+                                                (field) =>
+                                                   field !== null &&
+                                                   field !== undefined &&
+                                                   field !== ""
+                                             ).length;
+                                          const completionPercentage =
+                                             Math.round(
+                                                (completedFields /
+                                                   profileFields.length) *
+                                                   100
+                                             );
+                                          return completionPercentage;
+                                       })()}
+                                       % complet
+                                    </Text>
+                                 </div>
+
+                                 {/* Member since */}
+                                 <Text
+                                    style={{
+                                       color: "rgba(255, 255, 255, 0.7)",
+                                       fontSize: "11px",
+                                       fontWeight: 500,
+                                    }}
+                                 >
+                                    Membre VitaCare depuis 2024
+                                 </Text>
+
+                                 {/* Quick action hint */}
                               </div>
                            </div>
-                        )}
+                        </Col>
 
-                        {userData.dateOfBirth && (
-                           <div style={{ textAlign: "center" }}>
-                              <CalendarOutlined
+                        <Col xs={24} sm={12} md={16}>
+                           <div
+                              style={{
+                                 textAlign: "left",
+                                 position: "relative",
+                                 zIndex: 2,
+                                 padding: "0 20px",
+                              }}
+                           >
+                              {/* Main user identity */}
+                              <div style={{ marginBottom: "20px" }}>
+                                 <Title
+                                    level={2}
+                                    style={{
+                                       color: "#ffffff",
+                                       marginBottom: "4px",
+                                       fontSize: "28px",
+                                       fontWeight: 700,
+                                       letterSpacing: "-0.5px",
+                                    }}
+                                 >
+                                    {userData.firstName && userData.lastName
+                                       ? `${userData.firstName} ${userData.lastName}`
+                                       : "Utilisateur VitaCare"}
+                                 </Title>
+                                 <Text
+                                    style={{
+                                       color: "rgba(255, 255, 255, 0.8)",
+                                       fontSize: "16px",
+                                       fontWeight: 500,
+                                    }}
+                                 >
+                                    {userData.email}
+                                 </Text>
+                              </div>
+
+                              {/* Key demographics row */}
+                              <div
                                  style={{
-                                    fontSize: "24px",
-                                    marginBottom: "8px",
+                                    display: "flex",
+                                    flexWrap: "wrap",
+                                    gap: "20px",
+                                    marginBottom: "20px",
+                                    padding: "16px 0",
+                                    borderTop:
+                                       "1px solid rgba(255, 255, 255, 0.2)",
+                                    borderBottom:
+                                       "1px solid rgba(255, 255, 255, 0.2)",
                                  }}
-                              />
-                              <div style={{ fontSize: "14px", opacity: 0.8 }}>
-                                 {moment(userData.dateOfBirth).format(
-                                    "DD/MM/YYYY"
+                              >
+                                 {userData.dateOfBirth && (
+                                    <div
+                                       style={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                          gap: "8px",
+                                       }}
+                                    >
+                                       <CalendarOutlined
+                                          style={{
+                                             color: "rgba(255, 255, 255, 0.9)",
+                                             fontSize: "16px",
+                                          }}
+                                       />
+                                       <div>
+                                          <Text
+                                             style={{
+                                                color: "rgba(255, 255, 255, 0.7)",
+                                                fontSize: "12px",
+                                                display: "block",
+                                             }}
+                                          >
+                                             ÂGE
+                                          </Text>
+                                          <Text
+                                             style={{
+                                                color: "rgba(255, 255, 255, 0.95)",
+                                                fontSize: "16px",
+                                                fontWeight: 600,
+                                             }}
+                                          >
+                                             {moment().diff(
+                                                moment(userData.dateOfBirth),
+                                                "years"
+                                             )}{" "}
+                                             ans
+                                          </Text>
+                                       </div>
+                                    </div>
+                                 )}
+
+                                 {userData.gender && (
+                                    <div
+                                       style={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                          gap: "8px",
+                                       }}
+                                    >
+                                       <TeamOutlined
+                                          style={{
+                                             color: "rgba(255, 255, 255, 0.9)",
+                                             fontSize: "16px",
+                                          }}
+                                       />
+                                       <div>
+                                          <Text
+                                             style={{
+                                                color: "rgba(255, 255, 255, 0.7)",
+                                                fontSize: "12px",
+                                                display: "block",
+                                             }}
+                                          >
+                                             GENRE
+                                          </Text>
+                                          <Text
+                                             style={{
+                                                color: "rgba(255, 255, 255, 0.95)",
+                                                fontSize: "16px",
+                                                fontWeight: 600,
+                                             }}
+                                          >
+                                             {userData.gender === "MALE"
+                                                ? "Homme"
+                                                : "Femme"}
+                                          </Text>
+                                       </div>
+                                    </div>
+                                 )}
+
+                                 {userData.phoneNumber && (
+                                    <div
+                                       style={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                          gap: "8px",
+                                       }}
+                                    >
+                                       <PhoneOutlined
+                                          style={{
+                                             color: "rgba(255, 255, 255, 0.9)",
+                                             fontSize: "16px",
+                                          }}
+                                       />
+                                       <div>
+                                          <Text
+                                             style={{
+                                                color: "rgba(255, 255, 255, 0.7)",
+                                                fontSize: "12px",
+                                                display: "block",
+                                             }}
+                                          >
+                                             CONTACT
+                                          </Text>
+                                          <Text
+                                             style={{
+                                                color: "rgba(255, 255, 255, 0.95)",
+                                                fontSize: "16px",
+                                                fontWeight: 600,
+                                             }}
+                                          >
+                                             {userData.phoneNumber}
+                                          </Text>
+                                       </div>
+                                    </div>
                                  )}
                               </div>
-                           </div>
-                        )}
 
-                        {userData.gender && (
-                           <div style={{ textAlign: "center" }}>
-                              <TeamOutlined
-                                 style={{
-                                    fontSize: "24px",
-                                    marginBottom: "8px",
-                                 }}
-                              />
-                              <div style={{ fontSize: "14px", opacity: 0.8 }}>
-                                 {userData.gender === "MALE"
-                                    ? "Homme"
-                                    : "Femme"}
-                              </div>
+                              {/* Health metrics */}
+                              {((userData.height &&
+                                 Number(userData.height) > 0) ||
+                                 (userData.weight &&
+                                    Number(userData.weight) > 0) ||
+                                 userData.bloodType) && (
+                                 <div style={{ marginBottom: "20px" }}>
+                                    <Text
+                                       style={{
+                                          color: "rgba(255, 255, 255, 0.9)",
+                                          fontSize: "14px",
+                                          fontWeight: 600,
+                                          display: "block",
+                                          marginBottom: "12px",
+                                          letterSpacing: "0.5px",
+                                       }}
+                                    >
+                                       📋 DONNÉES MÉDICALES
+                                    </Text>
+                                    <div
+                                       style={{
+                                          display: "flex",
+                                          flexWrap: "wrap",
+                                          gap: "16px",
+                                       }}
+                                    >
+                                       {userData.bloodType && (
+                                          <div
+                                             style={{
+                                                background:
+                                                   "rgba(255, 255, 255, 0.15)",
+                                                padding: "8px 14px",
+                                                borderRadius: "20px",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: "6px",
+                                             }}
+                                          >
+                                             <span style={{ fontSize: "14px" }}>
+                                                🩸
+                                             </span>
+                                             <Text
+                                                style={{
+                                                   color: "rgba(255, 255, 255, 0.9)",
+                                                   fontSize: "14px",
+                                                   fontWeight: 500,
+                                                }}
+                                             >
+                                                {userData.bloodType}
+                                             </Text>
+                                          </div>
+                                       )}
+                                       {userData.height &&
+                                          Number(userData.height) > 0 && (
+                                             <div
+                                                style={{
+                                                   background:
+                                                      "rgba(255, 255, 255, 0.15)",
+                                                   padding: "8px 14px",
+                                                   borderRadius: "20px",
+                                                   display: "flex",
+                                                   alignItems: "center",
+                                                   gap: "6px",
+                                                }}
+                                             >
+                                                <span
+                                                   style={{ fontSize: "14px" }}
+                                                >
+                                                   📏
+                                                </span>
+                                                <Text
+                                                   style={{
+                                                      color: "rgba(255, 255, 255, 0.9)",
+                                                      fontSize: "14px",
+                                                      fontWeight: 500,
+                                                   }}
+                                                >
+                                                   {userData.height} cm
+                                                </Text>
+                                             </div>
+                                          )}
+                                       {userData.weight &&
+                                          Number(userData.weight) > 0 && (
+                                             <div
+                                                style={{
+                                                   background:
+                                                      "rgba(255, 255, 255, 0.15)",
+                                                   padding: "8px 14px",
+                                                   borderRadius: "20px",
+                                                   display: "flex",
+                                                   alignItems: "center",
+                                                   gap: "6px",
+                                                }}
+                                             >
+                                                <span
+                                                   style={{ fontSize: "14px" }}
+                                                >
+                                                   ⚖️
+                                                </span>
+                                                <Text
+                                                   style={{
+                                                      color: "rgba(255, 255, 255, 0.9)",
+                                                      fontSize: "14px",
+                                                      fontWeight: 500,
+                                                   }}
+                                                >
+                                                   {userData.weight} kg
+                                                </Text>
+                                             </div>
+                                          )}
+                                       {userData.height &&
+                                          Number(userData.height) > 0 &&
+                                          userData.weight &&
+                                          Number(userData.weight) > 0 && (
+                                             <div
+                                                style={{
+                                                   background:
+                                                      "rgba(255, 255, 255, 0.15)",
+                                                   padding: "8px 14px",
+                                                   borderRadius: "20px",
+                                                   display: "flex",
+                                                   alignItems: "center",
+                                                   gap: "6px",
+                                                }}
+                                             >
+                                                <span
+                                                   style={{ fontSize: "14px" }}
+                                                >
+                                                   📊
+                                                </span>
+                                                <Text
+                                                   style={{
+                                                      color: "rgba(255, 255, 255, 0.95)",
+                                                      fontSize: "14px",
+                                                      fontWeight: 600,
+                                                   }}
+                                                >
+                                                   IMC{" "}
+                                                   {(
+                                                      userData.weight /
+                                                      Math.pow(
+                                                         userData.height / 100,
+                                                         2
+                                                      )
+                                                   ).toFixed(1)}
+                                                </Text>
+                                             </div>
+                                          )}
+                                    </div>
+                                 </div>
+                              )}
+
+                              {/* Medical alerts - compact version */}
+                              {(userData.allergies ||
+                                 userData.chronicConditions) && (
+                                 <div
+                                    style={{
+                                       background: "rgba(255, 255, 255, 0.15)",
+                                       border:
+                                          "1px solid rgba(255, 69, 58, 0.4)",
+                                       padding: "12px 16px",
+                                       borderRadius: "12px",
+                                       marginTop: "16px",
+                                    }}
+                                 >
+                                    <div
+                                       style={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                          gap: "8px",
+                                          marginBottom: "8px",
+                                       }}
+                                    >
+                                       <span style={{ fontSize: "16px" }}>
+                                          ⚠️
+                                       </span>
+                                       <Text
+                                          style={{
+                                             color: "rgba(255, 255, 255, 0.95)",
+                                             fontSize: "14px",
+                                             fontWeight: 600,
+                                          }}
+                                       >
+                                          ALERTES MÉDICALES
+                                       </Text>
+                                    </div>
+                                    {userData.allergies && (
+                                       <Text
+                                          style={{
+                                             color: "rgba(255, 255, 255, 0.9)",
+                                             fontSize: "13px",
+                                             display: "block",
+                                             marginBottom: "4px",
+                                          }}
+                                       >
+                                          • Allergies:{" "}
+                                          {userData.allergies.length > 40
+                                             ? userData.allergies.substring(
+                                                  0,
+                                                  40
+                                               ) + "..."
+                                             : userData.allergies}
+                                       </Text>
+                                    )}
+                                    {userData.chronicConditions && (
+                                       <Text
+                                          style={{
+                                             color: "rgba(255, 255, 255, 0.9)",
+                                             fontSize: "13px",
+                                             display: "block",
+                                          }}
+                                       >
+                                          • Conditions chroniques:{" "}
+                                          {userData.chronicConditions.length >
+                                          40
+                                             ? userData.chronicConditions.substring(
+                                                  0,
+                                                  40
+                                               ) + "..."
+                                             : userData.chronicConditions}
+                                       </Text>
+                                    )}
+                                 </div>
+                              )}
                            </div>
-                        )}
+                        </Col>
+                     </Row>
+
+                     {/* Edit Button */}
+                     <div
+                        style={{
+                           marginTop: "32px",
+                           padding: "0 20px",
+                        }}
+                     >
+                        <Button
+                           type="primary"
+                           size="large"
+                           icon={<EditOutlined />}
+                           onClick={handleEdit}
+                           block
+                           style={{
+                              background: "#ffffff",
+                              color: "#1A8BB7",
+                              border: "none",
+                              borderRadius: "16px",
+                              padding: "8px 32px",
+                              height: "56px",
+                              fontSize: "16px",
+                              fontWeight: 600,
+                              boxShadow: "0 8px 24px rgba(255, 255, 255, 0.2)",
+                              transform: "translateY(0)",
+                              transition:
+                                 "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                           }}
+                           onMouseEnter={(e) => {
+                              e.currentTarget.style.transform =
+                                 "translateY(-2px)";
+                              e.currentTarget.style.boxShadow =
+                                 "0 12px 32px rgba(255, 255, 255, 0.3)";
+                           }}
+                           onMouseLeave={(e) => {
+                              e.currentTarget.style.transform = "translateY(0)";
+                              e.currentTarget.style.boxShadow =
+                                 "0 8px 24px rgba(255, 255, 255, 0.2)";
+                           }}
+                        >
+                           Modifier mon profil
+                        </Button>
                      </div>
                   </div>
-
-                  {/* Edit Button */}
-                  <Button
-                     type="primary"
-                     size="large"
-                     icon={<EditOutlined />}
-                     onClick={handleEdit}
-                     style={{
-                        background: "#ffffff",
-                        color: "#1A8BB7",
-                        border: "none",
-                        borderRadius: "16px",
-                        padding: "8px 32px",
-                        height: "56px",
-                        fontSize: "16px",
-                        fontWeight: 600,
-                        boxShadow: "0 8px 24px rgba(255, 255, 255, 0.2)",
-                        transform: "translateY(0)",
-                        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                     }}
-                     onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = "translateY(-2px)";
-                        e.currentTarget.style.boxShadow =
-                           "0 12px 32px rgba(255, 255, 255, 0.3)";
-                     }}
-                     onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = "translateY(0)";
-                        e.currentTarget.style.boxShadow =
-                           "0 8px 24px rgba(255, 255, 255, 0.2)";
-                     }}
-                  >
-                     Modifier mon profil
-                  </Button>
-               </div>
-            </Card>
-         ) : (
-            // Edit Mode - Form Layout
-            <Row gutter={[32, 32]}>
-               {/* Left Column - Profile Picture */}
-               <Col xs={24} lg={8}>
+               </Card>
+            ) : (
+               // Edit Mode - Stacked Layout
+               <div
+                  style={{
+                     display: "flex",
+                     flexDirection: "column",
+                     gap: "32px",
+                  }}
+               >
+                  {/* Profile Picture Section */}
                   <Card
                      style={{
                         borderRadius: "24px",
@@ -473,9 +1248,8 @@ export default function GestionProfile() {
                         boxShadow: "0 15px 45px rgba(26,139,183,0.12)",
                         background: "#1A8BB7",
                         textAlign: "center",
-                        padding: "40px 20px",
+                        padding: "30px 40px",
                         color: "#ffffff",
-                        minHeight: "400px",
                         position: "relative",
                         overflow: "hidden",
                      }}
@@ -484,8 +1258,8 @@ export default function GestionProfile() {
                      <div
                         style={{
                            position: "absolute",
-                           top: "-50%",
-                           right: "-20%",
+                           top: "-30%",
+                           right: "-10%",
                            width: "200px",
                            height: "200px",
                            background: "rgba(26,188,156,0.3)",
@@ -493,68 +1267,689 @@ export default function GestionProfile() {
                            filter: "blur(60px)",
                         }}
                      />
-                     <div
-                        style={{
-                           position: "relative",
-                           zIndex: 2,
-                           display: "inline-block",
-                           marginBottom: "32px",
-                        }}
-                     >
-                        <Avatar
-                           size={180}
-                           src={displayImage}
-                           icon={<UserOutlined />}
-                           style={{
-                              border: "4px solid rgba(255, 255, 255, 0.3)",
-                              boxShadow: "0 12px 32px rgba(0,0,0,0.2)",
-                              backgroundColor: "rgba(255, 255, 255, 0.1)",
-                           }}
-                        />
 
-                        <Upload
-                           showUploadList={false}
-                           customRequest={handleUpload}
-                           accept="image/*"
-                           beforeUpload={beforeUpload}
-                           disabled={uploading}
-                        >
-                           <Button
-                              type="primary"
-                              shape="circle"
-                              size="large"
-                              icon={<CameraOutlined />}
-                              loading={uploading}
+                     <Row align="middle" gutter={[48, 24]}>
+                        <Col xs={24} sm={12} md={8}>
+                           <div
                               style={{
-                                 position: "absolute",
-                                 bottom: "10px",
-                                 right: "10px",
-                                 background: "#ffffff",
-                                 color: "#1A8BB7",
-                                 border: "none",
-                                 width: "48px",
-                                 height: "48px",
-                                 boxShadow: "0 4px 16px rgba(0,0,0,0.2)",
+                                 position: "relative",
+                                 zIndex: 2,
+                                 textAlign: "center",
                               }}
-                           />
-                        </Upload>
-                     </div>
+                           >
+                              {/* Profile picture with progress border */}
+                              <div
+                                 style={{
+                                    position: "relative",
+                                    display: "inline-block",
+                                 }}
+                              >
+                                 {/* Progress circle background */}
+                                 <div
+                                    style={{
+                                       position: "absolute",
+                                       top: "-8px",
+                                       left: "-8px",
+                                       width: "156px",
+                                       height: "156px",
+                                       borderRadius: "50%",
+                                       background: `conic-gradient(
+                                       #1ABC9C 0deg ${(() => {
+                                          // Complete profile fields including health data
+                                          const profileFields = [
+                                             // Basic Info (5 fields)
+                                             userData.firstName,
+                                             userData.lastName,
+                                             userData.phoneNumber,
+                                             userData.dateOfBirth,
+                                             userData.gender,
+                                             // Health Info (6 fields)
+                                             userData.height &&
+                                             Number(userData.height) > 0
+                                                ? userData.height
+                                                : null,
+                                             userData.weight &&
+                                             Number(userData.weight) > 0
+                                                ? userData.weight
+                                                : null,
+                                             userData.bloodType,
+                                             userData.allergies,
+                                             userData.chronicConditions,
+                                             userData.profilePictureUrl,
+                                          ];
 
-                     <Title
-                        level={3}
-                        style={{ color: "#ffffff", marginBottom: "8px" }}
-                     >
-                        Photo de profil
-                     </Title>
-                     <Text style={{ color: "rgba(255, 255, 255, 0.8)" }}>
-                        Cliquez sur l'icône appareil photo pour changer votre
-                        photo
-                     </Text>
+                                          const completedFields =
+                                             profileFields.filter(
+                                                (field) =>
+                                                   field !== null &&
+                                                   field !== undefined &&
+                                                   field !== ""
+                                             ).length;
+
+                                          const completionPercentage =
+                                             (completedFields /
+                                                profileFields.length) *
+                                             100;
+                                          return (
+                                             completionPercentage * 3.6
+                                          ).toFixed(1);
+                                       })()}deg,
+                                       rgba(255, 255, 255, 0.2) ${(() => {
+                                          const profileFields = [
+                                             userData.firstName,
+                                             userData.lastName,
+                                             userData.phoneNumber,
+                                             userData.dateOfBirth,
+                                             userData.gender,
+                                             userData.height &&
+                                             Number(userData.height) > 0
+                                                ? userData.height
+                                                : null,
+                                             userData.weight &&
+                                             Number(userData.weight) > 0
+                                                ? userData.weight
+                                                : null,
+                                             userData.bloodType,
+                                             userData.allergies,
+                                             userData.chronicConditions,
+                                             userData.profilePictureUrl,
+                                          ];
+                                          const completedFields =
+                                             profileFields.filter(
+                                                (field) =>
+                                                   field !== null &&
+                                                   field !== undefined &&
+                                                   field !== ""
+                                             ).length;
+                                          const completionPercentage =
+                                             (completedFields /
+                                                profileFields.length) *
+                                             100;
+                                          return (
+                                             completionPercentage * 3.6
+                                          ).toFixed(1);
+                                       })()}deg 360deg
+                                    )`,
+                                       boxShadow: `0 0 20px rgba(26, 188, 156, ${(() => {
+                                          const profileFields = [
+                                             userData.firstName,
+                                             userData.lastName,
+                                             userData.phoneNumber,
+                                             userData.dateOfBirth,
+                                             userData.gender,
+                                             userData.height &&
+                                             Number(userData.height) > 0
+                                                ? userData.height
+                                                : null,
+                                             userData.weight &&
+                                             Number(userData.weight) > 0
+                                                ? userData.weight
+                                                : null,
+                                             userData.bloodType,
+                                             userData.allergies,
+                                             userData.chronicConditions,
+                                             userData.profilePictureUrl,
+                                          ];
+                                          const completedFields =
+                                             profileFields.filter(
+                                                (field) =>
+                                                   field !== null &&
+                                                   field !== undefined &&
+                                                   field !== ""
+                                             ).length;
+                                          const completionPercentage =
+                                             (completedFields /
+                                                profileFields.length) *
+                                             100;
+                                          return (
+                                             (completionPercentage / 100) *
+                                             0.6
+                                          ).toFixed(2);
+                                       })()})`,
+                                       animation:
+                                          "pulse-glow 2s ease-in-out infinite",
+                                    }}
+                                 />
+
+                                 {/* Inner white circle to create border effect */}
+                                 <div
+                                    style={{
+                                       position: "absolute",
+                                       top: "-4px",
+                                       left: "-4px",
+                                       width: "148px",
+                                       height: "148px",
+                                       borderRadius: "50%",
+                                       background: "rgba(255, 255, 255, 0.1)",
+                                    }}
+                                 />
+
+                                 <Avatar
+                                    size={140}
+                                    src={displayImage}
+                                    icon={<UserOutlined />}
+                                    style={{
+                                       border:
+                                          "2px solid rgba(255, 255, 255, 0.3)",
+                                       boxShadow: "0 12px 32px rgba(0,0,0,0.2)",
+                                       backgroundColor:
+                                          "rgba(255, 255, 255, 0.1)",
+                                       position: "relative",
+                                       zIndex: 2,
+                                    }}
+                                 />
+
+                                 <Upload
+                                    showUploadList={false}
+                                    customRequest={handleUpload}
+                                    accept="image/*"
+                                    beforeUpload={beforeUpload}
+                                    disabled={uploading}
+                                 >
+                                    <Button
+                                       type="primary"
+                                       shape="circle"
+                                       size="large"
+                                       icon={<CameraOutlined />}
+                                       loading={uploading}
+                                       style={{
+                                          position: "absolute",
+                                          bottom: "5px",
+                                          right: "5px",
+                                          background: "#ffffff",
+                                          color: "#1A8BB7",
+                                          border: "none",
+                                          width: "40px",
+                                          height: "40px",
+                                          boxShadow:
+                                             "0 4px 16px rgba(0,0,0,0.2)",
+                                          zIndex: 3,
+                                       }}
+                                    />
+                                 </Upload>
+                              </div>
+                              {/* Status indicators below avatar */}
+                              <div
+                                 style={{
+                                    marginTop: "16px",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: "8px",
+                                    alignItems: "center",
+                                 }}
+                              >
+                                 {/* Profile Completion Percentage */}
+                                 <div
+                                    style={{
+                                       background: "rgba(255, 255, 255, 0.15)",
+                                       padding: "6px 12px",
+                                       borderRadius: "12px",
+                                       backdropFilter: "blur(10px)",
+                                       border:
+                                          "1px solid rgba(255, 255, 255, 0.2)",
+                                    }}
+                                 >
+                                    <Text
+                                       style={{
+                                          color: "rgba(255, 255, 255, 0.9)",
+                                          fontSize: "12px",
+                                          fontWeight: 600,
+                                       }}
+                                    >
+                                       📋 Profil{" "}
+                                       {(() => {
+                                          const profileFields = [
+                                             userData.firstName,
+                                             userData.lastName,
+                                             userData.phoneNumber,
+                                             userData.dateOfBirth,
+                                             userData.gender,
+                                             userData.height &&
+                                             Number(userData.height) > 0
+                                                ? userData.height
+                                                : null,
+                                             userData.weight &&
+                                             Number(userData.weight) > 0
+                                                ? userData.weight
+                                                : null,
+                                             userData.bloodType,
+                                             userData.allergies,
+                                             userData.chronicConditions,
+                                             userData.profilePictureUrl,
+                                          ];
+                                          const completedFields =
+                                             profileFields.filter(
+                                                (field) =>
+                                                   field !== null &&
+                                                   field !== undefined &&
+                                                   field !== ""
+                                             ).length;
+                                          const completionPercentage =
+                                             Math.round(
+                                                (completedFields /
+                                                   profileFields.length) *
+                                                   100
+                                             );
+                                          return completionPercentage;
+                                       })()}
+                                       % complet
+                                    </Text>
+                                 </div>
+
+                                 {/* Member since */}
+                                 <Text
+                                    style={{
+                                       color: "rgba(255, 255, 255, 0.7)",
+                                       fontSize: "11px",
+                                       fontWeight: 500,
+                                    }}
+                                 >
+                                    Membre VitaCare depuis 2024
+                                 </Text>
+
+                                 {/* Quick action hint */}
+                              </div>
+                           </div>
+                        </Col>
+
+                        <Col xs={24} sm={12} md={16}>
+                           <div
+                              style={{
+                                 textAlign: "left",
+                                 position: "relative",
+                                 zIndex: 2,
+                                 padding: "0 20px",
+                              }}
+                           >
+                              {/* Main user identity */}
+                              <div style={{ marginBottom: "20px" }}>
+                                 <Title
+                                    level={2}
+                                    style={{
+                                       color: "#ffffff",
+                                       marginBottom: "4px",
+                                       fontSize: "28px",
+                                       fontWeight: 700,
+                                       letterSpacing: "-0.5px",
+                                    }}
+                                 >
+                                    {userData.firstName && userData.lastName
+                                       ? `${userData.firstName} ${userData.lastName}`
+                                       : "Utilisateur VitaCare"}
+                                 </Title>
+                                 <Text
+                                    style={{
+                                       color: "rgba(255, 255, 255, 0.8)",
+                                       fontSize: "16px",
+                                       fontWeight: 500,
+                                    }}
+                                 >
+                                    {userData.email}
+                                 </Text>
+                              </div>
+
+                              {/* Key demographics row */}
+                              <div
+                                 style={{
+                                    display: "flex",
+                                    flexWrap: "wrap",
+                                    gap: "20px",
+                                    marginBottom: "20px",
+                                    padding: "16px 0",
+                                    borderTop:
+                                       "1px solid rgba(255, 255, 255, 0.2)",
+                                    borderBottom:
+                                       "1px solid rgba(255, 255, 255, 0.2)",
+                                 }}
+                              >
+                                 {userData.dateOfBirth && (
+                                    <div
+                                       style={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                          gap: "8px",
+                                       }}
+                                    >
+                                       <CalendarOutlined
+                                          style={{
+                                             color: "rgba(255, 255, 255, 0.9)",
+                                             fontSize: "16px",
+                                          }}
+                                       />
+                                       <div>
+                                          <Text
+                                             style={{
+                                                color: "rgba(255, 255, 255, 0.7)",
+                                                fontSize: "12px",
+                                                display: "block",
+                                             }}
+                                          >
+                                             ÂGE
+                                          </Text>
+                                          <Text
+                                             style={{
+                                                color: "rgba(255, 255, 255, 0.95)",
+                                                fontSize: "16px",
+                                                fontWeight: 600,
+                                             }}
+                                          >
+                                             {moment().diff(
+                                                moment(userData.dateOfBirth),
+                                                "years"
+                                             )}{" "}
+                                             ans
+                                          </Text>
+                                       </div>
+                                    </div>
+                                 )}
+
+                                 {userData.gender && (
+                                    <div
+                                       style={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                          gap: "8px",
+                                       }}
+                                    >
+                                       <TeamOutlined
+                                          style={{
+                                             color: "rgba(255, 255, 255, 0.9)",
+                                             fontSize: "16px",
+                                          }}
+                                       />
+                                       <div>
+                                          <Text
+                                             style={{
+                                                color: "rgba(255, 255, 255, 0.7)",
+                                                fontSize: "12px",
+                                                display: "block",
+                                             }}
+                                          >
+                                             GENRE
+                                          </Text>
+                                          <Text
+                                             style={{
+                                                color: "rgba(255, 255, 255, 0.95)",
+                                                fontSize: "16px",
+                                                fontWeight: 600,
+                                             }}
+                                          >
+                                             {userData.gender === "MALE"
+                                                ? "Homme"
+                                                : "Femme"}
+                                          </Text>
+                                       </div>
+                                    </div>
+                                 )}
+
+                                 {userData.phoneNumber && (
+                                    <div
+                                       style={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                          gap: "8px",
+                                       }}
+                                    >
+                                       <PhoneOutlined
+                                          style={{
+                                             color: "rgba(255, 255, 255, 0.9)",
+                                             fontSize: "16px",
+                                          }}
+                                       />
+                                       <div>
+                                          <Text
+                                             style={{
+                                                color: "rgba(255, 255, 255, 0.7)",
+                                                fontSize: "12px",
+                                                display: "block",
+                                             }}
+                                          >
+                                             CONTACT
+                                          </Text>
+                                          <Text
+                                             style={{
+                                                color: "rgba(255, 255, 255, 0.95)",
+                                                fontSize: "16px",
+                                                fontWeight: 600,
+                                             }}
+                                          >
+                                             {userData.phoneNumber}
+                                          </Text>
+                                       </div>
+                                    </div>
+                                 )}
+                              </div>
+
+                              {/* Health metrics */}
+                              {((userData.height &&
+                                 Number(userData.height) > 0) ||
+                                 (userData.weight &&
+                                    Number(userData.weight) > 0) ||
+                                 userData.bloodType) && (
+                                 <div style={{ marginBottom: "20px" }}>
+                                    <Text
+                                       style={{
+                                          color: "rgba(255, 255, 255, 0.9)",
+                                          fontSize: "14px",
+                                          fontWeight: 600,
+                                          display: "block",
+                                          marginBottom: "12px",
+                                          letterSpacing: "0.5px",
+                                       }}
+                                    >
+                                       📋 DONNÉES MÉDICALES
+                                    </Text>
+                                    <div
+                                       style={{
+                                          display: "flex",
+                                          flexWrap: "wrap",
+                                          gap: "16px",
+                                       }}
+                                    >
+                                       {userData.bloodType && (
+                                          <div
+                                             style={{
+                                                background:
+                                                   "rgba(255, 255, 255, 0.15)",
+                                                padding: "8px 14px",
+                                                borderRadius: "20px",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: "6px",
+                                             }}
+                                          >
+                                             <span style={{ fontSize: "14px" }}>
+                                                🩸
+                                             </span>
+                                             <Text
+                                                style={{
+                                                   color: "rgba(255, 255, 255, 0.9)",
+                                                   fontSize: "14px",
+                                                   fontWeight: 500,
+                                                }}
+                                             >
+                                                {userData.bloodType}
+                                             </Text>
+                                          </div>
+                                       )}
+                                       {userData.height &&
+                                          Number(userData.height) > 0 && (
+                                             <div
+                                                style={{
+                                                   background:
+                                                      "rgba(255, 255, 255, 0.15)",
+                                                   padding: "8px 14px",
+                                                   borderRadius: "20px",
+                                                   display: "flex",
+                                                   alignItems: "center",
+                                                   gap: "6px",
+                                                }}
+                                             >
+                                                <span
+                                                   style={{ fontSize: "14px" }}
+                                                >
+                                                   📏
+                                                </span>
+                                                <Text
+                                                   style={{
+                                                      color: "rgba(255, 255, 255, 0.9)",
+                                                      fontSize: "14px",
+                                                      fontWeight: 500,
+                                                   }}
+                                                >
+                                                   {userData.height} cm
+                                                </Text>
+                                             </div>
+                                          )}
+                                       {userData.weight &&
+                                          Number(userData.weight) > 0 && (
+                                             <div
+                                                style={{
+                                                   background:
+                                                      "rgba(255, 255, 255, 0.15)",
+                                                   padding: "8px 14px",
+                                                   borderRadius: "20px",
+                                                   display: "flex",
+                                                   alignItems: "center",
+                                                   gap: "6px",
+                                                }}
+                                             >
+                                                <span
+                                                   style={{ fontSize: "14px" }}
+                                                >
+                                                   ⚖️
+                                                </span>
+                                                <Text
+                                                   style={{
+                                                      color: "rgba(255, 255, 255, 0.9)",
+                                                      fontSize: "14px",
+                                                      fontWeight: 500,
+                                                   }}
+                                                >
+                                                   {userData.weight} kg
+                                                </Text>
+                                             </div>
+                                          )}
+                                       {userData.height &&
+                                          Number(userData.height) > 0 &&
+                                          userData.weight &&
+                                          Number(userData.weight) > 0 && (
+                                             <div
+                                                style={{
+                                                   background:
+                                                      "rgba(26, 188, 156, 0.3)",
+                                                   padding: "8px 14px",
+                                                   borderRadius: "20px",
+                                                   display: "flex",
+                                                   alignItems: "center",
+                                                   gap: "6px",
+                                                }}
+                                             >
+                                                <span
+                                                   style={{ fontSize: "14px" }}
+                                                >
+                                                   📊
+                                                </span>
+                                                <Text
+                                                   style={{
+                                                      color: "rgba(255, 255, 255, 0.95)",
+                                                      fontSize: "14px",
+                                                      fontWeight: 600,
+                                                   }}
+                                                >
+                                                   IMC{" "}
+                                                   {(
+                                                      userData.weight /
+                                                      Math.pow(
+                                                         userData.height / 100,
+                                                         2
+                                                      )
+                                                   ).toFixed(1)}
+                                                </Text>
+                                             </div>
+                                          )}
+                                    </div>
+                                 </div>
+                              )}
+
+                              {/* Medical alerts - compact version */}
+                              {(userData.allergies ||
+                                 userData.chronicConditions) && (
+                                 <div
+                                    style={{
+                                       background: "rgba(255, 69, 58, 0.2)",
+                                       border:
+                                          "1px solid rgba(255, 69, 58, 0.4)",
+                                       padding: "12px 16px",
+                                       borderRadius: "12px",
+                                       marginTop: "16px",
+                                    }}
+                                 >
+                                    <div
+                                       style={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                          gap: "8px",
+                                          marginBottom: "8px",
+                                       }}
+                                    >
+                                       <span style={{ fontSize: "16px" }}>
+                                          ⚠️
+                                       </span>
+                                       <Text
+                                          style={{
+                                             color: "rgba(255, 255, 255, 0.95)",
+                                             fontSize: "14px",
+                                             fontWeight: 600,
+                                          }}
+                                       >
+                                          ALERTES MÉDICALES
+                                       </Text>
+                                    </div>
+                                    {userData.allergies && (
+                                       <Text
+                                          style={{
+                                             color: "rgba(255, 255, 255, 0.9)",
+                                             fontSize: "13px",
+                                             display: "block",
+                                             marginBottom: "4px",
+                                          }}
+                                       >
+                                          • Allergies:{" "}
+                                          {userData.allergies.length > 40
+                                             ? userData.allergies.substring(
+                                                  0,
+                                                  40
+                                               ) + "..."
+                                             : userData.allergies}
+                                       </Text>
+                                    )}
+                                    {userData.chronicConditions && (
+                                       <Text
+                                          style={{
+                                             color: "rgba(255, 255, 255, 0.9)",
+                                             fontSize: "13px",
+                                             display: "block",
+                                          }}
+                                       >
+                                          • Conditions chroniques:{" "}
+                                          {userData.chronicConditions.length >
+                                          40
+                                             ? userData.chronicConditions.substring(
+                                                  0,
+                                                  40
+                                               ) + "..."
+                                             : userData.chronicConditions}
+                                       </Text>
+                                    )}
+                                 </div>
+                              )}
+                           </div>
+                        </Col>
+                     </Row>
                   </Card>
-               </Col>
 
-               {/* Right Column - Form */}
-               <Col xs={24} lg={16}>
+                  {/* Form Section */}
                   <Card
                      style={{
                         borderRadius: "24px",
@@ -875,18 +2270,20 @@ export default function GestionProfile() {
                                  borderRadius: "12px",
                                  padding: "12px 32px",
                                  background: "#1A8BB7",
-                                 border: "2px solid #1ABC9C",
+
                                  fontWeight: 600,
                                  boxShadow: "0 4px 16px rgba(26,139,183,0.2)",
                                  transition: "all 0.3s ease",
                               }}
                               onMouseEnter={(e) => {
                                  e.currentTarget.style.background = "#1ABC9C";
-                                 e.currentTarget.style.transform = "translateY(-2px)";
+                                 e.currentTarget.style.transform =
+                                    "translateY(-2px)";
                               }}
                               onMouseLeave={(e) => {
                                  e.currentTarget.style.background = "#1A8BB7";
-                                 e.currentTarget.style.transform = "translateY(0)";
+                                 e.currentTarget.style.transform =
+                                    "translateY(0)";
                               }}
                            >
                               Sauvegarder
@@ -906,11 +2303,13 @@ export default function GestionProfile() {
                               }}
                               onMouseEnter={(e) => {
                                  e.currentTarget.style.background = "#E3E8EF";
-                                 e.currentTarget.style.transform = "translateY(-1px)";
+                                 e.currentTarget.style.transform =
+                                    "translateY(-1px)";
                               }}
                               onMouseLeave={(e) => {
                                  e.currentTarget.style.background = "#F8FAFC";
-                                 e.currentTarget.style.transform = "translateY(0)";
+                                 e.currentTarget.style.transform =
+                                    "translateY(0)";
                               }}
                            >
                               Annuler
@@ -918,9 +2317,9 @@ export default function GestionProfile() {
                         </div>
                      </Form>
                   </Card>
-               </Col>
-            </Row>
-         )}
-      </div>
+               </div>
+            )}
+         </div>
+      </>
    );
 }
