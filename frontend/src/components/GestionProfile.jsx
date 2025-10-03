@@ -40,6 +40,7 @@ export default function GestionProfile() {
    const [uploading, setUploading] = useState(false);
 
    // Helper function to calculate profile completion percentage
+   // eslint-disable-next-line no-unused-vars
    const calculateProfileCompletion = () => {
       if (!userData) return 0;
 

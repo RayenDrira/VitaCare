@@ -1,12 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import GestionDocuments from "../components/Documents";
 import GestionProfile from "../components/GestionProfile";
+import Sidebar from "../components/Sidebar/Sidebar";
+import { useSidebar } from "../hooks/useSidebar";
+import { COLORS, PAGE_TITLES, SIDER_ITEMS } from "../constants";
 
 import Logo from "../assets/VitaCare_logo.png";
 
 import {
    Layout,
-   Menu,
    ConfigProvider,
    Card,
    Typography,
@@ -15,75 +17,40 @@ import {
    Dropdown,
    Button,
    Input,
-   Space,
    Row,
    Col,
    Statistic,
+   Menu,
 } from "antd";
 import {
-   DashboardOutlined,
-   FileTextOutlined,
    UserOutlined,
-   BarChartOutlined,
    SettingOutlined,
    BellOutlined,
    SearchOutlined,
-   HeartOutlined,
    MedicineBoxOutlined,
    CalendarOutlined,
-   LeftOutlined,
-   RightOutlined,
+   FileTextOutlined,
+   BarChartOutlined,
 } from "@ant-design/icons";
 
-const { Header, Content, Sider } = Layout;
+const { Content } = Layout;
 const { Title, Text } = Typography;
 
-// Color palette
-const PRIMARY = "#1A8BB7";
-const SECONDARY = "#1ABC9C";
-const BG_LIGHT = "#F8FAFC";
-const BG_CARD = "#fff";
-const SIDEBAR_BG = "#F3F6F9";
-const SIDEBAR_BORDER = "#E3E8EF";
-const TEXT_DARK = "#22313F";
-const TEXT_MEDIUM = "#4B5C6B";
-const GREY = "#B0B8C1";
+// Destructure colors from constants
+const { PRIMARY, BG_LIGHT, BG_CARD, SIDEBAR_BORDER, TEXT_DARK, TEXT_MEDIUM } =
+   COLORS;
 
-export default function Dashboard() {
-   const [collapsed, setCollapsed] = useState(false);
-   const [activePage, setActivePage] = useState("1");
-   const pageTitles = {
-      1: { title: "Dashboard", subtitle: "Bienvenue sur VitaCare" },
-      2: {
-         title: "Analytics",
-         subtitle: "Visualisez vos statistiques de santé",
-      },
-      9: {
-         title: "Documents",
-         subtitle: "Organisez et gérez tous vos documents médicaux",
-      },
-      10: { title: "Profil", subtitle: "Gérez vos informations personnelles" },
-   };
-
-   const siderItems = [
-      {
-         key: "1",
-         icon: <DashboardOutlined />,
-         label: "Dashboard",
-      },
-      {
-         key: "2",
-         icon: <BarChartOutlined />,
-         label: "Analytics",
-      },
-      {
-         key: "9",
-         icon: <FileTextOutlined />,
-         label: "Documents",
-      },
-   ];
-
+function Dashboard() {
+   const { collapsed, setCollapsed, activePage, setActivePage } = useSidebar();
    const [searchQuery, setSearchQuery] = useState("");
+
+   // Clear search when navigating away from Documents page
+   useEffect(() => {
+      if (activePage !== "9" && searchQuery) {
+         // Optional: clear search when leaving documents
+         // setSearchQuery("");
+      }
+   }, [activePage, searchQuery]);
 
    const userMenu = (
       <Menu
@@ -132,7 +99,7 @@ export default function Dashboard() {
                   subMenuItemBg: "transparent",
                },
                Layout: {
-                  siderBg: SIDEBAR_BG,
+                  siderBg: COLORS.SIDEBAR_BG,
                   headerBg: BG_CARD,
                },
             },
@@ -144,120 +111,16 @@ export default function Dashboard() {
                background: BG_LIGHT,
             }}
          >
-            {/* Sidebar */}
-            <Sider
-               collapsible
+            <Sidebar
                collapsed={collapsed}
-               width={260}
-               collapsedWidth={80}
-               trigger={null}
-               style={{
-                  background: SIDEBAR_BG,
-                  borderRight: `1.5px solid ${SIDEBAR_BORDER}`,
-                  boxShadow: "0 2px 16px rgba(26,139,183,0.04)",
-                  zIndex: 10,
-                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                  position: "relative",
-               }}
-            >
-               <div
-                  style={{
-                     height: 80,
-                     display: "flex",
-                     alignItems: "center",
-                     justifyContent: collapsed ? "center" : "flex-start",
-                     paddingLeft: collapsed ? 0 : 24,
-                     gap: 10,
-                     position: "relative",
-                  }}
-               >
-                  <img
-                     src={Logo}
-                     style={{
-                        width: 40,
-                        height: 40,
-                        transition: "all 0.3s",
-                        display: "block",
-                        margin: collapsed ? "0 auto" : 0,
-                     }}
-                     alt="VitaCare"
-                  />
-                  {!collapsed && (
-                     <span
-                        style={{
-                           color: PRIMARY,
-                           fontSize: 24,
-                           fontWeight: 700,
-                           letterSpacing: "1px",
-                           fontFamily: "Outfit",
-                           marginLeft: 8,
-                        }}
-                     >
-                        VitaCare
-                     </span>
-                  )}
-               </div>
-               <div style={{ padding: "0 8px" }}>
-                  <Menu
-                     selectedKeys={[activePage]}
-                     mode="inline"
-                     items={siderItems.map((item) => ({
-                        ...item,
-                        icon: React.cloneElement(item.icon, {
-                           style: {
-                              color: activePage === item.key ? PRIMARY : GREY,
-                              fontSize: 20,
-                              transition: "color 0.2s",
-                           },
-                        }),
-                        label: (
-                           <span
-                              style={{
-                                 color:
-                                    activePage === item.key
-                                       ? PRIMARY
-                                       : TEXT_MEDIUM,
-                                 fontWeight:
-                                    activePage === item.key ? 700 : 500,
-                                 letterSpacing: "0.2px",
-                                 fontSize: 16,
-                                 transition: "color 0.2s",
-                              }}
-                           >
-                              {item.label}
-                           </span>
-                        ),
-                        style: {
-                           margin: "8px 0",
-                           borderRadius: "10px",
-                           background:
-                              activePage === item.key
-                                 ? "rgba(26,139,183,0.10)"
-                                 : "transparent",
-                           boxShadow:
-                              activePage === item.key
-                                 ? "0 4px 16px rgba(26,139,183,0.08)"
-                                 : "none",
-                           color:
-                              activePage === item.key ? PRIMARY : TEXT_MEDIUM,
-                           transition: "background 0.2s, box-shadow 0.2s",
-                        },
-                     }))}
-                     onClick={(e) => setActivePage(e.key)}
-                     style={{
-                        background: "transparent",
-                        border: "none",
-                        fontSize: "15px",
-                        fontWeight: 500,
-                     }}
-                     theme="light"
-                  />
-               </div>
-            </Sider>
+               setCollapsed={setCollapsed}
+               activePage={activePage}
+               setActivePage={setActivePage}
+               siderItems={SIDER_ITEMS}
+            />
 
-            {/* Main Layout */}
             <Layout style={{ backgroundColor: BG_LIGHT }}>
-               {/* Topbar as part of content */}
+               {/* Topbar */}
                <div
                   style={{
                      background: BG_CARD,
@@ -281,45 +144,8 @@ export default function Dashboard() {
                            letterSpacing: "-0.5px",
                         }}
                      >
-                        {pageTitles[activePage]?.title || ""}
+                        {PAGE_TITLES[activePage]?.title || ""}
                      </Title>
-                     <span
-                        onClick={() => setCollapsed((prev) => !prev)}
-                        style={{
-                           marginLeft: 12,
-                           cursor: "pointer",
-                           display: "flex",
-                           alignItems: "center",
-                           height: 32,
-                           width: 24,
-                           userSelect: "none",
-                        }}
-                        tabIndex={0}
-                        role="button"
-                        aria-label={
-                           collapsed ? "Expand sidebar" : "Collapse sidebar"
-                        }
-                     >
-                        {collapsed ? (
-                           <RightOutlined
-                              style={{
-                                 color: SECONDARY,
-                                 fontSize: 16,
-                                 fontWeight: 700,
-                                 lineHeight: 1,
-                              }}
-                           />
-                        ) : (
-                           <LeftOutlined
-                              style={{
-                                 color: SECONDARY,
-                                 fontSize: 16,
-                                 fontWeight: 700,
-                                 lineHeight: 1,
-                              }}
-                           />
-                        )}
-                     </span>
                      <Text
                         style={{
                            color: TEXT_MEDIUM,
@@ -328,296 +154,261 @@ export default function Dashboard() {
                            fontSize: 16,
                         }}
                      >
-                        {pageTitles[activePage]?.subtitle || ""}
+                        {PAGE_TITLES[activePage]?.subtitle || ""}
                      </Text>
                   </div>
 
-                  <Space size="large">
+                  <div
+                     style={{ display: "flex", alignItems: "center", gap: 16 }}
+                  >
                      <Input
-                        placeholder="Rechercher des documents..."
-                        prefix={<SearchOutlined style={{ color: PRIMARY }} />}
+                        placeholder="Rechercher des documents... (Appuyez sur Entrée)"
+                        prefix={
+                           <SearchOutlined style={{ color: TEXT_MEDIUM }} />
+                        }
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        onPressEnter={() => setActivePage("9")}
-                        style={{
-                           width: 240,
-                           height: 40,
-                           borderRadius: "20px",
-                           background: BG_LIGHT,
-                           border: `1.5px solid ${SIDEBAR_BORDER}`,
-                           fontSize: "15px",
-                           color: TEXT_DARK,
+                        onPressEnter={() => {
+                           if (searchQuery.trim()) {
+                              setActivePage("9"); // Navigate to documents page
+                           }
                         }}
+                        style={{
+                           width: 300,
+                           borderRadius: 32,
+                           backgroundColor: BG_LIGHT,
+                           border: searchQuery
+                              ? `2px solid ${PRIMARY}20`
+                              : "none",
+                           boxShadow: searchQuery
+                              ? "0 2px 12px rgba(26,139,183,0.15)"
+                              : "0 2px 8px rgba(26,139,183,0.08)",
+                        }}
+                        size="large"
+                        allowClear
                      />
-                     <Badge count={3} size="small">
+                     <Badge count={3} dot>
                         <Button
                            type="text"
-                           icon={<BellOutlined style={{ color: PRIMARY }} />}
                            shape="circle"
+                           icon={
+                              <BellOutlined
+                                 style={{ fontSize: 18, color: TEXT_MEDIUM }}
+                              />
+                           }
                            size="large"
                            style={{
-                              background: BG_LIGHT,
-                              border: `1.5px solid ${SIDEBAR_BORDER}`,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
                            }}
                         />
                      </Badge>
-                     <Dropdown
-                        overlay={userMenu}
-                        trigger={["click"]}
-                        placement="bottomRight"
-                     >
+                     <Dropdown overlay={userMenu} trigger={["click"]}>
                         <Avatar
-                           size={40}
+                           icon={<UserOutlined />}
                            style={{
+                              backgroundColor: PRIMARY,
                               cursor: "pointer",
-                              background: PRIMARY,
-                              border: "2px solid #fff",
-                              boxShadow: "0 2px 8px rgba(26,139,183,0.10)",
+                              fontSize: 18,
                            }}
-                        >
-                           <UserOutlined />
-                        </Avatar>
+                           size="large"
+                        />
                      </Dropdown>
-                  </Space>
+                  </div>
                </div>
 
                <Content
                   style={{
-                     margin: "32px",
-                     marginTop: 24,
-                     display: "flex",
-                     flexDirection: "column",
-                     minHeight: "calc(100vh - 144px)",
+                     padding: "32px",
+                     background: BG_LIGHT,
+                     minHeight: "calc(100vh - 80px)",
                   }}
                >
-                  {/* Dashboard Page */}
                   {activePage === "1" && (
-                     <div>
-                        {/* Hero Section */}
-                        <Card
-                           style={{
-                              background: BG_CARD,
-                              borderRadius: "20px",
-                              padding: "40px",
-                              marginBottom: "32px",
-                              boxShadow: "0 20px 60px rgba(26,139,183,0.10)",
-                              border: `1.5px solid ${SIDEBAR_BORDER}`,
-                           }}
-                           bodyStyle={{ padding: 0 }}
-                        >
-                           <div style={{ textAlign: "center" }}>
-                              <div>
+                     <Row gutter={[32, 32]}>
+                        <Col span={24}>
+                           <Card
+                              style={{
+                                 borderRadius: 20,
+                                 background: `linear-gradient(135deg, ${PRIMARY}15, ${PRIMARY}05)`,
+                                 border: `1.5px solid ${PRIMARY}20`,
+                                 boxShadow: "0 8px 32px rgba(26,139,183,0.12)",
+                              }}
+                           >
+                              <div
+                                 style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                 }}
+                              >
+                                 <div>
+                                    <Title
+                                       level={2}
+                                       style={{ color: PRIMARY, margin: 0 }}
+                                    >
+                                       Bienvenue sur VitaCare
+                                    </Title>
+                                    <Text
+                                       style={{
+                                          fontSize: 18,
+                                          color: TEXT_MEDIUM,
+                                          fontWeight: 500,
+                                       }}
+                                    >
+                                       Gérez votre santé en toute simplicité
+                                    </Text>
+                                 </div>
                                  <img
                                     src={Logo}
-                                    style={{
-                                       width: 88,
-                                       height: 88,
-                                       transition: "all 0.3s",
-                                    }}
                                     alt="VitaCare"
+                                    style={{ width: 80, height: 80 }}
                                  />
                               </div>
-                              <Title
-                                 level={1}
-                                 style={{
+                           </Card>
+                        </Col>
+                        <Col xs={24} sm={12} lg={6}>
+                           <Card
+                              style={{
+                                 borderRadius: 16,
+                                 border: "none",
+                                 boxShadow: "0 4px 24px rgba(26,139,183,0.08)",
+                              }}
+                           >
+                              <Statistic
+                                 title="Documents"
+                                 value={12}
+                                 prefix={
+                                    <FileTextOutlined
+                                       style={{ color: PRIMARY, fontSize: 24 }}
+                                    />
+                                 }
+                                 valueStyle={{
                                     color: PRIMARY,
-                                    fontSize: "42px",
                                     fontWeight: 700,
-                                    marginBottom: "16px",
-                                    fontFamily: "Outfit",
                                  }}
-                              >
-                                 Bienvenue sur VitaCare
-                              </Title>
-                              <Text
-                                 style={{
-                                    color: TEXT_MEDIUM,
-                                    fontSize: "18px",
-                                    fontWeight: 400,
-                                    lineHeight: 1.6,
-                                    maxWidth: "600px",
-                                    margin: "0 auto",
-                                    display: "block",
+                              />
+                           </Card>
+                        </Col>
+                        <Col xs={24} sm={12} lg={6}>
+                           <Card
+                              style={{
+                                 borderRadius: 16,
+                                 border: "none",
+                                 boxShadow: "0 4px 24px rgba(26,139,183,0.08)",
+                              }}
+                           >
+                              <Statistic
+                                 title="Rendez-vous"
+                                 value={3}
+                                 prefix={
+                                    <CalendarOutlined
+                                       style={{
+                                          color: "#52c41a",
+                                          fontSize: 24,
+                                       }}
+                                    />
+                                 }
+                                 valueStyle={{
+                                    color: "#52c41a",
+                                    fontWeight: 700,
                                  }}
-                              >
-                                 Votre plateforme de santé personnalisée pour
-                                 gérer vos documents médicaux et suivre votre
-                                 bien-être au quotidien.
-                              </Text>
-                           </div>
-                        </Card>
-
-                        {/* Statistics Cards */}
-                        <Row gutter={[24, 24]}>
-                           <Col xs={24} sm={12} lg={8}>
-                              <Card
-                                 style={{
-                                    background: BG_CARD,
-                                    borderRadius: "20px",
-                                    border: `1.5px solid ${SIDEBAR_BORDER}`,
-                                    boxShadow:
-                                       "0 8px 32px rgba(26,139,183,0.10)",
+                              />
+                           </Card>
+                        </Col>
+                        <Col xs={24} sm={12} lg={6}>
+                           <Card
+                              style={{
+                                 borderRadius: 16,
+                                 border: "none",
+                                 boxShadow: "0 4px 24px rgba(26,139,183,0.08)",
+                              }}
+                           >
+                              <Statistic
+                                 title="Traitements"
+                                 value={2}
+                                 prefix={
+                                    <MedicineBoxOutlined
+                                       style={{
+                                          color: "#fa8c16",
+                                          fontSize: 24,
+                                       }}
+                                    />
+                                 }
+                                 valueStyle={{
+                                    color: "#fa8c16",
+                                    fontWeight: 700,
                                  }}
-                              >
-                                 <Statistic
-                                    title={
-                                       <span
-                                          style={{
-                                             color: TEXT_MEDIUM,
-                                             fontSize: "16px",
-                                             fontWeight: 600,
-                                          }}
-                                       >
-                                          Documents
-                                       </span>
-                                    }
-                                    value={12}
-                                    prefix={
-                                       <FileTextOutlined
-                                          style={{ color: PRIMARY }}
-                                       />
-                                    }
-                                    valueStyle={{
-                                       color: PRIMARY,
-                                       fontSize: "28px",
-                                       fontWeight: 700,
-                                    }}
-                                 />
-                              </Card>
-                           </Col>
-                           <Col xs={24} sm={12} lg={8}>
-                              <Card
-                                 style={{
-                                    background: BG_CARD,
-                                    borderRadius: "20px",
-                                    border: `1.5px solid ${SIDEBAR_BORDER}`,
-                                    boxShadow:
-                                       "0 8px 32px rgba(26,139,183,0.10)",
+                              />
+                           </Card>
+                        </Col>
+                        <Col xs={24} sm={12} lg={6}>
+                           <Card
+                              style={{
+                                 borderRadius: 16,
+                                 border: "none",
+                                 boxShadow: "0 4px 24px rgba(26,139,183,0.08)",
+                              }}
+                           >
+                              <Statistic
+                                 title="Alertes médicaux"
+                                 value={1}
+                                 prefix={
+                                    <BellOutlined
+                                       style={{
+                                          color: COLORS.WARNING,
+                                          fontSize: 24,
+                                       }}
+                                    />
+                                 }
+                                 valueStyle={{
+                                    color: COLORS.WARNING,
+                                    fontWeight: 700,
                                  }}
-                              >
-                                 <Statistic
-                                    title={
-                                       <span
-                                          style={{
-                                             color: TEXT_MEDIUM,
-                                             fontSize: "16px",
-                                             fontWeight: 600,
-                                          }}
-                                       >
-                                          Consultations
-                                       </span>
-                                    }
-                                    value={8}
-                                    prefix={
-                                       <MedicineBoxOutlined
-                                          style={{ color: PRIMARY }}
-                                       />
-                                    }
-                                    valueStyle={{
-                                       color: PRIMARY,
-                                       fontSize: "28px",
-                                       fontWeight: 700,
-                                    }}
-                                 />
-                              </Card>
-                           </Col>
-                           <Col xs={24} sm={12} lg={8}>
-                              <Card
-                                 style={{
-                                    background: BG_CARD,
-                                    borderRadius: "20px",
-                                    border: `1.5px solid ${SIDEBAR_BORDER}`,
-                                    boxShadow:
-                                       "0 8px 32px rgba(26,139,183,0.10)",
-                                 }}
-                              >
-                                 <Statistic
-                                    title={
-                                       <span
-                                          style={{
-                                             color: TEXT_MEDIUM,
-                                             fontSize: "16px",
-                                             fontWeight: 600,
-                                          }}
-                                       >
-                                          Rendez-vous
-                                       </span>
-                                    }
-                                    value={3}
-                                    prefix={
-                                       <CalendarOutlined
-                                          style={{ color: PRIMARY }}
-                                       />
-                                    }
-                                    valueStyle={{
-                                       color: PRIMARY,
-                                       fontSize: "28px",
-                                       fontWeight: 700,
-                                    }}
-                                 />
-                              </Card>
-                           </Col>
-                        </Row>
-                     </div>
+                              />
+                           </Card>
+                        </Col>
+                     </Row>
                   )}
-
-                  {/* Analytics Page */}
                   {activePage === "2" && (
                      <Card
                         style={{
-                           background: BG_CARD,
-                           borderRadius: "20px",
-                           border: `1.5px solid ${SIDEBAR_BORDER}`,
-                           boxShadow: "0 8px 32px rgba(26,139,183,0.10)",
-                           flex: 1,
+                           borderRadius: 16,
+                           border: "none",
+                           boxShadow: "0 4px 24px rgba(26,139,183,0.08)",
+                           textAlign: "center",
+                           padding: "64px 32px",
                         }}
-                        bodyStyle={{ padding: "32px" }}
                      >
-                        <div
-                           style={{ textAlign: "center", padding: "60px 20px" }}
+                        <BarChartOutlined
+                           style={{
+                              fontSize: 80,
+                              color: PRIMARY,
+                              marginBottom: 24,
+                           }}
+                        />
+                        <Title
+                           level={2}
+                           style={{ color: TEXT_DARK, marginBottom: 16 }}
                         >
-                           <BarChartOutlined
-                              style={{
-                                 fontSize: 64,
-                                 color: PRIMARY,
-                                 marginBottom: 24,
-                              }}
-                           />
-                           <Title level={3} style={{ color: TEXT_DARK }}>
-                              Analytics
-                           </Title>
-                           <Text style={{ color: PRIMARY }}>
-                              Vos statistiques de santé apparaîtront ici
-                           </Text>
-                        </div>
+                           Analytics Dashboard
+                        </Title>
+                        <Text style={{ fontSize: 18, color: TEXT_MEDIUM }}>
+                           Visualisez vos statistiques de santé et suivez votre
+                           évolution
+                        </Text>
                      </Card>
                   )}
-
-                  {/* Documents Page */}
                   {activePage === "9" && (
-                     <Card
-                        style={{
-                           background: BG_CARD,
-                           borderRadius: "20px",
-                           border: `1.5px solid ${SIDEBAR_BORDER}`,
-                           boxShadow: "0 8px 32px rgba(26,139,183,0.10)",
-                           flex: 1,
-                        }}
-                        bodyStyle={{ padding: "32px" }}
-                     >
-                        <GestionDocuments searchQuery={searchQuery} />
-                     </Card>
+                     <GestionDocuments searchQuery={searchQuery} />
                   )}
-
-                  {/* Profile Page */}
-                  {activePage === "10" && (
-                     <div style={{ flex: 1 }}>
-                        <GestionProfile />
-                     </div>
-                  )}
+                  {activePage === "10" && <GestionProfile />}
                </Content>
             </Layout>
          </Layout>
       </ConfigProvider>
    );
 }
+
+export default Dashboard;
