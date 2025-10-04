@@ -6,8 +6,6 @@ import {
    FileTextOutlined,
    EyeOutlined,
    CloudUploadOutlined,
-   HeartOutlined,
-   MedicineBoxOutlined,
 } from "@ant-design/icons";
 import {
    Upload,
@@ -24,7 +22,6 @@ import {
 import { pdfjs } from "react-pdf";
 import { apiFetch, getEmailFromToken } from "../utils/api";
 import "../styles/Documents.css";
-import { Document as PdfDocument, Page } from "react-pdf";
 
 // Dashboard palette
 const PRIMARY = "#1A8BB7";
@@ -35,6 +32,19 @@ const SIDEBAR_BORDER = "#E3E8EF";
 const TEXT_DARK = "#22313F";
 const TEXT_MEDIUM = "#4B5C6B";
 const GREY = "#B0B8C1";
+
+// Translation language options
+const LANGUAGE_OPTIONS = [
+   { value: "auto", label: "🔍 Auto-détection", flag: "🔍" },
+   { value: "en", label: "🇺🇸 Anglais", flag: "🇺🇸" },
+   { value: "fr", label: "🇫🇷 Français", flag: "🇫🇷" },
+   { value: "es", label: "🇪🇸 Espagnol", flag: "🇪🇸" },
+   { value: "de", label: "🇩🇪 Allemand", flag: "🇩🇪" },
+   { value: "it", label: "🇮🇹 Italien", flag: "🇮🇹" },
+   { value: "pt", label: "🇵🇹 Portugais", flag: "🇵🇹" },
+   { value: "ar", label: "🇸🇦 Arabe", flag: "🇸🇦" },
+   { value: "zh", label: "🇨🇳 Chinois", flag: "🇨🇳" },
+];
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
@@ -57,6 +67,25 @@ const generatePdfThumbnail = async (url) => {
    }
 };
 
+// PDF text extraction function
+const extractTextFromPdf = async (pdfBlob) => {
+   try {
+      const pdf = await pdfjs.getDocument(URL.createObjectURL(pdfBlob)).promise;
+      let fullText = "";
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+         const page = await pdf.getPage(i);
+         const textContent = await page.getTextContent();
+         const pageText = textContent.items.map((item) => item.str).join(" ");
+         fullText += pageText + "\n";
+      }
+
+      return fullText.trim();
+   } catch (error) {
+      throw new Error("Impossible d'extraire le texte du PDF");
+   }
+};
+
 const handleAnalyse = async (filename) => {
    try {
       const email = getEmailFromToken();
@@ -70,22 +99,6 @@ const handleAnalyse = async (filename) => {
       message.success(`Analyse de ${filename} terminée !`);
    } catch {
       message.error("Erreur lors de l'analyse du document");
-   }
-};
-
-const handleTranslate = async (filename) => {
-   try {
-      const email = getEmailFromToken();
-      const res = await apiFetch(
-         `/api/documents/traduire/${encodeURIComponent(
-            filename
-         )}?email=${encodeURIComponent(email)}`,
-         { method: "POST" }
-      );
-      if (!res) throw new Error("Translation failed");
-      message.success(`Traduction de ${filename} terminée !`);
-   } catch {
-      message.error("Erreur lors de la traduction du document");
    }
 };
 
@@ -144,10 +157,292 @@ const GestionDocuments = ({ searchQuery = "" }) => {
    const [uploading, setUploading] = useState(false);
    const { Dragger } = Upload;
    const [sortBy, setSortBy] = useState("latest");
-   const [numPages, setNumPages] = useState(null);
 
-   const onPdfLoad = ({ numPages }) => {
-      setNumPages(numPages);
+   // Translation modal states
+   const [translationOpen, setTranslationOpen] = useState(false);
+   const [translating, setTranslating] = useState(false);
+   const [currentFile, setCurrentFile] = useState(null);
+   const [translationResult, setTranslationResult] = useState("");
+   const [sourceLanguage, setSourceLanguage] = useState("auto"); // Auto-detect by default
+   const [targetLanguage, setTargetLanguage] = useState("fr");
+   const [sourceText, setSourceText] = useState("");
+
+   // Helper function to split text into chunks
+   const chunkText = (text, maxLength = 350) => {
+      // Handle empty or very short text
+      if (!text || text.length <= maxLength) {
+         return text ? [text] : [];
+      }
+
+      const chunks = [];
+      let currentPosition = 0;
+
+      while (currentPosition < text.length) {
+         let endPosition = currentPosition + maxLength;
+
+         // If we're at the end of the text, take the rest
+         if (endPosition >= text.length) {
+            chunks.push(text.substring(currentPosition));
+            break;
+         }
+
+         // Find the best place to split - look for sentence endings first
+         let splitPosition = endPosition;
+         const sentenceEnders = /[.!?؟。！？]/g;
+         const segment = text.substring(currentPosition, endPosition);
+         let lastSentenceEnd = -1;
+         let match;
+
+         while ((match = sentenceEnders.exec(segment)) !== null) {
+            lastSentenceEnd = match.index;
+         }
+
+         if (lastSentenceEnd > maxLength * 0.3) {
+            // Only use if it's not too early in the chunk
+            splitPosition = currentPosition + lastSentenceEnd + 1;
+         } else {
+            // Look for word boundaries (spaces, commas, etc.)
+            const wordBoundaries = /[\s,،;；:：\-\u200B]/g;
+            let lastWordBoundary = -1;
+            wordBoundaries.lastIndex = 0;
+
+            while ((match = wordBoundaries.exec(segment)) !== null) {
+               if (match.index > maxLength * 0.7) break; // Don't split too late
+               lastWordBoundary = match.index;
+            }
+
+            if (lastWordBoundary > maxLength * 0.3) {
+               splitPosition = currentPosition + lastWordBoundary + 1;
+            } else {
+               // Force split at maxLength if no good boundary found
+               splitPosition = endPosition;
+            }
+         }
+
+         const chunk = text.substring(currentPosition, splitPosition).trim();
+         if (chunk) {
+            chunks.push(chunk);
+         }
+
+         currentPosition = splitPosition;
+      }
+
+      return chunks.filter((chunk) => chunk.length > 0);
+   };
+
+   // Language detection function
+   const detectLanguage = async (text) => {
+      try {
+         // Use a sample of the text for detection (first 500 chars)
+         const sample = text.substring(0, 500);
+
+         // Try LibreTranslate detection first
+         const response = await fetch("https://libretranslate.de/detect", {
+            method: "POST",
+            body: JSON.stringify({ q: sample }),
+            headers: { "Content-Type": "application/json" },
+         });
+
+         if (response.ok) {
+            const data = await response.json();
+            const detectedLang = data[0]?.language;
+            if (detectedLang && detectedLang !== "auto") {
+               console.log(`Detected language: ${detectedLang}`);
+               return detectedLang;
+            }
+         }
+
+         // Fallback: simple pattern-based detection
+         const patterns = {
+            en: /\b(the|and|is|are|in|on|at|to|for|of|with|by)\b/gi,
+            fr: /\b(le|la|les|et|est|sont|dans|sur|à|pour|de|avec|par)\b/gi,
+            es: /\b(el|la|los|las|y|es|son|en|sobre|para|de|con|por)\b/gi,
+            de: /\b(der|die|das|und|ist|sind|in|auf|zu|für|von|mit)\b/gi,
+            it: /\b(il|la|i|le|e|è|sono|in|su|a|per|di|con)\b/gi,
+         };
+
+         let bestMatch = { lang: "en", score: 0 };
+
+         for (const [lang, pattern] of Object.entries(patterns)) {
+            const matches = sample.match(pattern) || [];
+            const score = matches.length;
+            if (score > bestMatch.score) {
+               bestMatch = { lang, score };
+            }
+         }
+
+         console.log(`Pattern-detected language: ${bestMatch.lang}`);
+         return bestMatch.lang;
+      } catch (error) {
+         console.warn(
+            "Language detection failed, defaulting to English:",
+            error
+         );
+         return "en";
+      }
+   };
+
+   // Translation API function with chunking
+   const translateText = async (text, sourceLang, targetLang) => {
+      try {
+         // Handle auto-detection
+         let actualSourceLang = sourceLang;
+         if (sourceLang === "auto") {
+            actualSourceLang = await detectLanguage(text);
+         }
+
+         // Prevent same language translation
+         if (actualSourceLang === targetLang) {
+            return `[Même langue détectée: ${actualSourceLang.toUpperCase()}]\n\n${text}`;
+         }
+         const chunks = chunkText(text, 350); // Keep under 500 char limit
+         const translatedChunks = [];
+
+         for (let i = 0; i < chunks.length; i++) {
+            const chunk = chunks[i];
+
+            try {
+               // Using LibreTranslate API - more reliable than MyMemory
+               const response = await fetch(
+                  "https://libretranslate.de/translate",
+                  {
+                     method: "POST",
+                     body: JSON.stringify({
+                        q: chunk,
+                        source: actualSourceLang,
+                        target: targetLang,
+                        format: "text",
+                     }),
+                     headers: {
+                        "Content-Type": "application/json",
+                     },
+                  }
+               );
+
+               if (!response.ok) throw new Error("Translation failed");
+
+               const data = await response.json();
+               const translatedChunk = data.translatedText || chunk;
+               translatedChunks.push(translatedChunk);
+
+               // Add small delay between requests to avoid rate limiting
+               if (i < chunks.length - 1) {
+                  await new Promise((resolve) => setTimeout(resolve, 100));
+               }
+            } catch (error) {
+               console.warn(
+                  `LibreTranslate failed for chunk ${
+                     i + 1
+                  }, trying Google Translate:`,
+                  error
+               );
+
+               // Fallback to Google Translate API (free tier)
+               try {
+                  const googleResponse = await fetch(
+                     `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${actualSourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(
+                        chunk
+                     )}`
+                  );
+
+                  if (googleResponse.ok) {
+                     const googleData = await googleResponse.json();
+                     const translatedChunk = googleData[0]?.[0]?.[0] || chunk;
+                     translatedChunks.push(translatedChunk);
+                  } else {
+                     translatedChunks.push(chunk);
+                  }
+               } catch (googleError) {
+                  console.warn(
+                     `Google Translate also failed for chunk ${i + 1}:`,
+                     googleError
+                  );
+                  translatedChunks.push(chunk); // Keep original text if both fail
+               }
+            }
+         }
+
+         return translatedChunks.join(" ");
+      } catch (error) {
+         return `[Traduction vers ${targetLang.toUpperCase()}]\n\n${text}`;
+      }
+   };
+
+   const performTranslation = async () => {
+      if (!sourceText.trim()) {
+         message.error("Aucun texte à traduire");
+         return;
+      }
+
+      // Prevent same language translation (but allow auto-detect)
+      if (sourceLanguage === targetLanguage && sourceLanguage !== "auto") {
+         message.error("Veuillez sélectionner des langues différentes");
+         return;
+      }
+
+      setTranslating(true);
+      setTranslationResult(""); // Clear previous results
+
+      try {
+         // Show progress for large texts
+         const chunks = chunkText(sourceText, 350);
+         if (chunks.length > 1) {
+            message.loading(
+               `Traduction en cours... (${chunks.length} segments)`,
+               0
+            );
+         }
+
+         const translated = await translateText(
+            sourceText,
+            sourceLanguage,
+            targetLanguage
+         );
+         message.destroy();
+         setTranslationResult(translated);
+         message.success("Traduction terminée !");
+      } catch (error) {
+         message.destroy();
+         message.error("Erreur lors de la traduction");
+         console.error("Translation error:", error);
+      } finally {
+         setTranslating(false);
+      }
+   };
+
+   const handleTranslate = async (filename) => {
+      const file = fileList.find((f) => f.uid === filename);
+      if (!file) {
+         message.error("Fichier non trouvé");
+         return;
+      }
+
+      if (!file.contentType.startsWith("application/pdf")) {
+         message.error(
+            "La traduction n'est disponible que pour les fichiers PDF"
+         );
+         return;
+      }
+
+      setCurrentFile(file);
+      setTranslationOpen(true);
+      setTranslationResult("");
+      setSourceText("");
+
+      try {
+         message.loading("Extraction du texte du PDF...", 0);
+         const text = await extractTextFromPdf(file.blob);
+         setSourceText(text);
+         message.destroy();
+
+         if (!text.trim()) {
+            message.warning("Aucun texte extractible trouvé dans ce PDF");
+            return;
+         }
+      } catch (error) {
+         message.destroy();
+         message.error(error.message);
+      }
    };
 
    const fetchDocuments = async () => {
@@ -769,6 +1064,179 @@ const GestionDocuments = ({ searchQuery = "" }) => {
             </div>
          </Modal>
 
+         {/* Translation Modal */}
+         <Modal
+            open={translationOpen}
+            title={
+               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <GlobalOutlined style={{ color: SECONDARY, fontSize: 24 }} />
+                  <span
+                     style={{ color: TEXT_DARK, fontWeight: 600, fontSize: 18 }}
+                  >
+                     Traduction PDF - {currentFile?.name}
+                  </span>
+               </div>
+            }
+            onCancel={() => setTranslationOpen(false)}
+            centered
+            width="90%"
+            style={{ maxWidth: "1400px" }}
+            footer={[
+               <Button key="close" onClick={() => setTranslationOpen(false)}>
+                  Fermer
+               </Button>,
+               <Button
+                  key="translate"
+                  type="primary"
+                  icon={<GlobalOutlined />}
+                  loading={translating}
+                  onClick={performTranslation}
+                  disabled={!sourceText.trim()}
+                  style={{
+                     background: SECONDARY,
+                     borderColor: SECONDARY,
+                  }}
+               >
+                  Traduire
+               </Button>,
+            ]}
+         >
+            <div
+               style={{
+                  marginBottom: 20,
+                  display: "flex",
+                  gap: 30,
+                  alignItems: "center",
+                  flexWrap: "wrap",
+               }}
+            >
+               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <Text strong>Langue source:</Text>
+                  <Select
+                     value={sourceLanguage}
+                     onChange={setSourceLanguage}
+                     style={{ width: 180 }}
+                     size="large"
+                  >
+                     {LANGUAGE_OPTIONS.map((lang) => (
+                        <Select.Option key={lang.value} value={lang.value}>
+                           {lang.label}
+                        </Select.Option>
+                     ))}
+                  </Select>
+               </div>
+
+               <div style={{ fontSize: 20, color: SECONDARY }}>→</div>
+
+               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <Text strong>Langue cible:</Text>
+                  <Select
+                     value={targetLanguage}
+                     onChange={setTargetLanguage}
+                     style={{ width: 180 }}
+                     size="large"
+                  >
+                     {LANGUAGE_OPTIONS.map((lang) => (
+                        <Select.Option
+                           key={lang.value}
+                           value={lang.value}
+                           disabled={
+                              lang.value === sourceLanguage ||
+                              lang.value === "auto"
+                           }
+                        >
+                           {lang.label}
+                        </Select.Option>
+                     ))}
+                  </Select>
+               </div>
+            </div>
+
+            <div style={{ display: "flex", gap: 20, height: "60vh" }}>
+               {/* Source Text */}
+               <div style={{ flex: 1 }}>
+                  <Title level={4} style={{ color: PRIMARY, marginBottom: 12 }}>
+                     📄 Texte original
+                  </Title>
+                  <div
+                     style={{
+                        height: "100%",
+                        border: `2px solid ${SIDEBAR_BORDER}`,
+                        borderRadius: 12,
+                        padding: 16,
+                        background: BG_LIGHT,
+                        overflow: "auto",
+                        whiteSpace: "pre-wrap",
+                        fontFamily: "monospace",
+                        fontSize: 14,
+                        lineHeight: 1.6,
+                     }}
+                  >
+                     {sourceText || "Extraction du texte en cours..."}
+                  </div>
+               </div>
+
+               {/* Translation Result */}
+               <div style={{ flex: 1 }}>
+                  <Title
+                     level={4}
+                     style={{ color: SECONDARY, marginBottom: 12 }}
+                  >
+                     🌐 Traduction{" "}
+                     {
+                        LANGUAGE_OPTIONS.find((l) => l.value === targetLanguage)
+                           ?.flag
+                     }
+                  </Title>
+                  <div
+                     style={{
+                        height: "100%",
+                        border: `2px solid ${
+                           translationResult ? SECONDARY + "40" : SIDEBAR_BORDER
+                        }`,
+                        borderRadius: 12,
+                        padding: 16,
+                        background: translationResult
+                           ? SECONDARY + "05"
+                           : BG_CARD,
+                        overflow: "auto",
+                        whiteSpace: "pre-wrap",
+                        fontFamily: "monospace",
+                        fontSize: 14,
+                        lineHeight: 1.6,
+                     }}
+                  >
+                     {translating ? (
+                        <div style={{ textAlign: "center", padding: 40 }}>
+                           <GlobalOutlined
+                              style={{
+                                 fontSize: 48,
+                                 color: SECONDARY,
+                                 animation: "spin 2s linear infinite",
+                              }}
+                           />
+                           <div style={{ marginTop: 16, color: TEXT_MEDIUM }}>
+                              Traduction en cours...
+                           </div>
+                        </div>
+                     ) : translationResult ? (
+                        translationResult
+                     ) : (
+                        <div
+                           style={{
+                              textAlign: "center",
+                              padding: 40,
+                              color: GREY,
+                           }}
+                        >
+                           Cliquez sur "Traduire" pour commencer
+                        </div>
+                     )}
+                  </div>
+               </div>
+            </div>
+         </Modal>
+
          <style jsx>{`
             .document-item:hover .document-overlay {
                opacity: 1 !important;
@@ -785,6 +1253,14 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                }
                100% {
                   transform: scale(1);
+               }
+            }
+            @keyframes spin {
+               from {
+                  transform: rotate(0deg);
+               }
+               to {
+                  transform: rotate(360deg);
                }
             }
          `}</style>
