@@ -509,7 +509,9 @@ export default function GestionProfile() {
                      />
 
                      <Row align="middle" gutter={[24, 16]}>
-                        <Col xs={24} sm={12} md={8}>
+                        <Col xs={24} sm={12} md={10}>
+                           {" "}
+                           {/* Changed from md={8} to md={10} for more space */}
                            <div
                               style={{
                                  position: "relative",
@@ -524,14 +526,14 @@ export default function GestionProfile() {
                                     display: "inline-block",
                                  }}
                               >
-                                 {/* Progress circle background */}
+                                 {/* Progress circle background - made bigger */}
                                  <div
                                     style={{
                                        position: "absolute",
-                                       top: "-8px",
-                                       left: "-8px",
-                                       width: "156px",
-                                       height: "156px",
+                                       top: "-10px", // Increased from -8px
+                                       left: "-10px", // Increased from -8px
+                                       width: "200px", // Increased from 156px
+                                       height: "200px", // Increased from 156px
                                        borderRadius: "50%",
                                        background: `conic-gradient(
                                        #1ABC9C 0deg ${(() => {
@@ -610,7 +612,7 @@ export default function GestionProfile() {
                                           ).toFixed(1);
                                        })()}deg 360deg
                                     )`,
-                                       boxShadow: `0 0 20px rgba(26, 188, 156, ${(() => {
+                                       boxShadow: `0 0 25px rgba(26, 188, 156, ${(() => {
                                           const profileFields = [
                                              userData.firstName,
                                              userData.lastName,
@@ -643,35 +645,36 @@ export default function GestionProfile() {
                                              100;
                                           return (
                                              (completionPercentage / 100) *
-                                             0.6
-                                          ).toFixed(2);
+                                             0.7
+                                          ).toFixed(2); // Increased glow intensity
                                        })()})`,
                                        animation:
                                           "pulse-glow 2s ease-in-out infinite",
                                     }}
                                  />
 
-                                 {/* Inner white circle to create border effect */}
+                                 {/* Inner white circle to create border effect - made bigger */}
                                  <div
                                     style={{
                                        position: "absolute",
-                                       top: "-4px",
-                                       left: "-4px",
-                                       width: "148px",
-                                       height: "148px",
+                                       top: "-5px", // Adjusted for new size
+                                       left: "-5px", // Adjusted for new size
+                                       width: "190px", // Increased from 148px
+                                       height: "190px", // Increased from 148px
                                        borderRadius: "50%",
                                        background: "rgba(255, 255, 255, 0.1)",
                                     }}
                                  />
 
                                  <Avatar
-                                    size={140}
+                                    size={180} // Increased from 140
                                     src={displayImage}
                                     icon={<UserOutlined />}
                                     style={{
                                        border:
-                                          "2px solid rgba(255, 255, 255, 0.3)",
-                                       boxShadow: "0 12px 32px rgba(0,0,0,0.2)",
+                                          "3px solid rgba(255, 255, 255, 0.3)", // Increased border thickness
+                                       boxShadow:
+                                          "0 15px 40px rgba(0,0,0,0.25)", // Enhanced shadow
                                        backgroundColor:
                                           "rgba(255, 255, 255, 0.1)",
                                        position: "relative",
@@ -694,13 +697,13 @@ export default function GestionProfile() {
                                        loading={uploading}
                                        style={{
                                           position: "absolute",
-                                          bottom: "5px",
-                                          right: "5px",
+                                          bottom: "8px", // Adjusted for new avatar size
+                                          right: "8px", // Adjusted for new avatar size
                                           background: "#ffffff",
                                           color: "#1A8BB7",
                                           border: "none",
-                                          width: "40px",
-                                          height: "40px",
+                                          width: "48px", // Made camera button bigger too
+                                          height: "48px", // Made camera button bigger too
                                           boxShadow:
                                              "0 4px 16px rgba(0,0,0,0.2)",
                                           zIndex: 3,
@@ -711,19 +714,19 @@ export default function GestionProfile() {
                               {/* Status indicators below avatar */}
                               <div
                                  style={{
-                                    marginTop: "16px",
+                                    marginTop: "20px", // Increased margin for better spacing
                                     display: "flex",
                                     flexDirection: "column",
-                                    gap: "8px",
+                                    gap: "10px", // Increased gap
                                     alignItems: "center",
                                  }}
                               >
-                                 {/* Profile Completion Percentage */}
+                                 {/* Profile Completion Percentage - made bigger */}
                                  <div
                                     style={{
                                        background: "rgba(255, 255, 255, 0.15)",
-                                       padding: "6px 12px",
-                                       borderRadius: "12px",
+                                       padding: "8px 16px", // Increased padding
+                                       borderRadius: "16px", // Increased border radius
                                        backdropFilter: "blur(10px)",
                                        border:
                                           "1px solid rgba(255, 255, 255, 0.2)",
@@ -732,7 +735,7 @@ export default function GestionProfile() {
                                     <Text
                                        style={{
                                           color: "rgba(255, 255, 255, 0.9)",
-                                          fontSize: "12px",
+                                          fontSize: "14px", // Increased from 12px
                                           fontWeight: 600,
                                        }}
                                     >
@@ -776,23 +779,60 @@ export default function GestionProfile() {
                                     </Text>
                                  </div>
 
-                                 {/* Member since */}
+                                 {/* Member since - bigger text */}
                                  <Text
                                     style={{
                                        color: "rgba(255, 255, 255, 0.7)",
-                                       fontSize: "11px",
+                                       fontSize: "13px", // Increased from 11px
                                        fontWeight: 500,
                                     }}
                                  >
                                     Membre VitaCare depuis 2024
                                  </Text>
 
-                                 {/* Quick action hint */}
+                                 {/* Add completion encouragement */}
+                                 {(() => {
+                                    const profileFields = [
+                                       userData.firstName,
+                                       userData.lastName,
+                                       userData.phoneNumber,
+                                       userData.dateOfBirth,
+                                       userData.gender,
+                                       userData.height &&
+                                       Number(userData.height) > 0
+                                          ? userData.height
+                                          : null,
+                                       userData.weight &&
+                                       Number(userData.weight) > 0
+                                          ? userData.weight
+                                          : null,
+                                       userData.bloodType,
+                                       userData.allergies,
+                                       userData.chronicConditions,
+                                       userData.profilePictureUrl,
+                                    ];
+                                    const completedFields =
+                                       profileFields.filter(
+                                          (field) =>
+                                             field !== null &&
+                                             field !== undefined &&
+                                             field !== ""
+                                       ).length;
+                                    const completionPercentage = Math.round(
+                                       (completedFields /
+                                          profileFields.length) *
+                                          100
+                                    );
+
+                                    
+                                 })()}
                               </div>
                            </div>
                         </Col>
 
-                        <Col xs={24} sm={12} md={16}>
+                        <Col xs={24} sm={12} md={14}>
+                           {" "}
+                           {/* Changed from md={16} to md={14} to balance */}
                            <div
                               style={{
                                  textAlign: "left",
@@ -1119,7 +1159,7 @@ export default function GestionProfile() {
                                     style={{
                                        background: "rgba(255, 255, 255, 0.15)",
                                        border:
-                                          "1px solid rgba(255, 69, 58, 0.4)",
+                                          "1px solid rgba(255, 255, 255, 0.15)",
                                        padding: "12px 16px",
                                        borderRadius: "12px",
                                        marginTop: "16px",
@@ -1270,7 +1310,7 @@ export default function GestionProfile() {
                      />
 
                      <Row align="middle" gutter={[48, 24]}>
-                        <Col xs={24} sm={12} md={8}>
+                        <Col xs={24} sm={12} md={10}>
                            <div
                               style={{
                                  position: "relative",
@@ -1289,10 +1329,10 @@ export default function GestionProfile() {
                                  <div
                                     style={{
                                        position: "absolute",
-                                       top: "-8px",
-                                       left: "-8px",
-                                       width: "156px",
-                                       height: "156px",
+                                       top: "-10px",
+                                       left: "-10px",
+                                       width: "200px",
+                                       height: "200px",
                                        borderRadius: "50%",
                                        background: `conic-gradient(
                                        #1ABC9C 0deg ${(() => {
@@ -1416,17 +1456,17 @@ export default function GestionProfile() {
                                  <div
                                     style={{
                                        position: "absolute",
-                                       top: "-4px",
-                                       left: "-4px",
-                                       width: "148px",
-                                       height: "148px",
+                                       top: "-6px",
+                                       left: "-6px",
+                                       width: "192px",
+                                       height: "192px",
                                        borderRadius: "50%",
                                        background: "rgba(255, 255, 255, 0.1)",
                                     }}
                                  />
 
                                  <Avatar
-                                    size={140}
+                                    size={180}
                                     src={displayImage}
                                     icon={<UserOutlined />}
                                     style={{
@@ -1455,13 +1495,13 @@ export default function GestionProfile() {
                                        loading={uploading}
                                        style={{
                                           position: "absolute",
-                                          bottom: "5px",
-                                          right: "5px",
+                                          bottom: "8px",
+                                          right: "8px",
                                           background: "#ffffff",
                                           color: "#1A8BB7",
                                           border: "none",
-                                          width: "40px",
-                                          height: "40px",
+                                          width: "48px",
+                                          height: "48px",
                                           boxShadow:
                                              "0 4px 16px rgba(0,0,0,0.2)",
                                           zIndex: 3,
@@ -1553,7 +1593,7 @@ export default function GestionProfile() {
                            </div>
                         </Col>
 
-                        <Col xs={24} sm={12} md={16}>
+                        <Col xs={24} sm={12} md={14}>
                            <div
                               style={{
                                  textAlign: "left",
@@ -1838,7 +1878,7 @@ export default function GestionProfile() {
                                              <div
                                                 style={{
                                                    background:
-                                                      "rgba(26, 188, 156, 0.3)",
+                                                      "rgba(255, 255, 255, 0.15)",
                                                    padding: "8px 14px",
                                                    borderRadius: "20px",
                                                    display: "flex",
@@ -1878,9 +1918,9 @@ export default function GestionProfile() {
                                  userData.chronicConditions) && (
                                  <div
                                     style={{
-                                       background: "rgba(255, 69, 58, 0.2)",
+                                       background: "rgba(255, 255, 255, 0.15)",
                                        border:
-                                          "1px solid rgba(255, 69, 58, 0.4)",
+                                          "1px solid rgba(255, 255, 255, 0.15)",
                                        padding: "12px 16px",
                                        borderRadius: "12px",
                                        marginTop: "16px",

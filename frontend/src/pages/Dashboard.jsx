@@ -146,16 +146,7 @@ function Dashboard() {
                      >
                         {PAGE_TITLES[activePage]?.title || ""}
                      </Title>
-                     <Text
-                        style={{
-                           color: TEXT_MEDIUM,
-                           fontWeight: 500,
-                           marginLeft: 18,
-                           fontSize: 16,
-                        }}
-                     >
-                        {PAGE_TITLES[activePage]?.subtitle || ""}
-                     </Text>
+                     
                   </div>
 
                   <div
