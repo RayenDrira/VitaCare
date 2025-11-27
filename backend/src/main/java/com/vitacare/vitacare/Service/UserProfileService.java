@@ -39,6 +39,7 @@ public class UserProfileService {
         if (updatedData.getBloodType() != null) user.setBloodType(updatedData.getBloodType());
         if (updatedData.getAllergies() != null) user.setAllergies(updatedData.getAllergies());
         if (updatedData.getChronicConditions() != null) user.setChronicConditions(updatedData.getChronicConditions());
+        if (updatedData.getMedications() != null) user.setMedications(updatedData.getMedications());
 
         return userRepository.save(user);
     }

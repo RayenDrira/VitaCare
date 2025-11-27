@@ -1,6 +1,6 @@
 package com.vitacare.vitacare.Model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -75,9 +75,15 @@ public class User {
     @Column(name = "chronic_conditions")
     private String chronicConditions; // optional, comma-separated
 
-    @JsonBackReference // prevents infinite loop
+    private String medications; // optional, comma-separated
+
+    @JsonIgnore // prevents infinite loop
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Document> documents = new ArrayList<>();
+
+    @JsonIgnore // prevents infinite loop
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Tag> tags = new ArrayList<>();
 
 
     // --- Enums ---

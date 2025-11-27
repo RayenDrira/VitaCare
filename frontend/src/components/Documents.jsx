@@ -6,6 +6,8 @@ import {
    FileTextOutlined,
    EyeOutlined,
    CloudUploadOutlined,
+   TagsOutlined,
+   PlusOutlined,
 } from "@ant-design/icons";
 import {
    Upload,
@@ -18,6 +20,7 @@ import {
    Tag,
    Tooltip,
    Space,
+   Input,
 } from "antd";
 import { pdfjs } from "react-pdf";
 import { apiFetch, getEmailFromToken } from "../utils/api";
@@ -35,7 +38,7 @@ const GREY = "#B0B8C1";
 
 // Translation language options
 const LANGUAGE_OPTIONS = [
-   { value: "auto", label: "🔍 Auto-détection", flag: "🔍" },
+   { value: "auto", label: "🔍 Détection auto", flag: "🔍" },
    { value: "en", label: "🇺🇸 Anglais", flag: "🇺🇸" },
    { value: "fr", label: "🇫🇷 Français", flag: "🇫🇷" },
    { value: "es", label: "🇪🇸 Espagnol", flag: "🇪🇸" },
@@ -82,7 +85,7 @@ const extractTextFromPdf = async (pdfBlob) => {
 
       return fullText.trim();
    } catch (error) {
-      throw new Error("Impossible d'extraire le texte du PDF");
+      throw new Error("Unable to extract text from PDF");
    }
 };
 
@@ -95,8 +98,8 @@ const handleAnalyse = async (filename) => {
          )}?email=${encodeURIComponent(email)}`,
          { method: "POST" }
       );
-      if (!res) throw new Error("Analyse failed");
-      message.success(`Analyse de ${filename} terminée !`);
+      if (!res) throw new Error("Analyse échouée");
+      message.success(`Analyse de ${filename} terminée!`);
    } catch {
       message.error("Erreur lors de l'analyse du document");
    }
@@ -167,6 +170,25 @@ const GestionDocuments = ({ searchQuery = "" }) => {
    const [targetLanguage, setTargetLanguage] = useState("fr");
    const [sourceText, setSourceText] = useState("");
 
+   // Tagging system states
+   const [documentTags, setDocumentTags] = useState({}); // {documentId: [tag1, tag2]}
+   const [availableTags, setAvailableTags] = useState([
+      "Prescription",
+      "Lab Results",
+      "X-Ray",
+      "Report",
+      "Insurance",
+      "Consultation",
+      "Vaccination",
+      "Emergency",
+      "Chronic Care",
+      "Preventive",
+   ]);
+   const [tagModalOpen, setTagModalOpen] = useState(false);
+   const [currentTagFile, setCurrentTagFile] = useState(null);
+   const [newTagName, setNewTagName] = useState("");
+   const [selectedTagFilter, setSelectedTagFilter] = useState(null);
+
    // Helper function to split text into chunks
    const chunkText = (text, maxLength = 350) => {
       // Handle empty or very short text
@@ -233,32 +255,62 @@ const GestionDocuments = ({ searchQuery = "" }) => {
    // Language detection function
    const detectLanguage = async (text) => {
       try {
-         // Use a sample of the text for detection (first 500 chars)
-         const sample = text.substring(0, 500);
+         // Use a sample of the text for detection (first 1000 chars for better accuracy)
+         const sample = text.substring(0, 1000).trim();
 
-         // Try LibreTranslate detection first
-         const response = await fetch("https://libretranslate.de/detect", {
-            method: "POST",
-            body: JSON.stringify({ q: sample }),
-            headers: { "Content-Type": "application/json" },
-         });
-
-         if (response.ok) {
-            const data = await response.json();
-            const detectedLang = data[0]?.language;
-            if (detectedLang && detectedLang !== "auto") {
-               console.log(`Detected language: ${detectedLang}`);
-               return detectedLang;
-            }
+         if (!sample) {
+            console.warn("Empty text for detection, defaulting to English");
+            return "en";
          }
 
-         // Fallback: simple pattern-based detection
+         console.log("🔍 Attempting language detection...");
+
+         // Try LibreTranslate detection first
+         try {
+            const response = await fetch("https://libretranslate.de/detect", {
+               method: "POST",
+               body: JSON.stringify({ q: sample }),
+               headers: { "Content-Type": "application/json" },
+            });
+
+            if (response.ok) {
+               const data = await response.json();
+               console.log("LibreTranslate API response:", data);
+
+               const detectedLang = data[0]?.language;
+               if (detectedLang && detectedLang !== "auto") {
+                  console.log(
+                     `✅ LibreTranslate detected: ${detectedLang} (confidence: ${
+                        data[0]?.confidence || "N/A"
+                     })`
+                  );
+                  message.info(
+                     `Language detected: ${detectedLang.toUpperCase()}`
+                  );
+                  return detectedLang;
+               }
+            } else {
+               console.warn(
+                  "LibreTranslate API returned non-OK status:",
+                  response.status
+               );
+            }
+         } catch (apiError) {
+            console.warn("LibreTranslate API error:", apiError.message);
+         }
+
+         console.log("📝 Using pattern-based detection as fallback...");
+
+         // Enhanced fallback: pattern-based detection with better scoring
          const patterns = {
-            en: /\b(the|and|is|are|in|on|at|to|for|of|with|by)\b/gi,
-            fr: /\b(le|la|les|et|est|sont|dans|sur|à|pour|de|avec|par)\b/gi,
-            es: /\b(el|la|los|las|y|es|son|en|sobre|para|de|con|por)\b/gi,
-            de: /\b(der|die|das|und|ist|sind|in|auf|zu|für|von|mit)\b/gi,
-            it: /\b(il|la|i|le|e|è|sono|in|su|a|per|di|con)\b/gi,
+            en: /\b(the|and|is|are|was|were|in|on|at|to|for|of|with|by|from|this|that|have|has|will|would|could|should)\b/gi,
+            fr: /\b(le|la|les|un|une|des|et|est|sont|dans|sur|à|pour|de|avec|par|ce|cette|ces|qui|que|mais|ou)\b/gi,
+            es: /\b(el|la|los|las|un|una|y|es|son|está|están|en|sobre|para|de|con|por|que|pero|como)\b/gi,
+            de: /\b(der|die|das|ein|eine|und|ist|sind|war|waren|in|auf|zu|für|von|mit|durch|oder|aber)\b/gi,
+            it: /\b(il|la|i|le|un|una|e|è|sono|in|su|a|per|di|con|da|che|ma|come)\b/gi,
+            pt: /\b(o|a|os|as|um|uma|e|é|são|em|sobre|para|de|com|por|que|mas|como)\b/gi,
+            ar: /[\u0600-\u06FF]+/g, // Arabic script
+            zh: /[\u4e00-\u9fff]+/g, // Chinese characters
          };
 
          let bestMatch = { lang: "en", score: 0 };
@@ -266,18 +318,28 @@ const GestionDocuments = ({ searchQuery = "" }) => {
          for (const [lang, pattern] of Object.entries(patterns)) {
             const matches = sample.match(pattern) || [];
             const score = matches.length;
+
             if (score > bestMatch.score) {
                bestMatch = { lang, score };
             }
          }
 
-         console.log(`Pattern-detected language: ${bestMatch.lang}`);
-         return bestMatch.lang;
+         // Only use pattern detection if score is significant (at least 5 matches)
+         if (bestMatch.score >= 5) {
+            console.log(
+               `✅ Pattern detected: ${bestMatch.lang} (score: ${bestMatch.score})`
+            );
+            message.info(`Language detected: ${bestMatch.lang.toUpperCase()}`);
+            return bestMatch.lang;
+         }
+
+         // Default to English if no significant pattern found
+         console.log("⚠️ No significant pattern found, defaulting to English");
+         message.warning("Language not detected, using English by default");
+         return "en";
       } catch (error) {
-         console.warn(
-            "Language detection failed, defaulting to English:",
-            error
-         );
+         console.error("Language detection failed:", error);
+         message.error("Language detection error, using English");
          return "en";
       }
    };
@@ -288,12 +350,20 @@ const GestionDocuments = ({ searchQuery = "" }) => {
          // Handle auto-detection
          let actualSourceLang = sourceLang;
          if (sourceLang === "auto") {
+            message.loading("Detecting language...", 0);
             actualSourceLang = await detectLanguage(text);
+            message.destroy();
+            console.log(
+               `🌐 Auto-detection result: ${actualSourceLang} → ${targetLang}`
+            );
          }
 
          // Prevent same language translation
          if (actualSourceLang === targetLang) {
-            return `[Même langue détectée: ${actualSourceLang.toUpperCase()}]\n\n${text}`;
+            message.warning(
+               `Source and target languages are identical (${actualSourceLang.toUpperCase()})`
+            );
+            return `[Same language: ${actualSourceLang.toUpperCase()}]\n\n${text}`;
          }
          const chunks = chunkText(text, 350); // Keep under 500 char limit
          const translatedChunks = [];
@@ -364,8 +434,69 @@ const GestionDocuments = ({ searchQuery = "" }) => {
 
          return translatedChunks.join(" ");
       } catch (error) {
-         return `[Traduction vers ${targetLang.toUpperCase()}]\n\n${text}`;
+         return `[Translation to ${targetLang.toUpperCase()}]\n\n${text}`;
       }
+   };
+
+   // Tag management functions
+   const handleAddTag = (filename) => {
+      setCurrentTagFile(filename);
+      setTagModalOpen(true);
+   };
+
+   const addNewTag = () => {
+      if (newTagName.trim() && !availableTags.includes(newTagName.trim())) {
+         setAvailableTags((prev) => [...prev, newTagName.trim()]);
+         setNewTagName("");
+         message.success(`Étiquette "${newTagName.trim()}" ajoutée!`);
+      }
+   };
+
+   const toggleDocumentTag = async (filename, tagName) => {
+      const currentTags = documentTags[filename] || [];
+      const hasTag = currentTags.includes(tagName);
+
+      const updatedTags = hasTag
+         ? currentTags.filter((tag) => tag !== tagName)
+         : [...currentTags, tagName];
+
+      // Update local state
+      setDocumentTags((prev) => ({
+         ...prev,
+         [filename]: updatedTags,
+      }));
+
+      // Save to backend
+      try {
+         const email = getEmailFromToken();
+         const res = await apiFetch(
+            `/api/documents/${encodeURIComponent(
+               filename
+            )}/tags?email=${encodeURIComponent(email)}`,
+            {
+               method: "PUT",
+               headers: { "Content-Type": "application/json" },
+               body: JSON.stringify({ tags: updatedTags }),
+            }
+         );
+
+         if (!res || !res.ok) {
+            throw new Error("Failed to save tags");
+         }
+
+         message.success(hasTag ? "Étiquette retirée" : "Étiquette ajoutée");
+      } catch (error) {
+         message.error("Erreur lors de la sauvegarde de l'étiquette");
+         // Revert local state on error
+         setDocumentTags((prev) => ({
+            ...prev,
+            [filename]: currentTags,
+         }));
+      }
+   };
+
+   const getDocumentTags = (filename) => {
+      return documentTags[filename] || [];
    };
 
    const performTranslation = async () => {
@@ -388,7 +519,7 @@ const GestionDocuments = ({ searchQuery = "" }) => {
          const chunks = chunkText(sourceText, 350);
          if (chunks.length > 1) {
             message.loading(
-               `Traduction en cours... (${chunks.length} segments)`,
+               `Translation in progress... (${chunks.length} segments)`,
                0
             );
          }
@@ -400,10 +531,10 @@ const GestionDocuments = ({ searchQuery = "" }) => {
          );
          message.destroy();
          setTranslationResult(translated);
-         message.success("Traduction terminée !");
+         message.success("Traduction terminée!");
       } catch (error) {
          message.destroy();
-         message.error("Erreur lors de la traduction");
+         message.error("Erreur de traduction");
          console.error("Translation error:", error);
       } finally {
          setTranslating(false);
@@ -413,14 +544,12 @@ const GestionDocuments = ({ searchQuery = "" }) => {
    const handleTranslate = async (filename) => {
       const file = fileList.find((f) => f.uid === filename);
       if (!file) {
-         message.error("Fichier non trouvé");
+         message.error("Fichier introuvable");
          return;
       }
 
       if (!file.contentType.startsWith("application/pdf")) {
-         message.error(
-            "La traduction n'est disponible que pour les fichiers PDF"
-         );
+         message.error("Translation is only available for PDF files");
          return;
       }
 
@@ -430,7 +559,7 @@ const GestionDocuments = ({ searchQuery = "" }) => {
       setSourceText("");
 
       try {
-         message.loading("Extraction du texte du PDF...", 0);
+         message.loading("Extracting text from PDF...", 0);
          const text = await extractTextFromPdf(file.blob);
          setSourceText(text);
          message.destroy();
@@ -453,6 +582,16 @@ const GestionDocuments = ({ searchQuery = "" }) => {
          );
          if (!res) return;
          const data = await res.json();
+
+         // Initialize tags from backend data
+         const tagsMap = {};
+         data.forEach((doc) => {
+            // Backend returns tagNames (array of strings) in DocumentDTO
+            if (doc.tagNames && Array.isArray(doc.tagNames)) {
+               tagsMap[doc.filename] = doc.tagNames;
+            }
+         });
+         setDocumentTags(tagsMap);
 
          const list = await Promise.all(
             data.map(async (doc) => {
@@ -504,8 +643,12 @@ const GestionDocuments = ({ searchQuery = "" }) => {
    const filteredDocs = fileList
       .filter(
          (file) =>
-            file.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            file.contentType.toLowerCase().includes(searchQuery.toLowerCase())
+            (file.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+               file.contentType
+                  .toLowerCase()
+                  .includes(searchQuery.toLowerCase())) &&
+            (selectedTagFilter === null ||
+               getDocumentTags(file.uid).includes(selectedTagFilter))
       )
       .sort((a, b) => {
          if (sortBy === "latest") return b.uploadedAt - a.uploadedAt;
@@ -533,7 +676,7 @@ const GestionDocuments = ({ searchQuery = "" }) => {
    const handleCustomUpload = async ({ file, onSuccess, onError }) => {
       if (!ACCEPTED_TYPES.some((type) => file.type.startsWith(type))) {
          message.error("Type de fichier non autorisé!");
-         return onError(new Error("Type non autorisé"));
+         return onError(new Error("Type not allowed"));
       }
 
       setUploading(true);
@@ -552,10 +695,10 @@ const GestionDocuments = ({ searchQuery = "" }) => {
          if (!res) throw new Error("Upload failed");
          onSuccess(null);
          fetchDocuments();
-         message.success(`${file.name} téléchargé avec succès!`);
+         message.success(`${file.name} téléversé avec succès!`);
       } catch (err) {
          onError(err);
-         message.error(`Échec du téléchargement de ${file.name}.`);
+         message.error(`Échec du téléversement de ${file.name}.`);
       } finally {
          setUploading(false);
       }
@@ -565,11 +708,11 @@ const GestionDocuments = ({ searchQuery = "" }) => {
       const email = getEmailFromToken();
 
       Modal.confirm({
-         title: "Êtes-vous sûr de vouloir supprimer ce document?",
-         content: `${filename} sera définitivement supprimé.`,
-         okText: "Oui, supprimer",
+         title: "Are you sure you want to delete this document?",
+         content: `${filename} will be permanently deleted.`,
+         okText: "Yes, delete",
          okType: "danger",
-         cancelText: "Annuler",
+         cancelText: "Cancel",
          onOk: async () => {
             try {
                await apiFetch(
@@ -649,8 +792,8 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                      }}
                   >
                      {uploading
-                        ? "Téléchargement en cours..."
-                        : "Glissez vos fichiers ici"}
+                        ? "Téléversement..."
+                        : "Déposez vos fichiers ici"}
                   </Title>
                   <Text
                      style={{
@@ -675,14 +818,61 @@ const GestionDocuments = ({ searchQuery = "" }) => {
             </Dragger>
          </Card>
 
-         {/* Sort Controls */}
+         {/* Sort Controls & Tag Filter */}
          <div
             style={{
                display: "flex",
-               justifyContent: "flex-end",
+               justifyContent: "space-between",
+               alignItems: "center",
                marginBottom: "24px",
+               gap: "16px",
+               flexWrap: "wrap",
             }}
          >
+            {/* Tag Filter */}
+            <div
+               style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  flex: 1,
+               }}
+            >
+               <Text strong style={{ color: TEXT_DARK }}>
+                  Filtrer par étiquette:
+               </Text>
+               <Select
+                  placeholder="Tous les documents"
+                  allowClear
+                  value={selectedTagFilter}
+                  onChange={(value) =>
+                     setSelectedTagFilter(value === undefined ? null : value)
+                  }
+                  style={{
+                     minWidth: 200,
+                     borderRadius: "16px",
+                     background: BG_CARD,
+                     border: `1.5px solid ${SIDEBAR_BORDER}`,
+                  }}
+                  size="large"
+               >
+                  {availableTags.map((tag) => (
+                     <Select.Option key={tag} value={tag}>
+                        <Tag color={PRIMARY} style={{ margin: 0 }}>
+                           {tag}
+                        </Tag>
+                     </Select.Option>
+                  ))}
+               </Select>
+               {selectedTagFilter && (
+                  <Text style={{ color: SECONDARY, fontWeight: 500 }}>
+                     {filteredDocs.length} document
+                     {filteredDocs.length !== 1 ? "s" : ""}
+                  </Text>
+               )}
+            </div>
+
+            {/* Sort Dropdown */}
             <Select
                value={sortBy}
                onChange={(val) => setSortBy(val)}
@@ -694,9 +884,9 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                }}
                size="large"
             >
-               <Select.Option value="latest">📅 Plus récents</Select.Option>
-               <Select.Option value="alpha">🔤 Alphabétique</Select.Option>
-               <Select.Option value="type">📂 Type de fichier</Select.Option>
+               <Select.Option value="latest">Récent</Select.Option>
+               <Select.Option value="alpha">Alphabétique</Select.Option>
+               <Select.Option value="type">Type de fichier</Select.Option>
             </Select>
          </div>
 
@@ -791,7 +981,7 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                               boxShadow: "0 4px 20px rgba(26,139,183,0.08)",
                            }}
                         >
-                           Aperçu
+                           Preview
                         </Button>
                      </div>
 
@@ -841,8 +1031,29 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                         </Text>
                      </div>
 
+                     {/* Document Tags */}
+                     {getDocumentTags(file.uid).length > 0 && (
+                        <div style={{ marginBottom: "16px" }}>
+                           <Space wrap>
+                              {getDocumentTags(file.uid).map((tag) => (
+                                 <Tag
+                                    key={tag}
+                                    color={PRIMARY}
+                                    style={{
+                                       borderRadius: "8px",
+                                       fontWeight: 500,
+                                       fontSize: "11px",
+                                    }}
+                                 >
+                                    {tag}
+                                 </Tag>
+                              ))}
+                           </Space>
+                        </div>
+                     )}
+
                      {/* Action Buttons */}
-                     <Space>
+                     <Space wrap>
                         <Tooltip title="Supprimer">
                            <Button
                               danger
@@ -876,6 +1087,24 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                               onClick={(e) => {
                                  e.stopPropagation();
                                  handleAnalyse(file.uid);
+                              }}
+                           />
+                        </Tooltip>
+
+                        <Tooltip title="Gérer les étiquettes">
+                           <Button
+                              icon={<TagsOutlined />}
+                              size="large"
+                              style={{
+                                 borderRadius: "12px",
+                                 background: "rgba(138,43,226,0.08)",
+                                 border: "1.5px solid #8a2be222",
+                                 color: "#8a2be2",
+                                 fontWeight: 600,
+                              }}
+                              onClick={(e) => {
+                                 e.stopPropagation();
+                                 handleAddTag(file.uid);
                               }}
                            />
                         </Tooltip>
@@ -942,7 +1171,7 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                      fontWeight: 600,
                   }}
                >
-                  Aucun document
+                  No documents
                </Title>
                <Text
                   style={{
@@ -951,7 +1180,7 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                      fontWeight: 500,
                   }}
                >
-                  Commencez par télécharger votre premier document médical
+                  Start by uploading your first medical document
                </Text>
             </Card>
          )}
@@ -985,7 +1214,7 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                      fontWeight: 600,
                   }}
                >
-                  Aucun document trouvé
+                  No documents found
                </Title>
                <Text
                   style={{
@@ -994,7 +1223,7 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                      fontWeight: 500,
                   }}
                >
-                  Essayez avec d'autres termes de recherche
+                  Try different search terms
                </Text>
             </Card>
          )}
@@ -1050,7 +1279,7 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                      <div style={{ textAlign: "center", padding: "20px" }}>
                         <img
                            src={previewContent}
-                           alt="aperçu"
+                           alt="preview"
                            style={{
                               maxWidth: "100%",
                               maxHeight: "70vh",
@@ -1172,7 +1401,7 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                         lineHeight: 1.6,
                      }}
                   >
-                     {sourceText || "Extraction du texte en cours..."}
+                     {sourceText || "Extraction du texte..."}
                   </div>
                </div>
 
@@ -1235,6 +1464,155 @@ const GestionDocuments = ({ searchQuery = "" }) => {
                   </div>
                </div>
             </div>
+         </Modal>
+
+         {/* Tag Management Modal */}
+         <Modal
+            open={tagModalOpen}
+            title={
+               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <TagsOutlined style={{ color: "#8a2be2", fontSize: 24 }} />
+                  <span
+                     style={{ color: TEXT_DARK, fontWeight: 600, fontSize: 18 }}
+                  >
+                     Gérer les étiquettes -{" "}
+                     {fileList.find((f) => f.uid === currentTagFile)?.name}
+                  </span>
+               </div>
+            }
+            onCancel={() => setTagModalOpen(false)}
+            centered
+            width="600px"
+            footer={[
+               <Button key="close" onClick={() => setTagModalOpen(false)}>
+                  Fermer
+               </Button>,
+            ]}
+         >
+            {/* Create New Tag */}
+            <div
+               style={{
+                  marginBottom: 24,
+                  padding: 16,
+                  background: BG_LIGHT,
+                  borderRadius: 12,
+               }}
+            >
+               <Text
+                  strong
+                  style={{
+                     display: "block",
+                     marginBottom: 12,
+                     color: TEXT_DARK,
+                  }}
+               >
+                  ➕ Create new tag
+               </Text>
+               <div style={{ display: "flex", gap: 12 }}>
+                  <Input
+                     placeholder="Nom de la nouvelle étiquette..."
+                     value={newTagName}
+                     onChange={(e) => setNewTagName(e.target.value)}
+                     onPressEnter={addNewTag}
+                     style={{ borderRadius: 8 }}
+                  />
+                  <Button
+                     type="primary"
+                     icon={<PlusOutlined />}
+                     onClick={addNewTag}
+                     disabled={
+                        !newTagName.trim() ||
+                        availableTags.includes(newTagName.trim())
+                     }
+                     style={{ borderRadius: 8 }}
+                  >
+                     Ajouter
+                  </Button>
+               </div>
+            </div>
+
+            {/* Assign Tags to Document */}
+            <div>
+               <Text
+                  strong
+                  style={{
+                     display: "block",
+                     marginBottom: 16,
+                     color: TEXT_DARK,
+                  }}
+               >
+                  🏷️ Étiquettes disponibles (cliquez pour assigner/retirer)
+               </Text>
+               <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+                  {availableTags.map((tag) => {
+                     const isAssigned =
+                        currentTagFile &&
+                        getDocumentTags(currentTagFile).includes(tag);
+                     return (
+                        <Tag.CheckableTag
+                           key={tag}
+                           checked={isAssigned}
+                           onChange={() =>
+                              currentTagFile &&
+                              toggleDocumentTag(currentTagFile, tag)
+                           }
+                           style={{
+                              padding: "8px 16px",
+                              borderRadius: "20px",
+                              fontSize: "14px",
+                              fontWeight: 500,
+                              border: isAssigned
+                                 ? `2px solid ${PRIMARY}`
+                                 : "2px solid #d9d9d9",
+                              background: isAssigned
+                                 ? `${PRIMARY}15`
+                                 : "#ffffff",
+                              color: isAssigned ? PRIMARY : TEXT_MEDIUM,
+                              cursor: "pointer",
+                              transition: "all 0.3s ease",
+                           }}
+                        >
+                           {tag}
+                        </Tag.CheckableTag>
+                     );
+                  })}
+               </div>
+            </div>
+
+            {/* Current Document Tags Summary */}
+            {currentTagFile && getDocumentTags(currentTagFile).length > 0 && (
+               <div
+                  style={{
+                     marginTop: 24,
+                     padding: 16,
+                     background: `${SECONDARY}10`,
+                     borderRadius: 12,
+                     border: `1px solid ${SECONDARY}30`,
+                  }}
+               >
+                  <Text
+                     strong
+                     style={{
+                        color: SECONDARY,
+                        marginBottom: 8,
+                        display: "block",
+                     }}
+                  >
+                     ✅ Tags assigned to this document:
+                  </Text>
+                  <Space wrap>
+                     {getDocumentTags(currentTagFile).map((tag) => (
+                        <Tag
+                           key={tag}
+                           color={SECONDARY}
+                           style={{ fontSize: "12px" }}
+                        >
+                           {tag}
+                        </Tag>
+                     ))}
+                  </Space>
+               </div>
+            )}
          </Modal>
 
          <style jsx>{`

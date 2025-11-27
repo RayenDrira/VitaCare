@@ -36,15 +36,15 @@ export default function GestionProfile() {
    const [form] = Form.useForm();
    const [userData, setUserData] = useState(null);
    const [loading, setLoading] = useState(true);
-   const [previewImage, setPreviewImage] = useState(null);
+   const [previewImage, setpreviewImage] = useState(null);
    const [uploading, setUploading] = useState(false);
 
-   // Helper function to calculate profile completion percentage
+   // Helper function to calculate Profilee completion percentage
    // eslint-disable-next-line no-unused-vars
    const calculateProfileCompletion = () => {
       if (!userData) return 0;
 
-      const profileFields = [
+      const ProfileeFields = [
          userData.firstName,
          userData.lastName,
          userData.phoneNumber,
@@ -55,7 +55,7 @@ export default function GestionProfile() {
          userData.bloodType,
          userData.allergies,
          userData.chronicConditions,
-         userData.profilePictureUrl, // ✅ Fixed: use profilePictureUrl instead of profilePicture
+         userData.profilePictureUrl, // ✅ Fixed: use ProfileePictureUrl instead of ProfileePicture
       ];
 
       // Debug logging to see what's missing
@@ -73,7 +73,7 @@ export default function GestionProfile() {
          "profilePictureUrl",
       ];
 
-      profileFields.forEach((field, index) => {
+      ProfileeFields.forEach((field, index) => {
          const isEmpty =
             field === null ||
             field === undefined ||
@@ -93,7 +93,7 @@ export default function GestionProfile() {
          }
       });
 
-      const completedFieldsArray = profileFields.filter(
+      const completedFieldsArray = ProfileeFields.filter(
          (field) =>
             field !== null &&
             field !== undefined &&
@@ -104,26 +104,26 @@ export default function GestionProfile() {
       const completedFields = completedFieldsArray.length;
 
       console.log("🔍 DETAILED CALCULATION:", {
-         totalFields: profileFields.length,
-         totalFieldsArray: profileFields,
+         totalFields: ProfileeFields.length,
+         totalFieldsArray: ProfileeFields,
          completedCount: completedFields,
          completedFieldsArray: completedFieldsArray,
-         exactPercentage: (completedFields / profileFields.length) * 100,
+         exactPercentage: (completedFields / ProfileeFields.length) * 100,
          roundedPercentage: Math.round(
-            (completedFields / profileFields.length) * 100
+            (completedFields / ProfileeFields.length) * 100
          ),
       });
 
       const completionPercentage = Math.round(
-         (completedFields / profileFields.length) * 100
+         (completedFields / ProfileeFields.length) * 100
       );
       console.log(
-         `🔍 Profile completion: ${completedFields}/${profileFields.length} = ${completionPercentage}%`
+         `🔍 Profilee completion: ${completedFields}/${ProfileeFields.length} = ${completionPercentage}%`
       );
-      console.log("🔍 All field values:", profileFields);
+      console.log("🔍 All field values:", ProfileeFields);
       console.log("🔍 Raw userData for debugging:", {
-         height: userData.height,
-         weight: userData.weight,
+         Taille: userData.height,
+         Poids: userData.weight,
          heightType: typeof userData.height,
          weightType: typeof userData.weight,
          heightAsNumber: Number(userData.height),
@@ -137,10 +137,10 @@ export default function GestionProfile() {
          try {
             setLoading(true);
             const email = getEmailFromToken();
-            if (!email) throw new Error("Utilisateur non authentifié");
+            if (!email) throw new Error("User not authenticated");
 
             const res = await apiFetch(`/api/profile/user/by-email/${email}`);
-            if (!res.ok) throw new Error("Impossible de charger le profil");
+            if (!res.ok) throw new Error("Unable to load Profilee");
 
             const user = await res.json();
             setUserData(user);
@@ -163,6 +163,7 @@ export default function GestionProfile() {
                bloodType: user.bloodType || null,
                allergies: user.allergies || "",
                chronicConditions: user.chronicConditions || "",
+               medications: user.medications || "",
             });
          } catch (err) {
             console.error(err);
@@ -197,6 +198,7 @@ export default function GestionProfile() {
             bloodType: userData.bloodType || null,
             allergies: userData.allergies || "",
             chronicConditions: userData.chronicConditions || "",
+            medications: userData.medications || "",
          });
       }
    }, [userData, form]);
@@ -215,7 +217,7 @@ export default function GestionProfile() {
       setIsEditing(false);
       if (previewImage && previewImage.startsWith("blob:")) {
          URL.revokeObjectURL(previewImage);
-         setPreviewImage(null);
+         setpreviewImage(null);
       }
       if (userData) {
          form.setFieldsValue({
@@ -238,6 +240,7 @@ export default function GestionProfile() {
             bloodType: userData.bloodType || null,
             allergies: userData.allergies || "",
             chronicConditions: userData.chronicConditions || "",
+            medications: userData.medications || "",
          });
       }
    };
@@ -245,7 +248,7 @@ export default function GestionProfile() {
    const handleSave = async () => {
       try {
          const values = await form.validateFields();
-         console.log("🔍 Form values before save:", values);
+         console.log("🔍 Form values before Enregistrer:", values);
 
          const payload = {
             firstName: values.firstName !== undefined ? values.firstName : "",
@@ -275,6 +278,8 @@ export default function GestionProfile() {
                values.chronicConditions !== undefined
                   ? values.chronicConditions
                   : "",
+            medications:
+               values.medications !== undefined ? values.medications : "",
          };
          console.log("🔍 Payload being sent to API:", payload);
 
@@ -284,14 +289,14 @@ export default function GestionProfile() {
             body: JSON.stringify(payload),
          });
 
-         if (!res.ok) throw new Error("Erreur lors de la mise à jour");
+         if (!res.ok) throw new Error("Error during update");
 
          const updatedUser = await res.json();
          console.log("🔍 Updated user from API:", updatedUser);
 
          const newUserData = {
             ...updatedUser,
-            profilePictureUrl: updatedUser.profilePictureUrl,
+            ProfileePictureUrl: updatedUser.profilePictureUrl,
          };
          console.log("🔍 Setting userData to:", newUserData);
 
@@ -318,14 +323,15 @@ export default function GestionProfile() {
             bloodType: updatedUser.bloodType || null,
             allergies: updatedUser.allergies || "",
             chronicConditions: updatedUser.chronicConditions || "",
+            medications: updatedUser.medications || "",
          });
-         console.log("🔍 Form forcefully updated after save");
+         console.log("🔍 Form forcefully updated after Enregistrer");
 
-         message.success("Profil mis à jour avec succès !");
+         message.success("Profil updated successfully!");
          setIsEditing(false);
       } catch (err) {
          console.error(err);
-         message.error(err.message || "Erreur lors de la sauvegarde");
+         message.error(err.message || "Error saving Profilee");
       }
    };
 
@@ -340,21 +346,20 @@ export default function GestionProfile() {
             body: formData,
          });
 
-         if (!res.ok)
-            throw new Error("Erreur lors du téléchargement de la photo");
+         if (!res.ok) throw new Error("Error uploading photo");
 
          const updatedUser = await res.json();
 
          if (file) {
             const objectUrl = URL.createObjectURL(file);
-            setPreviewImage(objectUrl);
+            setpreviewImage(objectUrl);
          }
 
          setUserData(updatedUser);
-         message.success("Photo mise à jour avec succès !");
+         message.success("Photo updated successfully!");
       } catch (err) {
          console.error(err);
-         message.error(err.message || "Erreur lors du téléchargement");
+         message.error(err.message || "Error during upload");
       } finally {
          setUploading(false);
       }
@@ -363,12 +368,12 @@ export default function GestionProfile() {
    const beforeUpload = (file) => {
       const isImage = file.type.startsWith("image/");
       if (!isImage) {
-         message.error("Vous ne pouvez télécharger que des fichiers image !");
+         message.error("You can only upload image files!");
          return Upload.LIST_IGNORE;
       }
       const isLt5M = file.size / 1024 / 1024 < 5;
       if (!isLt5M) {
-         message.error("L'image doit faire moins de 5MB !");
+         message.error("ImÂGE must be smaller than 5MB!");
          return Upload.LIST_IGNORE;
       }
       return true;
@@ -424,11 +429,14 @@ export default function GestionProfile() {
    const displayImage =
       previewImage ||
       (userData.profilePictureUrl
-         ? userData.profilePictureUrl.startsWith("https")
+         ? userData.profilePictureUrl.startsWith("http://") ||
+           userData.profilePictureUrl.startsWith("https://")
             ? userData.profilePictureUrl
             : `http://localhost:8081/uploads/${userData.profilePictureUrl}`
          : undefined);
    console.log("User Data:", userData);
+   console.log("Profile Picture URL:", userData.profilePictureUrl);
+   console.log("Display Image:", displayImage);
    return (
       <>
          <style>
@@ -445,7 +453,7 @@ export default function GestionProfile() {
          </style>
          <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
             {!isEditing ? (
-               // View Mode - Full Screen Profile Display
+               // View Mode - Full Screen Profilee Display
                <Card
                   style={{
                      borderRadius: "32px",
@@ -493,7 +501,7 @@ export default function GestionProfile() {
                         color: "#ffffff",
                      }}
                   >
-                     {/* Profile Picture Section */}
+                     {/* Profilee Picture Section */}
 
                      <div
                         style={{
@@ -519,7 +527,7 @@ export default function GestionProfile() {
                                  textAlign: "center",
                               }}
                            >
-                              {/* Profile picture with progress border */}
+                              {/* Profilee picture with progress border */}
                               <div
                                  style={{
                                     position: "relative",
@@ -537,8 +545,8 @@ export default function GestionProfile() {
                                        borderRadius: "50%",
                                        background: `conic-gradient(
                                        #1ABC9C 0deg ${(() => {
-                                          // Complete profile fields including health data
-                                          const profileFields = [
+                                          // Complete Profilee fields including health data
+                                          const ProfileeFields = [
                                              // Basic Info (5 fields)
                                              userData.firstName,
                                              userData.lastName,
@@ -561,23 +569,23 @@ export default function GestionProfile() {
                                           ];
 
                                           const completedFields =
-                                             profileFields.filter(
+                                             ProfileeFields.filter(
                                                 (field) =>
                                                    field !== null &&
                                                    field !== undefined &&
                                                    field !== ""
                                              ).length;
 
-                                          const completionPercentage =
+                                          const completionPercentÂGE =
                                              (completedFields /
-                                                profileFields.length) *
+                                                ProfileeFields.length) *
                                              100;
                                           return (
-                                             completionPercentage * 3.6
+                                             completionPercentÂGE * 3.6
                                           ).toFixed(1);
                                        })()}deg,
                                        rgba(255, 255, 255, 0.2) ${(() => {
-                                          const profileFields = [
+                                          const ProfileeFields = [
                                              userData.firstName,
                                              userData.lastName,
                                              userData.phoneNumber,
@@ -597,23 +605,23 @@ export default function GestionProfile() {
                                              userData.profilePictureUrl,
                                           ];
                                           const completedFields =
-                                             profileFields.filter(
+                                             ProfileeFields.filter(
                                                 (field) =>
                                                    field !== null &&
                                                    field !== undefined &&
                                                    field !== ""
                                              ).length;
-                                          const completionPercentage =
+                                          const completionPercentÂGE =
                                              (completedFields /
-                                                profileFields.length) *
+                                                ProfileeFields.length) *
                                              100;
                                           return (
-                                             completionPercentage * 3.6
+                                             completionPercentÂGE * 3.6
                                           ).toFixed(1);
                                        })()}deg 360deg
                                     )`,
                                        boxShadow: `0 0 25px rgba(26, 188, 156, ${(() => {
-                                          const profileFields = [
+                                          const ProfileeFields = [
                                              userData.firstName,
                                              userData.lastName,
                                              userData.phoneNumber,
@@ -633,18 +641,18 @@ export default function GestionProfile() {
                                              userData.profilePictureUrl,
                                           ];
                                           const completedFields =
-                                             profileFields.filter(
+                                             ProfileeFields.filter(
                                                 (field) =>
                                                    field !== null &&
                                                    field !== undefined &&
                                                    field !== ""
                                              ).length;
-                                          const completionPercentage =
+                                          const completionPercentÂGE =
                                              (completedFields /
-                                                profileFields.length) *
+                                                ProfileeFields.length) *
                                              100;
                                           return (
-                                             (completionPercentage / 100) *
+                                             (completionPercentÂGE / 100) *
                                              0.7
                                           ).toFixed(2); // Increased glow intensity
                                        })()})`,
@@ -666,26 +674,55 @@ export default function GestionProfile() {
                                     }}
                                  />
 
-                                 <Avatar
-                                    size={180} // Increased from 140
-                                    src={displayImage}
-                                    icon={<UserOutlined />}
-                                    style={{
-                                       border:
-                                          "3px solid rgba(255, 255, 255, 0.3)", // Increased border thickness
-                                       boxShadow:
-                                          "0 15px 40px rgba(0,0,0,0.25)", // Enhanced shadow
-                                       backgroundColor:
-                                          "rgba(255, 255, 255, 0.1)",
-                                       position: "relative",
-                                       zIndex: 2,
-                                    }}
-                                 />
+                                 {displayImage ? (
+                                    <div
+                                       style={{
+                                          width: 180,
+                                          height: 180,
+                                          borderRadius: "50%",
+                                          overflow: "hidden",
+                                          border:
+                                             "3px solid rgba(255, 255, 255, 0.3)",
+                                          boxShadow:
+                                             "0 15px 40px rgba(0,0,0,0.25)",
+                                          backgroundColor:
+                                             "rgba(255, 255, 255, 0.1)",
+                                          position: "relative",
+                                          zIndex: 2,
+                                       }}
+                                    >
+                                       <img
+                                          src={displayImage}
+                                          alt="Profile"
+                                          referrerPolicy="no-referrer"
+                                          style={{
+                                             width: "100%",
+                                             height: "100%",
+                                             objectFit: "cover",
+                                          }}
+                                       />
+                                    </div>
+                                 ) : (
+                                    <Avatar
+                                       size={180}
+                                       icon={<UserOutlined />}
+                                       style={{
+                                          border:
+                                             "3px solid rgba(255, 255, 255, 0.3)",
+                                          boxShadow:
+                                             "0 15px 40px rgba(0,0,0,0.25)",
+                                          backgroundColor:
+                                             "rgba(255, 255, 255, 0.1)",
+                                          position: "relative",
+                                          zIndex: 2,
+                                       }}
+                                    />
+                                 )}
 
                                  <Upload
                                     showUploadList={false}
                                     customRequest={handleUpload}
-                                    accept="image/*"
+                                    accept="imÂGE/*"
                                     beforeUpload={beforeUpload}
                                     disabled={uploading}
                                  >
@@ -721,7 +758,7 @@ export default function GestionProfile() {
                                     alignItems: "center",
                                  }}
                               >
-                                 {/* Profile Completion Percentage - made bigger */}
+                                 {/* Profilee Completion PercentÂGE - made bigger */}
                                  <div
                                     style={{
                                        background: "rgba(255, 255, 255, 0.15)",
@@ -739,9 +776,9 @@ export default function GestionProfile() {
                                           fontWeight: 600,
                                        }}
                                     >
-                                       📋 Profil{" "}
+                                       📋 Profile{" "}
                                        {(() => {
-                                          const profileFields = [
+                                          const ProfileeFields = [
                                              userData.firstName,
                                              userData.lastName,
                                              userData.phoneNumber,
@@ -761,19 +798,19 @@ export default function GestionProfile() {
                                              userData.profilePictureUrl,
                                           ];
                                           const completedFields =
-                                             profileFields.filter(
+                                             ProfileeFields.filter(
                                                 (field) =>
                                                    field !== null &&
                                                    field !== undefined &&
                                                    field !== ""
                                              ).length;
-                                          const completionPercentage =
+                                          const completionPercentÂGE =
                                              Math.round(
                                                 (completedFields /
-                                                   profileFields.length) *
+                                                   ProfileeFields.length) *
                                                    100
                                              );
-                                          return completionPercentage;
+                                          return completionPercentÂGE;
                                        })()}
                                        % complet
                                     </Text>
@@ -787,45 +824,13 @@ export default function GestionProfile() {
                                        fontWeight: 500,
                                     }}
                                  >
-                                    Membre VitaCare depuis 2024
+                                    Membre VitaCare depuis{" "}
+                                    {userData.createdAt
+                                       ? moment(userData.createdAt).format(
+                                            "YYYY"
+                                         )
+                                       : "2025"}
                                  </Text>
-
-                                 {/* Add completion encouragement */}
-                                 {(() => {
-                                    const profileFields = [
-                                       userData.firstName,
-                                       userData.lastName,
-                                       userData.phoneNumber,
-                                       userData.dateOfBirth,
-                                       userData.gender,
-                                       userData.height &&
-                                       Number(userData.height) > 0
-                                          ? userData.height
-                                          : null,
-                                       userData.weight &&
-                                       Number(userData.weight) > 0
-                                          ? userData.weight
-                                          : null,
-                                       userData.bloodType,
-                                       userData.allergies,
-                                       userData.chronicConditions,
-                                       userData.profilePictureUrl,
-                                    ];
-                                    const completedFields =
-                                       profileFields.filter(
-                                          (field) =>
-                                             field !== null &&
-                                             field !== undefined &&
-                                             field !== ""
-                                       ).length;
-                                    const completionPercentage = Math.round(
-                                       (completedFields /
-                                          profileFields.length) *
-                                          100
-                                    );
-
-                                    
-                                 })()}
                               </div>
                            </div>
                         </Col>
@@ -855,7 +860,7 @@ export default function GestionProfile() {
                                  >
                                     {userData.firstName && userData.lastName
                                        ? `${userData.firstName} ${userData.lastName}`
-                                       : "Utilisateur VitaCare"}
+                                       : "VitaCare User"}
                                  </Title>
                                  <Text
                                     style={{
@@ -945,7 +950,7 @@ export default function GestionProfile() {
                                                 display: "block",
                                              }}
                                           >
-                                             GENRE
+                                             Genre
                                           </Text>
                                           <Text
                                              style={{
@@ -955,8 +960,8 @@ export default function GestionProfile() {
                                              }}
                                           >
                                              {userData.gender === "MALE"
-                                                ? "Homme"
-                                                : "Femme"}
+                                                ? "Male"
+                                                : "Female"}
                                           </Text>
                                        </div>
                                     </div>
@@ -1152,7 +1157,7 @@ export default function GestionProfile() {
                                  </div>
                               )}
 
-                              {/* Medical alerts - compact version */}
+                              {/* ALERTES MÉDICALES - compact version */}
                               {(userData.allergies ||
                                  userData.chronicConditions) && (
                                  <div
@@ -1195,7 +1200,7 @@ export default function GestionProfile() {
                                              marginBottom: "4px",
                                           }}
                                        >
-                                          • Allergies:{" "}
+                                          • allergies:{" "}
                                           {userData.allergies.length > 40
                                              ? userData.allergies.substring(
                                                   0,
@@ -1210,9 +1215,10 @@ export default function GestionProfile() {
                                              color: "rgba(255, 255, 255, 0.9)",
                                              fontSize: "13px",
                                              display: "block",
+                                             marginBottom: "4px",
                                           }}
                                        >
-                                          • Conditions chroniques:{" "}
+                                          • Maladies chroniques :{" "}
                                           {userData.chronicConditions.length >
                                           40
                                              ? userData.chronicConditions.substring(
@@ -1220,6 +1226,23 @@ export default function GestionProfile() {
                                                   40
                                                ) + "..."
                                              : userData.chronicConditions}
+                                       </Text>
+                                    )}
+                                    {userData.medications && (
+                                       <Text
+                                          style={{
+                                             color: "rgba(255, 255, 255, 0.9)",
+                                             fontSize: "13px",
+                                             display: "block",
+                                          }}
+                                       >
+                                          • medications:{" "}
+                                          {userData.medications.length > 40
+                                             ? userData.medications.substring(
+                                                  0,
+                                                  40
+                                               ) + "..."
+                                             : userData.medications}
                                        </Text>
                                     )}
                                  </div>
@@ -1281,7 +1304,7 @@ export default function GestionProfile() {
                      gap: "32px",
                   }}
                >
-                  {/* Profile Picture Section */}
+                  {/* Profilee Picture Section */}
                   <Card
                      style={{
                         borderRadius: "24px",
@@ -1318,7 +1341,7 @@ export default function GestionProfile() {
                                  textAlign: "center",
                               }}
                            >
-                              {/* Profile picture with progress border */}
+                              {/* Profilee picture with progress border */}
                               <div
                                  style={{
                                     position: "relative",
@@ -1336,8 +1359,8 @@ export default function GestionProfile() {
                                        borderRadius: "50%",
                                        background: `conic-gradient(
                                        #1ABC9C 0deg ${(() => {
-                                          // Complete profile fields including health data
-                                          const profileFields = [
+                                          // Complete Profilee fields including health data
+                                          const ProfileeFields = [
                                              // Basic Info (5 fields)
                                              userData.firstName,
                                              userData.lastName,
@@ -1360,23 +1383,23 @@ export default function GestionProfile() {
                                           ];
 
                                           const completedFields =
-                                             profileFields.filter(
+                                             ProfileeFields.filter(
                                                 (field) =>
                                                    field !== null &&
                                                    field !== undefined &&
                                                    field !== ""
                                              ).length;
 
-                                          const completionPercentage =
+                                          const completionPercentÂGE =
                                              (completedFields /
-                                                profileFields.length) *
+                                                ProfileeFields.length) *
                                              100;
                                           return (
-                                             completionPercentage * 3.6
+                                             completionPercentÂGE * 3.6
                                           ).toFixed(1);
                                        })()}deg,
                                        rgba(255, 255, 255, 0.2) ${(() => {
-                                          const profileFields = [
+                                          const ProfileeFields = [
                                              userData.firstName,
                                              userData.lastName,
                                              userData.phoneNumber,
@@ -1396,23 +1419,23 @@ export default function GestionProfile() {
                                              userData.profilePictureUrl,
                                           ];
                                           const completedFields =
-                                             profileFields.filter(
+                                             ProfileeFields.filter(
                                                 (field) =>
                                                    field !== null &&
                                                    field !== undefined &&
                                                    field !== ""
                                              ).length;
-                                          const completionPercentage =
+                                          const completionPercentÂGE =
                                              (completedFields /
-                                                profileFields.length) *
+                                                ProfileeFields.length) *
                                              100;
                                           return (
-                                             completionPercentage * 3.6
+                                             completionPercentÂGE * 3.6
                                           ).toFixed(1);
                                        })()}deg 360deg
                                     )`,
                                        boxShadow: `0 0 20px rgba(26, 188, 156, ${(() => {
-                                          const profileFields = [
+                                          const ProfileeFields = [
                                              userData.firstName,
                                              userData.lastName,
                                              userData.phoneNumber,
@@ -1432,18 +1455,18 @@ export default function GestionProfile() {
                                              userData.profilePictureUrl,
                                           ];
                                           const completedFields =
-                                             profileFields.filter(
+                                             ProfileeFields.filter(
                                                 (field) =>
                                                    field !== null &&
                                                    field !== undefined &&
                                                    field !== ""
                                              ).length;
-                                          const completionPercentage =
+                                          const completionPercentÂGE =
                                              (completedFields /
-                                                profileFields.length) *
+                                                ProfileeFields.length) *
                                              100;
                                           return (
-                                             (completionPercentage / 100) *
+                                             (completionPercentÂGE / 100) *
                                              0.6
                                           ).toFixed(2);
                                        })()})`,
@@ -1465,25 +1488,55 @@ export default function GestionProfile() {
                                     }}
                                  />
 
-                                 <Avatar
-                                    size={180}
-                                    src={displayImage}
-                                    icon={<UserOutlined />}
-                                    style={{
-                                       border:
-                                          "2px solid rgba(255, 255, 255, 0.3)",
-                                       boxShadow: "0 12px 32px rgba(0,0,0,0.2)",
-                                       backgroundColor:
-                                          "rgba(255, 255, 255, 0.1)",
-                                       position: "relative",
-                                       zIndex: 2,
-                                    }}
-                                 />
+                                 {displayImage ? (
+                                    <div
+                                       style={{
+                                          width: 180,
+                                          height: 180,
+                                          borderRadius: "50%",
+                                          overflow: "hidden",
+                                          border:
+                                             "2px solid rgba(255, 255, 255, 0.3)",
+                                          boxShadow:
+                                             "0 12px 32px rgba(0,0,0,0.2)",
+                                          backgroundColor:
+                                             "rgba(255, 255, 255, 0.1)",
+                                          position: "relative",
+                                          zIndex: 2,
+                                       }}
+                                    >
+                                       <img
+                                          src={displayImage}
+                                          alt="Profile"
+                                          referrerPolicy="no-referrer"
+                                          style={{
+                                             width: "100%",
+                                             height: "100%",
+                                             objectFit: "cover",
+                                          }}
+                                       />
+                                    </div>
+                                 ) : (
+                                    <Avatar
+                                       size={180}
+                                       icon={<UserOutlined />}
+                                       style={{
+                                          border:
+                                             "2px solid rgba(255, 255, 255, 0.3)",
+                                          boxShadow:
+                                             "0 12px 32px rgba(0,0,0,0.2)",
+                                          backgroundColor:
+                                             "rgba(255, 255, 255, 0.1)",
+                                          position: "relative",
+                                          zIndex: 2,
+                                       }}
+                                    />
+                                 )}
 
                                  <Upload
                                     showUploadList={false}
                                     customRequest={handleUpload}
-                                    accept="image/*"
+                                    accept="imÂGE/*"
                                     beforeUpload={beforeUpload}
                                     disabled={uploading}
                                  >
@@ -1519,7 +1572,7 @@ export default function GestionProfile() {
                                     alignItems: "center",
                                  }}
                               >
-                                 {/* Profile Completion Percentage */}
+                                 {/* Profilee Completion PercentÂGE */}
                                  <div
                                     style={{
                                        background: "rgba(255, 255, 255, 0.15)",
@@ -1537,9 +1590,9 @@ export default function GestionProfile() {
                                           fontWeight: 600,
                                        }}
                                     >
-                                       📋 Profil{" "}
+                                       📋 Profile{" "}
                                        {(() => {
-                                          const profileFields = [
+                                          const ProfileeFields = [
                                              userData.firstName,
                                              userData.lastName,
                                              userData.phoneNumber,
@@ -1559,19 +1612,19 @@ export default function GestionProfile() {
                                              userData.profilePictureUrl,
                                           ];
                                           const completedFields =
-                                             profileFields.filter(
+                                             ProfileeFields.filter(
                                                 (field) =>
                                                    field !== null &&
                                                    field !== undefined &&
                                                    field !== ""
                                              ).length;
-                                          const completionPercentage =
+                                          const completionPercentÂGE =
                                              Math.round(
                                                 (completedFields /
-                                                   profileFields.length) *
+                                                   ProfileeFields.length) *
                                                    100
                                              );
-                                          return completionPercentage;
+                                          return completionPercentÂGE;
                                        })()}
                                        % complet
                                     </Text>
@@ -1585,7 +1638,12 @@ export default function GestionProfile() {
                                        fontWeight: 500,
                                     }}
                                  >
-                                    Membre VitaCare depuis 2024
+                                    Membre VitaCare depuis{" "}
+                                    {userData.createdAt
+                                       ? moment(userData.createdAt).format(
+                                            "YYYY"
+                                         )
+                                       : "2025"}
                                  </Text>
 
                                  {/* Quick action hint */}
@@ -1616,7 +1674,7 @@ export default function GestionProfile() {
                                  >
                                     {userData.firstName && userData.lastName
                                        ? `${userData.firstName} ${userData.lastName}`
-                                       : "Utilisateur VitaCare"}
+                                       : "VitaCare User"}
                                  </Title>
                                  <Text
                                     style={{
@@ -1706,7 +1764,7 @@ export default function GestionProfile() {
                                                 display: "block",
                                              }}
                                           >
-                                             GENRE
+                                             Genre
                                           </Text>
                                           <Text
                                              style={{
@@ -1716,8 +1774,8 @@ export default function GestionProfile() {
                                              }}
                                           >
                                              {userData.gender === "MALE"
-                                                ? "Homme"
-                                                : "Femme"}
+                                                ? "Male"
+                                                : "Female"}
                                           </Text>
                                        </div>
                                     </div>
@@ -1913,7 +1971,7 @@ export default function GestionProfile() {
                                  </div>
                               )}
 
-                              {/* Medical alerts - compact version */}
+                              {/* ALERTES MÉDICALES - compact version */}
                               {(userData.allergies ||
                                  userData.chronicConditions) && (
                                  <div
@@ -1956,7 +2014,7 @@ export default function GestionProfile() {
                                              marginBottom: "4px",
                                           }}
                                        >
-                                          • Allergies:{" "}
+                                          • allergies:{" "}
                                           {userData.allergies.length > 40
                                              ? userData.allergies.substring(
                                                   0,
@@ -1971,9 +2029,10 @@ export default function GestionProfile() {
                                              color: "rgba(255, 255, 255, 0.9)",
                                              fontSize: "13px",
                                              display: "block",
+                                             marginBottom: "4px",
                                           }}
                                        >
-                                          • Conditions chroniques:{" "}
+                                          • Maladies chroniques :{" "}
                                           {userData.chronicConditions.length >
                                           40
                                              ? userData.chronicConditions.substring(
@@ -1981,6 +2040,23 @@ export default function GestionProfile() {
                                                   40
                                                ) + "..."
                                              : userData.chronicConditions}
+                                       </Text>
+                                    )}
+                                    {userData.medications && (
+                                       <Text
+                                          style={{
+                                             color: "rgba(255, 255, 255, 0.9)",
+                                             fontSize: "13px",
+                                             display: "block",
+                                          }}
+                                       >
+                                          • medications:{" "}
+                                          {userData.medications.length > 40
+                                             ? userData.medications.substring(
+                                                  0,
+                                                  40
+                                               ) + "..."
+                                             : userData.medications}
                                        </Text>
                                     )}
                                  </div>
@@ -2027,7 +2103,7 @@ export default function GestionProfile() {
                                  name="firstName"
                               >
                                  <Input
-                                    placeholder="Votre prénom"
+                                    placeholder="Your Prénom"
                                     style={{
                                        borderRadius: "12px",
                                        border: "2px solid #f1f5f9",
@@ -2053,7 +2129,7 @@ export default function GestionProfile() {
                                  name="lastName"
                               >
                                  <Input
-                                    placeholder="Votre nom"
+                                    placeholder="Your Nom"
                                     style={{
                                        borderRadius: "12px",
                                        border: "2px solid #f1f5f9",
@@ -2173,7 +2249,7 @@ export default function GestionProfile() {
                                  </Select>
                               </Form.Item>
                            </Col>
-                           {/* Blood Type */}
+                           {/* Groupe sanguin */}
                            <Col xs={24} sm={12}>
                               <Form.Item
                                  label={
@@ -2184,7 +2260,7 @@ export default function GestionProfile() {
                                  name="bloodType"
                               >
                                  <Select
-                                    placeholder="Sélectionnez votre groupe sanguin"
+                                    placeholder="Select your Groupe sanguin"
                                     style={{
                                        borderRadius: "12px",
                                        border: "2px solid #f1f5f9",
@@ -2259,7 +2335,7 @@ export default function GestionProfile() {
                                  name="allergies"
                               >
                                  <Input.TextArea
-                                    placeholder="Listez vos allergies, si applicable"
+                                    placeholder="Listez vos allergies, le cas échéant"
                                     style={{
                                        borderRadius: "12px",
                                        border: "2px solid #f1f5f9",
@@ -2271,18 +2347,41 @@ export default function GestionProfile() {
                               </Form.Item>
                            </Col>
 
-                           {/* Chronic Conditions */}
+                           {/* Maladies chroniques */}
                            <Col xs={24}>
                               <Form.Item
                                  label={
                                     <Text strong style={{ fontSize: "16px" }}>
-                                       Conditions chroniques
+                                       Maladies chroniques
                                     </Text>
                                  }
                                  name="chronicConditions"
                               >
                                  <Input.TextArea
-                                    placeholder="Listez vos conditions médicales chroniques, si applicable"
+                                    placeholder="List your Maladies chroniques, if applicable"
+                                    style={{
+                                       borderRadius: "12px",
+                                       border: "2px solid #f1f5f9",
+                                       padding: "12px 16px",
+                                       fontSize: "16px",
+                                    }}
+                                    rows={2}
+                                 />
+                              </Form.Item>
+                           </Col>
+
+                           {/* Medications */}
+                           <Col xs={24}>
+                              <Form.Item
+                                 label={
+                                    <Text strong style={{ fontSize: "16px" }}>
+                                       Medications
+                                    </Text>
+                                 }
+                                 name="medications"
+                              >
+                                 <Input.TextArea
+                                    placeholder="Listez vos médicaments actuels, le cas échéant"
                                     style={{
                                        borderRadius: "12px",
                                        border: "2px solid #f1f5f9",
@@ -2327,7 +2426,7 @@ export default function GestionProfile() {
                                     "translateY(0)";
                               }}
                            >
-                              Sauvegarder
+                              Enregistrer
                            </Button>
                            <Button
                               icon={<CloseOutlined />}

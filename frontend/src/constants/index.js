@@ -21,10 +21,10 @@ export const COLORS = {
 
 // Page configuration
 export const PAGE_TITLES = {
-   1: { title: "Dashboard", subtitle: "Bienvenue sur VitaCare" },
+   1: { title: "Tableau de bord", subtitle: "Bienvenue sur VitaCare" },
    2: {
-      title: "Analytics",
-      subtitle: "Visualisez vos statistiques de santé",
+      title: "Analyses",
+      subtitle: "Consultez vos statistiques de santé",
    },
    9: {
       title: "Documents",
@@ -41,12 +41,12 @@ export const SIDER_ITEMS = [
    {
       key: "1",
       icon: <DashboardOutlined />,
-      label: "Dashboard",
+      label: "Tableau de bord",
    },
    {
       key: "2",
       icon: <BarChartOutlined />,
-      label: "Analytics",
+      label: "Analyses",
    },
    {
       key: "9",

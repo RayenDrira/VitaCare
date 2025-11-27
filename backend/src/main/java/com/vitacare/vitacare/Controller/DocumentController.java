@@ -1,5 +1,6 @@
 package com.vitacare.vitacare.Controller;
 
+import com.vitacare.vitacare.DTO.DocumentDTO;
 import com.vitacare.vitacare.Model.Document;
 import com.vitacare.vitacare.Model.User;
 import com.vitacare.vitacare.Repository.UserRepository;
@@ -15,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/documents")
@@ -42,11 +44,11 @@ public class DocumentController {
         return ResponseEntity.ok(doc.getFilename());
     }
 
-    // List documents of the current user
+    // List documents of the current user (with tags)
     @GetMapping
-    public ResponseEntity<List<Document>> getUserDocuments(@RequestParam("email") String email) {
+    public ResponseEntity<List<DocumentDTO>> getUserDocuments(@RequestParam("email") String email) {
         User user = getCurrentUser(email);
-        List<Document> docs = documentService.getDocumentsByUser(user);
+        List<DocumentDTO> docs = documentService.getDocumentDTOsByUser(user);
         return ResponseEntity.ok(docs);
     }
 
@@ -72,5 +74,35 @@ public class DocumentController {
         User user = getCurrentUser(email);
         documentService.deleteDocument(user, filename);
         return ResponseEntity.ok().build();
+    }
+
+    // Update document tags
+    @PutMapping("/{filename:.+}/tags")
+    public ResponseEntity<DocumentDTO> updateDocumentTags(
+            @PathVariable String filename,
+            @RequestParam("email") String email,
+            @RequestBody Map<String, List<String>> request) {
+        try {
+            User user = getCurrentUser(email);
+            List<String> tags = request.get("tags");
+            DocumentDTO updatedDoc = documentService.updateDocumentTags(user, filename, tags);
+            return ResponseEntity.ok(updatedDoc);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    // Get document with tags
+    @GetMapping("/{filename:.+}/details")
+    public ResponseEntity<DocumentDTO> getDocumentDetails(
+            @PathVariable String filename,
+            @RequestParam("email") String email) {
+        try {
+            User user = getCurrentUser(email);
+            DocumentDTO doc = documentService.getDocumentDTOByFilename(user, filename);
+            return ResponseEntity.ok(doc);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

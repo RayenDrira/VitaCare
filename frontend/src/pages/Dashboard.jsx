@@ -4,6 +4,8 @@ import GestionProfile from "../components/GestionProfile";
 import Sidebar from "../components/Sidebar/Sidebar";
 import { useSidebar } from "../hooks/useSidebar";
 import { COLORS, PAGE_TITLES, SIDER_ITEMS } from "../constants";
+import { apiFetch, getEmailFromToken } from "../utils/api";
+import moment from "moment";
 
 import Logo from "../assets/VitaCare_logo.png";
 
@@ -12,14 +14,11 @@ import {
    ConfigProvider,
    Card,
    Typography,
-   Badge,
    Avatar,
    Dropdown,
-   Button,
    Input,
    Row,
    Col,
-   Statistic,
    Menu,
 } from "antd";
 import {
@@ -27,8 +26,6 @@ import {
    SettingOutlined,
    BellOutlined,
    SearchOutlined,
-   MedicineBoxOutlined,
-   CalendarOutlined,
    FileTextOutlined,
    BarChartOutlined,
 } from "@ant-design/icons";
@@ -43,6 +40,53 @@ const { PRIMARY, BG_LIGHT, BG_CARD, SIDEBAR_BORDER, TEXT_DARK, TEXT_MEDIUM } =
 function Dashboard() {
    const { collapsed, setCollapsed, activePage, setActivePage } = useSidebar();
    const [searchQuery, setSearchQuery] = useState("");
+   const [userData, setUserData] = useState(null);
+   const [loading, setLoading] = useState(true);
+   const [documentCount, setDocumentCount] = useState(0);
+   const [tagCount, setTagCount] = useState(0);
+
+   // Fetch user data and documents for dashboard
+   useEffect(() => {
+      const fetchDashboardData = async () => {
+         try {
+            setLoading(true);
+            const email = getEmailFromToken();
+            if (!email) return;
+
+            // Fetch user profile
+            const profileRes = await apiFetch(
+               `/api/profile/user/by-email/${email}`
+            );
+            if (profileRes.ok) {
+               const user = await profileRes.json();
+               setUserData(user);
+            }
+
+            // Fetch documents count
+            const docsRes = await apiFetch(
+               `/api/documents?email=${encodeURIComponent(email)}`
+            );
+            if (docsRes.ok) {
+               const docs = await docsRes.json();
+               setDocumentCount(docs.length);
+
+               // Count unique tags from documents
+               const uniqueTags = new Set();
+               docs.forEach((doc) => {
+                  if (doc.tagNames && Array.isArray(doc.tagNames)) {
+                     doc.tagNames.forEach((tag) => uniqueTags.add(tag));
+                  }
+               });
+               setTagCount(uniqueTags.size);
+            }
+         } catch (err) {
+            console.error("Error fetching dashboard data:", err);
+         } finally {
+            setLoading(false);
+         }
+      };
+      fetchDashboardData();
+   }, []);
 
    // Clear search when navigating away from Documents page
    useEffect(() => {
@@ -146,7 +190,6 @@ function Dashboard() {
                      >
                         {PAGE_TITLES[activePage]?.title || ""}
                      </Title>
-                     
                   </div>
 
                   <div
@@ -178,23 +221,6 @@ function Dashboard() {
                         size="large"
                         allowClear
                      />
-                     <Badge count={3} dot>
-                        <Button
-                           type="text"
-                           shape="circle"
-                           icon={
-                              <BellOutlined
-                                 style={{ fontSize: 18, color: TEXT_MEDIUM }}
-                              />
-                           }
-                           size="large"
-                           style={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                           }}
-                        />
-                     </Badge>
                      <Dropdown overlay={userMenu} trigger={["click"]}>
                         <Avatar
                            icon={<UserOutlined />}
@@ -221,10 +247,12 @@ function Dashboard() {
                         <Col span={24}>
                            <Card
                               style={{
-                                 borderRadius: 20,
-                                 background: `linear-gradient(135deg, ${PRIMARY}15, ${PRIMARY}05)`,
-                                 border: `1.5px solid ${PRIMARY}20`,
+                                 borderRadius: 24,
+                                 background:
+                                    "linear-gradient(135deg, #ffffff 0%, #f8fafb 100%)",
+                                 border: "none",
                                  boxShadow: "0 8px 32px rgba(26,139,183,0.12)",
+                                 overflow: "hidden",
                               }}
                            >
                               <div
@@ -232,18 +260,26 @@ function Dashboard() {
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "space-between",
+                                    padding: "8px 0",
                                  }}
                               >
                                  <div>
                                     <Title
                                        level={2}
-                                       style={{ color: PRIMARY, margin: 0 }}
+                                       style={{
+                                          color: PRIMARY,
+                                          margin: 0,
+                                          fontWeight: 700,
+                                       }}
                                     >
-                                       Bienvenue sur VitaCare
+                                       Bienvenue{" "}
+                                       {userData?.firstName
+                                          ? `${userData.firstName}`
+                                          : "sur VitaCare"}
                                     </Title>
                                     <Text
                                        style={{
-                                          fontSize: 18,
+                                          fontSize: 16,
                                           color: TEXT_MEDIUM,
                                           fontWeight: 500,
                                        }}
@@ -251,115 +287,717 @@ function Dashboard() {
                                        Gérez votre santé en toute simplicité
                                     </Text>
                                  </div>
-                                 <img
-                                    src={Logo}
-                                    alt="VitaCare"
-                                    style={{ width: 80, height: 80 }}
-                                 />
+                                 <div
+                                    style={{
+                                       width: 80,
+                                       height: 80,
+                                       borderRadius: 20,
+                                       background: `${PRIMARY}15`,
+                                       display: "flex",
+                                       alignItems: "center",
+                                       justifyContent: "center",
+                                    }}
+                                 >
+                                    <img
+                                       src={Logo}
+                                       alt="VitaCare"
+                                       style={{ width: 60, height: 60 }}
+                                    />
+                                 </div>
                               </div>
                            </Card>
                         </Col>
-                        <Col xs={24} sm={12} lg={6}>
+
+                        {/* Real-time Analytics Cards */}
+                        <Col xs={24} sm={12} lg={8}>
                            <Card
                               style={{
                                  borderRadius: 16,
                                  border: "none",
-                                 boxShadow: "0 4px 24px rgba(26,139,183,0.08)",
+                                 boxShadow: "0 2px 8px rgba(26,139,183,0.06)",
+                                 background: "white",
+                                 overflow: "hidden",
+                                 transition: "all 0.3s ease",
                               }}
+                              bodyStyle={{ padding: 16 }}
                            >
-                              <Statistic
-                                 title="Documents"
-                                 value={12}
-                                 prefix={
+                              <div
+                                 style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 16,
+                                 }}
+                              >
+                                 <div
+                                    style={{
+                                       display: "flex",
+                                       alignItems: "center",
+                                       justifyContent: "center",
+                                       width: 48,
+                                       height: 48,
+                                       borderRadius: 12,
+                                       background: `${PRIMARY}15`,
+                                       flexShrink: 0,
+                                    }}
+                                 >
                                     <FileTextOutlined
-                                       style={{ color: PRIMARY, fontSize: 24 }}
+                                       style={{ fontSize: 20, color: PRIMARY }}
                                     />
-                                 }
-                                 valueStyle={{
-                                    color: PRIMARY,
-                                    fontWeight: 700,
-                                 }}
-                              />
+                                 </div>
+                                 <div style={{ flex: 1 }}>
+                                    <Text
+                                       style={{
+                                          fontSize: 12,
+                                          color: TEXT_MEDIUM,
+                                          display: "block",
+                                          marginBottom: 4,
+                                       }}
+                                    >
+                                       documents
+                                    </Text>
+                                    <div
+                                       style={{
+                                          display: "flex",
+                                          alignItems: "baseline",
+                                          gap: 6,
+                                       }}
+                                    >
+                                       <Text
+                                          style={{
+                                             fontSize: 24,
+                                             fontWeight: 700,
+                                             color: PRIMARY,
+                                             lineHeight: 1,
+                                          }}
+                                       >
+                                          {documentCount}
+                                       </Text>
+                                       <Text
+                                          style={{
+                                             fontSize: 12,
+                                             color: TEXT_MEDIUM,
+                                             fontWeight: 500,
+                                          }}
+                                       >
+                                          fichiers
+                                       </Text>
+                                    </div>
+                                 </div>
+                              </div>
                            </Card>
                         </Col>
-                        <Col xs={24} sm={12} lg={6}>
+                        <Col xs={24} sm={12} lg={8}>
                            <Card
                               style={{
                                  borderRadius: 16,
                                  border: "none",
-                                 boxShadow: "0 4px 24px rgba(26,139,183,0.08)",
+                                 boxShadow: "0 2px 8px rgba(82,196,26,0.06)",
+                                 background: "white",
+                                 overflow: "hidden",
+                                 transition: "all 0.3s ease",
                               }}
+                              bodyStyle={{ padding: 16 }}
                            >
-                              <Statistic
-                                 title="Rendez-vous"
-                                 value={3}
-                                 prefix={
-                                    <CalendarOutlined
+                              <div
+                                 style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 16,
+                                 }}
+                              >
+                                 <div
+                                    style={{
+                                       display: "flex",
+                                       alignItems: "center",
+                                       justifyContent: "center",
+                                       width: 48,
+                                       height: 48,
+                                       borderRadius: 12,
+                                       background: "#52c41a15",
+                                       flexShrink: 0,
+                                    }}
+                                 >
+                                    <FileTextOutlined
                                        style={{
+                                          fontSize: 20,
                                           color: "#52c41a",
-                                          fontSize: 24,
                                        }}
                                     />
-                                 }
-                                 valueStyle={{
-                                    color: "#52c41a",
-                                    fontWeight: 700,
-                                 }}
-                              />
-                           </Card>
-                        </Col>
-                        <Col xs={24} sm={12} lg={6}>
-                           <Card
-                              style={{
-                                 borderRadius: 16,
-                                 border: "none",
-                                 boxShadow: "0 4px 24px rgba(26,139,183,0.08)",
-                              }}
-                           >
-                              <Statistic
-                                 title="Traitements"
-                                 value={2}
-                                 prefix={
-                                    <MedicineBoxOutlined
+                                 </div>
+                                 <div style={{ flex: 1 }}>
+                                    <Text
                                        style={{
-                                          color: "#fa8c16",
-                                          fontSize: 24,
+                                          fontSize: 12,
+                                          color: TEXT_MEDIUM,
+                                          display: "block",
+                                          marginBottom: 4,
                                        }}
-                                    />
-                                 }
-                                 valueStyle={{
-                                    color: "#fa8c16",
-                                    fontWeight: 700,
-                                 }}
-                              />
+                                    >
+                                       étiquettes
+                                    </Text>
+                                    <div
+                                       style={{
+                                          display: "flex",
+                                          alignItems: "baseline",
+                                          gap: 6,
+                                       }}
+                                    >
+                                       <Text
+                                          style={{
+                                             fontSize: 24,
+                                             fontWeight: 700,
+                                             color: "#52c41a",
+                                             lineHeight: 1,
+                                          }}
+                                       >
+                                          {tagCount}
+                                       </Text>
+                                       <Text
+                                          style={{
+                                             fontSize: 12,
+                                             color: TEXT_MEDIUM,
+                                             fontWeight: 500,
+                                          }}
+                                       >
+                                          créées
+                                       </Text>
+                                    </div>
+                                 </div>
+                              </div>
                            </Card>
                         </Col>
-                        <Col xs={24} sm={12} lg={6}>
+                        <Col xs={24} sm={12} lg={8}>
                            <Card
                               style={{
                                  borderRadius: 16,
                                  border: "none",
-                                 boxShadow: "0 4px 24px rgba(26,139,183,0.08)",
+                                 boxShadow: "0 2px 8px rgba(255,77,79,0.06)",
+                                 background: "white",
+                                 overflow: "hidden",
+                                 transition: "all 0.3s ease",
                               }}
+                              bodyStyle={{ padding: 16 }}
                            >
-                              <Statistic
-                                 title="Alertes médicaux"
-                                 value={1}
-                                 prefix={
+                              <div
+                                 style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 16,
+                                 }}
+                              >
+                                 <div
+                                    style={{
+                                       display: "flex",
+                                       alignItems: "center",
+                                       justifyContent: "center",
+                                       width: 48,
+                                       height: 48,
+                                       borderRadius: 12,
+                                       background: `${COLORS.WARNING}15`,
+                                       flexShrink: 0,
+                                    }}
+                                 >
                                     <BellOutlined
                                        style={{
+                                          fontSize: 20,
                                           color: COLORS.WARNING,
-                                          fontSize: 24,
                                        }}
                                     />
-                                 }
-                                 valueStyle={{
-                                    color: COLORS.WARNING,
-                                    fontWeight: 700,
-                                 }}
-                              />
+                                 </div>
+                                 <div style={{ flex: 1 }}>
+                                    <Text
+                                       style={{
+                                          fontSize: 12,
+                                          color: TEXT_MEDIUM,
+                                          display: "block",
+                                          marginBottom: 4,
+                                       }}
+                                    >
+                                       alertes médicales
+                                    </Text>
+                                    <div
+                                       style={{
+                                          display: "flex",
+                                          alignItems: "baseline",
+                                          gap: 6,
+                                       }}
+                                    >
+                                       <Text
+                                          style={{
+                                             fontSize: 24,
+                                             fontWeight: 700,
+                                             color: COLORS.WARNING,
+                                             lineHeight: 1,
+                                          }}
+                                       >
+                                          {(userData?.allergies &&
+                                          userData.allergies.trim()
+                                             ? userData.allergies.split(",")
+                                                  .length
+                                             : 0) +
+                                             (userData?.chronicConditions &&
+                                             userData.chronicConditions.trim()
+                                                ? userData.chronicConditions.split(
+                                                     ","
+                                                  ).length
+                                                : 0) +
+                                             (userData?.médicaments &&
+                                             userData.medications.trim()
+                                                ? userData.medications.split(
+                                                     ","
+                                                  ).length
+                                                : 0)}
+                                       </Text>
+                                       <Text
+                                          style={{
+                                             fontSize: 12,
+                                             color: TEXT_MEDIUM,
+                                             fontWeight: 500,
+                                          }}
+                                       >
+                                          actives
+                                       </Text>
+                                    </div>
+                                 </div>
+                              </div>
                            </Card>
                         </Col>
+
+                        {/* Personal Information Section */}
+                        {userData && !loading && (
+                           <Col span={24}>
+                              <Card
+                                 style={{
+                                    borderRadius: 16,
+                                    border: "none",
+                                    boxShadow:
+                                       "0 2px 8px rgba(26,139,183,0.06)",
+                                    background: "white",
+                                 }}
+                                 bodyStyle={{ padding: 20 }}
+                              >
+                                 <Title
+                                    level={4}
+                                    style={{
+                                       margin: 0,
+                                       marginBottom: 20,
+                                       color: TEXT_DARK,
+                                       fontWeight: 600,
+                                    }}
+                                 >
+                                    informations personnelles
+                                 </Title>
+
+                                 <Row gutter={[24, 24]}>
+                                    {/* Demographics Card */}
+                                    <Col xs={24} lg={8}>
+                                       <Card
+                                          style={{
+                                             height: "100%",
+                                             borderRadius: 12,
+                                             border: `1px solid ${PRIMARY}15`,
+                                          }}
+                                          bodyStyle={{ padding: 20 }}
+                                       >
+                                          <Title
+                                             level={5}
+                                             style={{
+                                                margin: 0,
+                                                marginBottom: 16,
+                                                color: TEXT_DARK,
+                                             }}
+                                          >
+                                             informations démographiques
+                                          </Title>
+                                          <div
+                                             style={{
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                gap: 16,
+                                             }}
+                                          >
+                                             {userData.dateOfBirth && (
+                                                <div>
+                                                   <Text
+                                                      style={{
+                                                         fontSize: 12,
+                                                         color: TEXT_MEDIUM,
+                                                         display: "block",
+                                                         marginBottom: 4,
+                                                      }}
+                                                   >
+                                                      âge
+                                                   </Text>
+                                                   <Text
+                                                      strong
+                                                      style={{
+                                                         fontSize: 18,
+                                                         color: TEXT_DARK,
+                                                      }}
+                                                   >
+                                                      {moment().diff(
+                                                         moment(
+                                                            userData.dateOfBirth
+                                                         ),
+                                                         "years"
+                                                      )}{" "}
+                                                      ans
+                                                   </Text>
+                                                </div>
+                                             )}
+                                             {userData.gender && (
+                                                <div>
+                                                   <Text
+                                                      style={{
+                                                         fontSize: 12,
+                                                         color: TEXT_MEDIUM,
+                                                         display: "block",
+                                                         marginBottom: 4,
+                                                      }}
+                                                   >
+                                                      genre
+                                                   </Text>
+                                                   <Text
+                                                      strong
+                                                      style={{
+                                                         fontSize: 18,
+                                                         color: TEXT_DARK,
+                                                      }}
+                                                   >
+                                                      {userData.gender ===
+                                                      "MALE"
+                                                         ? "homme"
+                                                         : "femme"}
+                                                   </Text>
+                                                </div>
+                                             )}
+                                             {userData.phoneNumber && (
+                                                <div>
+                                                   <Text
+                                                      style={{
+                                                         fontSize: 12,
+                                                         color: TEXT_MEDIUM,
+                                                         display: "block",
+                                                         marginBottom: 4,
+                                                      }}
+                                                   >
+                                                      téléphone
+                                                   </Text>
+                                                   <Text
+                                                      strong
+                                                      style={{
+                                                         fontSize: 16,
+                                                         color: TEXT_DARK,
+                                                      }}
+                                                   >
+                                                      {userData.phoneNumber}
+                                                   </Text>
+                                                </div>
+                                             )}
+                                             {userData.bloodType && (
+                                                <div>
+                                                   <Text
+                                                      style={{
+                                                         fontSize: 12,
+                                                         color: TEXT_MEDIUM,
+                                                         display: "block",
+                                                         marginBottom: 4,
+                                                      }}
+                                                   >
+                                                      groupe sanguin
+                                                   </Text>
+                                                   <Text
+                                                      strong
+                                                      style={{
+                                                         fontSize: 18,
+                                                         color: TEXT_DARK,
+                                                      }}
+                                                   >
+                                                      {userData.bloodType}
+                                                   </Text>
+                                                </div>
+                                             )}
+                                          </div>
+                                       </Card>
+                                    </Col>
+
+                                    {/* Health Metrics Card */}
+                                    <Col xs={24} lg={8}>
+                                       <Card
+                                          style={{
+                                             height: "100%",
+                                             borderRadius: 12,
+                                             border: `1px solid ${PRIMARY}15`,
+                                          }}
+                                          bodyStyle={{ padding: 20 }}
+                                       >
+                                          <Title
+                                             level={5}
+                                             style={{
+                                                margin: 0,
+                                                marginBottom: 16,
+                                                color: TEXT_DARK,
+                                             }}
+                                          >
+                                             métriques de santé
+                                          </Title>
+                                          <div
+                                             style={{
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                gap: 16,
+                                             }}
+                                          >
+                                             {userData.height &&
+                                                Number(userData.height) > 0 && (
+                                                   <div>
+                                                      <Text
+                                                         style={{
+                                                            fontSize: 12,
+                                                            color: TEXT_MEDIUM,
+                                                            display: "block",
+                                                            marginBottom: 4,
+                                                         }}
+                                                      >
+                                                         taille
+                                                      </Text>
+                                                      <Text
+                                                         strong
+                                                         style={{
+                                                            fontSize: 18,
+                                                            color: TEXT_DARK,
+                                                         }}
+                                                      >
+                                                         {userData.height} cm
+                                                      </Text>
+                                                   </div>
+                                                )}
+                                             {userData.weight &&
+                                                Number(userData.weight) > 0 && (
+                                                   <div>
+                                                      <Text
+                                                         style={{
+                                                            fontSize: 12,
+                                                            color: TEXT_MEDIUM,
+                                                            display: "block",
+                                                            marginBottom: 4,
+                                                         }}
+                                                      >
+                                                         poids
+                                                      </Text>
+                                                      <Text
+                                                         strong
+                                                         style={{
+                                                            fontSize: 18,
+                                                            color: TEXT_DARK,
+                                                         }}
+                                                      >
+                                                         {userData.weight} kg
+                                                      </Text>
+                                                   </div>
+                                                )}
+                                             {userData.height &&
+                                                Number(userData.height) > 0 &&
+                                                userData.weight &&
+                                                Number(userData.weight) > 0 && (
+                                                   <div>
+                                                      <Text
+                                                         style={{
+                                                            fontSize: 12,
+                                                            color: TEXT_MEDIUM,
+                                                            display: "block",
+                                                            marginBottom: 4,
+                                                         }}
+                                                      >
+                                                         imc
+                                                      </Text>
+                                                      <Text
+                                                         strong
+                                                         style={{
+                                                            fontSize: 18,
+                                                            color: TEXT_DARK,
+                                                         }}
+                                                      >
+                                                         {(
+                                                            userData.weight /
+                                                            Math.pow(
+                                                               userData.height /
+                                                                  100,
+                                                               2
+                                                            )
+                                                         ).toFixed(1)}
+                                                      </Text>
+                                                      <Text
+                                                         style={{
+                                                            color: (() => {
+                                                               const bmi =
+                                                                  userData.weight /
+                                                                  Math.pow(
+                                                                     userData.height /
+                                                                        100,
+                                                                     2
+                                                                  );
+                                                               if (bmi < 18.5)
+                                                                  return "#fa8c16";
+                                                               if (bmi < 25)
+                                                                  return "#52c41a";
+                                                               if (bmi < 30)
+                                                                  return "#fa8c16";
+                                                               return "#ff4d4f";
+                                                            })(),
+                                                            marginLeft: 8,
+                                                            fontSize: 14,
+                                                            fontWeight: 500,
+                                                         }}
+                                                      >
+                                                         {(() => {
+                                                            const bmi =
+                                                               userData.weight /
+                                                               Math.pow(
+                                                                  userData.height /
+                                                                     100,
+                                                                  2
+                                                               );
+                                                            if (bmi < 18.5)
+                                                               return "insuffisance pondérale";
+                                                            if (bmi < 25)
+                                                               return "normal";
+                                                            if (bmi < 30)
+                                                               return "surpoids";
+                                                            return "obésité";
+                                                         })()}
+                                                      </Text>
+                                                   </div>
+                                                )}
+                                          </div>
+                                       </Card>
+                                    </Col>
+
+                                    {/* Medical Alerts Card */}
+                                    <Col xs={24} lg={8}>
+                                       <Card
+                                          style={{
+                                             height: "100%",
+                                             borderRadius: 12,
+                                             border: "1px solid #fa8c1615",
+                                          }}
+                                          bodyStyle={{ padding: 20 }}
+                                       >
+                                          <Title
+                                             level={5}
+                                             style={{
+                                                margin: 0,
+                                                marginBottom: 16,
+                                                color: TEXT_DARK,
+                                             }}
+                                          >
+                                             alertes médicales
+                                          </Title>
+                                          <div
+                                             style={{
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                gap: 16,
+                                             }}
+                                          >
+                                             {userData.allergies &&
+                                                userData.allergies.trim() && (
+                                                   <div>
+                                                      <Text
+                                                         style={{
+                                                            fontSize: 12,
+                                                            color: TEXT_MEDIUM,
+                                                            display: "block",
+                                                            marginBottom: 4,
+                                                         }}
+                                                      >
+                                                         allergies
+                                                      </Text>
+                                                      <Text
+                                                         strong
+                                                         style={{
+                                                            fontSize: 18,
+                                                            color: TEXT_DARK,
+                                                         }}
+                                                      >
+                                                         {userData.allergies
+                                                            .length > 80
+                                                            ? userData.allergies.substring(
+                                                                 0,
+                                                                 80
+                                                              ) + "..."
+                                                            : userData.allergies}
+                                                      </Text>
+                                                   </div>
+                                                )}
+                                             {userData.chronicConditions &&
+                                                userData.chronicConditions.trim() && (
+                                                   <div>
+                                                      <Text
+                                                         style={{
+                                                            fontSize: 12,
+                                                            color: TEXT_MEDIUM,
+                                                            display: "block",
+                                                            marginBottom: 4,
+                                                         }}
+                                                      >
+                                                         maladies chroniques
+                                                      </Text>
+                                                      <Text
+                                                         strong
+                                                         style={{
+                                                            fontSize: 18,
+                                                            color: TEXT_DARK,
+                                                         }}
+                                                      >
+                                                         {userData
+                                                            .chronicConditions
+                                                            .length > 80
+                                                            ? userData.chronicConditions.substring(
+                                                                 0,
+                                                                 80
+                                                              ) + "..."
+                                                            : userData.chronicConditions}
+                                                      </Text>
+                                                   </div>
+                                                )}
+                                             {userData.medications &&
+                                                userData.medications.trim() && (
+                                                   <div>
+                                                      <Text
+                                                         style={{
+                                                            fontSize: 12,
+                                                            color: TEXT_MEDIUM,
+                                                            display: "block",
+                                                            marginBottom: 4,
+                                                         }}
+                                                      >
+                                                         médicaments
+                                                      </Text>
+                                                      <Text
+                                                         strong
+                                                         style={{
+                                                            fontSize: 18,
+                                                            color: TEXT_DARK,
+                                                         }}
+                                                      >
+                                                         {userData.medications
+                                                            .length > 80
+                                                            ? userData.medications.substring(
+                                                                 0,
+                                                                 80
+                                                              ) + "..."
+                                                            : userData.medications}
+                                                      </Text>
+                                                   </div>
+                                                )}
+                                          </div>
+                                       </Card>
+                                    </Col>
+                                 </Row>
+                              </Card>
+                           </Col>
+                        )}
                      </Row>
                   )}
                   {activePage === "2" && (
@@ -383,11 +1021,10 @@ function Dashboard() {
                            level={2}
                            style={{ color: TEXT_DARK, marginBottom: 16 }}
                         >
-                           Analytics Dashboard
+                           analyses
                         </Title>
                         <Text style={{ fontSize: 18, color: TEXT_MEDIUM }}>
-                           Visualisez vos statistiques de santé et suivez votre
-                           évolution
+                           fonctionnalité à venir
                         </Text>
                      </Card>
                   )}
@@ -403,3 +1040,5 @@ function Dashboard() {
 }
 
 export default Dashboard;
+
+

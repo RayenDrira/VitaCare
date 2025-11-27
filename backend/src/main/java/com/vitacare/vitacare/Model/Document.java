@@ -1,13 +1,16 @@
 package com.vitacare.vitacare.Model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "documents")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Document {
@@ -31,8 +34,15 @@ public class Document {
     // --- Relationship to User ---
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    @JsonBackReference // prevents infinite loop
+    @JsonIgnore // prevents infinite loop
     private User user;
+
+    // --- Many-to-Many with Tags (Inverse side) ---
+    @ManyToMany(mappedBy = "documents", fetch = FetchType.LAZY)
+    @JsonIgnore // Prevent serialization issues
+    @ToString.Exclude // Prevent toString loops
+    @EqualsAndHashCode.Exclude // Prevent equals/hashCode loops
+    private Set<Tag> tags = new HashSet<>();
 
     public Document(String filename, String fileType, Long fileSize, String filePath, User user) {
         this.filename = filename;
